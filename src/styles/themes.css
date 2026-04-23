@@ -1,0 +1,53 @@
+/* BrickForge LEGO Color Themes — applied via data-theme on <html> */
+
+[data-theme="dark-midnight"] {
+  --color-surface-base:    #0F0F10;
+  --color-surface-raised:  #1A1A1F;
+  --color-surface-overlay: #252530;
+  --color-surface-border:  #2E2E3A;
+  --color-accent:          #FFD700;
+  --color-accent-dark:     #E6C200;
+  --color-accent-text:     #000000;
+}
+
+[data-theme="classic-red"] {
+  --color-surface-base:    #110808;
+  --color-surface-raised:  #1C0E0E;
+  --color-surface-overlay: #261414;
+  --color-surface-border:  #3A1A1A;
+  --color-accent:          #CC0000;
+  --color-accent-dark:     #A80000;
+  --color-accent-text:     #FFFFFF;
+}
+
+[data-theme="ocean-blue"] {
+  --color-surface-base:    #080F18;
+  --color-surface-raised:  #0E1822;
+  --color-surface-overlay: #14222E;
+  --color-surface-border:  #1A2E40;
+  --color-accent:          #006DB7;
+  --color-accent-dark:     #005A96;
+  --color-accent-text:     #FFFFFF;
+}
+
+[data-theme="forest-green"] {
+  --color-surface-base:    #081208;
+  --color-surface-raised:  #0E1C0E;
+  --color-surface-overlay: #142614;
+  --color-surface-border:  #1A3A1A;
+  --color-accent:          #237F52;
+  --color-accent-dark:     #1A6040;
+  --color-accent-text:     #FFFFFF;
+}
+
+[data-theme="light-studio"] {
+  --color-surface-base:    #F0F0F5;
+  --color-surface-raised:  #FFFFFF;
+  --color-surface-overlay: #E4E4EE;
+  --color-surface-border:  #D0D0DD;
+  --color-accent:          #FFD700;
+  --color-accent-dark:     #E6C200;
+  --color-accent-text:     #000000;
+  color-scheme: light;
+  color: #1A1A1A;
+}

@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "@fontsource/nunito/400.css";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/nunito/800.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+
+@theme {
+  /* ── LEGO Brand Colors ───────────────────────────────────────────── */
+  --color-lego-yellow:      #FFD700;
+  --color-lego-yellow-dark: #E6C200;
+  --color-lego-red:         #CC0000;
+  --color-lego-red-dark:    #A80000;
+  --color-lego-blue:        #006DB7;
+  --color-lego-blue-dark:   #005A96;
+  --color-lego-green:       #237F52;
+  --color-lego-green-dark:  #1A6040;
+  --color-lego-orange:      #FF6B35;
+  --color-lego-black:       #1A1A1A;
+  --color-lego-white:       #F5F5F5;
+
+  /* ── Semantic Surfaces (dark-first) ────────────────────────────── */
+  --color-surface-base:    #0F0F10;
+  --color-surface-raised:  #1A1A1F;
+  --color-surface-overlay: #252530;
+  --color-surface-border:  #2E2E3A;
+  --color-surface-muted:   #3A3A48;
+
+  /* ── Accent (swapped by theme) ─────────────────────────────────── */
+  --color-accent:          var(--color-lego-yellow);
+  --color-accent-dark:     var(--color-lego-yellow-dark);
+  --color-accent-text:     #000000;
+
+  /* ── Status ────────────────────────────────────────────────────── */
+  --color-success:  #22c55e;
+  --color-warning:  #f59e0b;
+  --color-danger:   #ef4444;
+  --color-info:     #3b82f6;
+
+  /* ── Typography ────────────────────────────────────────────────── */
+  --font-family-display: "Nunito", ui-rounded, system-ui, sans-serif;
+  --font-family-body:    "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Radius ────────────────────────────────────────────────────── */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+
+  /* ── Motion ────────────────────────────────────────────────────── */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   120ms;
+  --duration-normal: 200ms;
+  --duration-slow:   320ms;
+}
+
+/* ── Base Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  color-scheme: dark;
+  font-family: var(--font-family-body);
+  background-color: var(--color-surface-base);
+  color: var(--color-lego-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+}
+
+/* ── Light mode override ───────────────────────────────────────── */
+.light {
+  --color-surface-base:    #F0F0F5;
+  --color-surface-raised:  #FFFFFF;
+  --color-surface-overlay: #E4E4EE;
+  --color-surface-border:  #D0D0DD;
+  --color-surface-muted:   #C8C8D8;
+  color-scheme: light;
+  color: var(--color-lego-black);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-surface-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+
+/* ── Selection ─────────────────────────────────────────────────── */
+::selection { background: var(--color-accent); color: var(--color-accent-text); }
