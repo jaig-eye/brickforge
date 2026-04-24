@@ -16,7 +16,7 @@ function UpdateListener() {
   useEffect(() => {
     const offAvailable = window.ipc.on(IPC.PUSH_UPDATE_AVAILABLE, (...args: unknown[]) => {
       const { version } = args[1] as { version: string }
-      toast.loading(`Update ${version} found, starting download...`, { id: 'update-dl' })
+      toast(`Update ${version} available — go to Settings to install.`, { id: 'update-avail', duration: 8000 })
     })
     const offProgress = window.ipc.on(IPC.PUSH_UPDATE_PROGRESS, (...args: unknown[]) => {
       const { percent } = args[1] as { percent: number }
@@ -43,7 +43,12 @@ function UpdateListener() {
         { duration: Infinity, icon: '✅' },
       )
     })
-    return () => { offAvailable(); offProgress(); offDownloaded() }
+    const offError = window.ipc.on(IPC.PUSH_UPDATE_ERROR, (...args: unknown[]) => {
+      const { message } = args[1] as { message: string }
+      toast.dismiss('update-dl')
+      toast.error(`Update failed: ${message}`, { duration: 8000 })
+    })
+    return () => { offAvailable(); offProgress(); offDownloaded(); offError() }
   }, [])
   return null
 }

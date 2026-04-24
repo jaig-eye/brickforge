@@ -64,6 +64,7 @@ export default function SettingsPage() {
   type UpdateStatus =
     | { type: 'idle' }
     | { type: 'checking' }
+    | { type: 'available'; version: string }
     | { type: 'upToDate' }
     | { type: 'downloading'; version: string; percent: number }
     | { type: 'ready'; version: string }
@@ -80,18 +81,25 @@ export default function SettingsPage() {
       const { version } = args[1] as { version: string }
       setUpdateStatus({ type: 'ready', version })
     })
-    return () => { offProgress(); offDownloaded() }
+    const offError = window.ipc.on(IPC.PUSH_UPDATE_ERROR, (...args: unknown[]) => {
+      const { message } = args[1] as { message: string }
+      setUpdateStatus({ type: 'error', message })
+    })
+    return () => { offProgress(); offDownloaded(); offError() }
   }, [])
 
-  // Sync with any download already in progress from the startup auto-check
+  // Sync with any in-progress state from the startup check
   useEffect(() => {
     window.ipc.invoke(IPC.UPDATE_GET_STATE).then((s) => {
       const st = s as { status: string; version?: string; percent?: number }
-      if (st.status === 'downloading') {
+      if (st.status === 'available') {
+        setUpdateStatus({ type: 'available', version: st.version! })
+      } else if (st.status === 'downloading') {
         setUpdateStatus({ type: 'downloading', version: st.version!, percent: st.percent ?? 0 })
       } else if (st.status === 'ready') {
         setUpdateStatus({ type: 'ready', version: st.version! })
       }
+      // stale 'error' from startup check not surfaced on mount — leave as idle
     }).catch(() => {})
   }, [])
 
@@ -99,7 +107,7 @@ export default function SettingsPage() {
     setUpdateStatus({ type: 'checking' })
     try {
       const res = await window.ipc.invoke(IPC.UPDATE_CHECK) as {
-        upToDate?: boolean; version?: string; error?: string
+        upToDate?: boolean; available?: boolean; version?: string; error?: string
         downloading?: boolean; percent?: number; ready?: boolean
       }
       if (res.error) {
@@ -110,9 +118,22 @@ export default function SettingsPage() {
         setUpdateStatus({ type: 'ready', version: res.version! })
       } else if (res.downloading) {
         setUpdateStatus({ type: 'downloading', version: res.version!, percent: res.percent ?? 0 })
+      } else if (res.available) {
+        setUpdateStatus({ type: 'available', version: res.version! })
       } else {
-        setUpdateStatus({ type: 'downloading', version: res.version!, percent: 0 })
+        setUpdateStatus({ type: 'available', version: res.version! })
       }
+    } catch (err) {
+      setUpdateStatus({ type: 'error', message: String(err) })
+    }
+  }
+
+  const downloadUpdate = async () => {
+    const version = updateStatus.type === 'available' ? updateStatus.version : ''
+    setUpdateStatus({ type: 'downloading', version, percent: 0 })
+    try {
+      const res = await window.ipc.invoke(IPC.UPDATE_DOWNLOAD) as { ok?: boolean; error?: string }
+      if (res.error) setUpdateStatus({ type: 'error', message: res.error })
     } catch (err) {
       setUpdateStatus({ type: 'error', message: String(err) })
     }
@@ -295,6 +316,17 @@ export default function SettingsPage() {
                 <Button variant="outline" onClick={checkForUpdates} className="shrink-0 text-xs">
                   <RefreshCw className="h-3 w-3" />
                   Re-check
+                </Button>
+              </div>
+            )}
+            {updateStatus.type === 'available' && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Download className="h-4 w-4 text-[var(--color-accent)] shrink-0" />
+                  <p className="text-sm font-semibold">Update v{updateStatus.version} available.</p>
+                </div>
+                <Button onClick={downloadUpdate} className="shrink-0">
+                  Download &amp; Install
                 </Button>
               </div>
             )}

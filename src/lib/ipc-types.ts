@@ -70,6 +70,7 @@ export const IPC = {
   UPDATE_INSTALL:       'bf:update:install',
   UPDATE_CHECK:         'bf:update:check',
   UPDATE_GET_STATE:     'bf:update:getState',
+  UPDATE_DOWNLOAD:      'bf:update:download',
 
   // ── Push events (main → renderer) ───────────────────────────────────────
   PUSH_PRICE_UPDATED:      'bf:push:priceUpdated',
@@ -77,6 +78,7 @@ export const IPC = {
   PUSH_UPDATE_AVAILABLE:   'bf:push:updateAvailable',
   PUSH_UPDATE_PROGRESS:    'bf:push:updateProgress',
   PUSH_UPDATE_DOWNLOADED:  'bf:push:updateDownloaded',
+  PUSH_UPDATE_ERROR:       'bf:push:updateError',
 } as const
 
 export type IpcChannel = typeof IPC[keyof typeof IPC]
