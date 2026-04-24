@@ -95,10 +95,11 @@ export function registerPricingHandlers(): void {
     return { refreshed, total: sets.length, errors }
   })
 
-  // ── Minifig pricing ─────────────────────────────────────────────────────
+  // ── Minifig pricing ──────────────────────────────────────────────────────────────────
 
   /** Fetch fresh BrickLink price for a single minifig. */
   ipcMain.handle(IPC.PRICE_FETCH_FIG, async (_e, figNum: string, condition: string) => {
+    if (figNum.startsWith('fig-')) return null  // Rebrickable-only ID, not in BrickLink
     const norm = normFigCondition(condition)
     const result = await fetchBricklinkPrice(figNum, norm, 'M')
     if (result) {
@@ -129,6 +130,8 @@ export function registerPricingHandlers(): void {
     let refreshed = 0
     const errors: string[] = []
     for (const f of figs) {
+      // Rebrickable-only figs use a "fig-XXXXXX" ID that doesn't exist in BrickLink — skip silently
+      if (f.fig_number.startsWith('fig-')) continue
       const norm = normFigCondition(f.condition)
       try {
         const result = await fetchBricklinkPrice(f.fig_number, norm, 'M')
