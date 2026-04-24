@@ -23,7 +23,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run build && electron-builder --win --publish always --config electron-builder.config.js
+        run: npm run build && npx electron-builder --win --publish always --config electron-builder.config.js
 
   release-mac:
     runs-on: macos-latest
@@ -41,4 +41,4 @@ jobs:
       - name: Build & package
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run build && electron-builder --mac --publish always --config electron-builder.config.js
+        run: npm run build && npx electron-builder --mac --publish always --config electron-builder.config.js
