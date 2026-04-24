@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron'
+import { app, ipcMain, BrowserWindow } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { IPC } from '../../src/lib/ipc-types'
 import log from '../main/logger'
@@ -11,6 +11,19 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
   autoUpdater.on('update-available', (info) => {
     log.info('[updater] Update available:', info.version)
     mainWindow.webContents.send(IPC.PUSH_UPDATE_AVAILABLE, { version: info.version })
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    log.info('[updater] Already up to date')
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow.webContents.send(IPC.PUSH_UPDATE_PROGRESS, {
+      percent: Math.round(progress.percent),
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total,
+    })
   })
 
   autoUpdater.on('update-downloaded', (info) => {
@@ -27,13 +40,15 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
     autoUpdater.quitAndInstall()
   })
 
-  // Manual check triggered from Settings
+  // Manual check triggered from Settings — compare versions to detect "up to date" correctly
   ipcMain.handle(IPC.UPDATE_CHECK, async () => {
     try {
       const result = await autoUpdater.checkForUpdates()
-      if (!result || !result.updateInfo) return { upToDate: true }
-      const { version } = result.updateInfo
-      return { upToDate: false, version }
+      if (!result?.updateInfo) return { upToDate: true }
+      const available = result.updateInfo.version
+      const current = app.getVersion()
+      if (available === current) return { upToDate: true }
+      return { upToDate: false, version: available }
     } catch (err) {
       log.warn('[updater] Manual check failed:', err)
       return { error: String(err) }
@@ -42,6 +57,6 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
 
   // Check for updates a few seconds after startup (non-blocking)
   setTimeout(() => {
-    autoUpdater.checkForUpdates().catch((err) => log.warn('[updater] Check failed:', err))
+    autoUpdater.checkForUpdates().catch((err) => log.warn('[updater] Startup check failed:', err))
   }, 5000)
 }
