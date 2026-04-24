@@ -30,6 +30,7 @@ export interface Minifigure {
   year: number | null
   image_url: string | null
   bricklink_url: string | null
+  bricklink_id: string | null
   notes: string | null
   is_owned: 0 | 1
   is_wanted: 0 | 1
@@ -114,22 +115,29 @@ export function upsertMinifigure(data: Omit<Minifigure, 'id' | 'created_at' | 'u
   const db = getDb()
   db.prepare(`
     INSERT INTO minifigures (fig_number, name, character, theme, year, image_url,
-      bricklink_url, notes, is_owned, is_wanted, quantity, condition, acquired_price)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      bricklink_url, bricklink_id, notes, is_owned, is_wanted, quantity, condition, acquired_price)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(fig_number) DO UPDATE SET
       name = excluded.name, character = excluded.character, theme = excluded.theme,
       year = excluded.year, image_url = excluded.image_url,
-      bricklink_url = excluded.bricklink_url, notes = excluded.notes,
+      bricklink_url = excluded.bricklink_url,
+      bricklink_id = COALESCE(excluded.bricklink_id, bricklink_id),
+      notes = excluded.notes,
       is_owned = excluded.is_owned, is_wanted = excluded.is_wanted,
       quantity = excluded.quantity, condition = excluded.condition,
       acquired_price = excluded.acquired_price, updated_at = datetime('now')
   `).run(
     data.fig_number, data.name, data.character, data.theme, data.year,
-    data.image_url, data.bricklink_url, data.notes,
+    data.image_url, data.bricklink_url, data.bricklink_id ?? null, data.notes,
     data.is_owned, data.is_wanted, data.quantity,
     data.condition ?? 'used', data.acquired_price ?? null,
   )
   return db.prepare('SELECT * FROM minifigures WHERE fig_number = ?').get(data.fig_number) as Minifigure
+}
+
+/** Persist a resolved BrickLink ID for an existing fig without touching any other fields. */
+export function setMinifigBricklinkId(figNumber: string, bricklinkId: string): void {
+  getDb().prepare('UPDATE minifigures SET bricklink_id = ? WHERE fig_number = ?').run(bricklinkId, figNumber)
 }
 
 export function deleteMinifigure(id: number): void {

@@ -183,6 +183,20 @@ export async function inspectRebrickableSet(setNum: string): Promise<SetDetailRe
   }
 }
 
+/**
+ * Look up the BrickLink ID for a Rebrickable minifig (e.g. "fig-000123" → "sw0001").
+ * Returns null if the fig has no BrickLink mapping or if the request fails.
+ */
+export async function fetchMinifigBricklinkId(figNum: string): Promise<string | null> {
+  try {
+    const data = await get<{ external_ids?: { BrickLink?: string[] } }>(`/minifigs/${figNum}/`)
+    return data.external_ids?.BrickLink?.[0] ?? null
+  } catch (err) {
+    log.warn('[Rebrickable] fetchMinifigBricklinkId failed for', figNum, err)
+    return null
+  }
+}
+
 export async function importRebrickableSet(setNum: string): Promise<LegoSet | null> {
   try {
     const s = await get<RebrickableSet>(`/sets/${setNum}/`)
