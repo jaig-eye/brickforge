@@ -44,10 +44,17 @@ function getCredentials(): BLCredentials | null {
   }
 }
 
-function buildOAuthHeader(method: string, url: string, creds: BLCredentials): string {
+function buildOAuthHeader(method: string, fullUrl: string, creds: BLCredentials): string {
   const nonce = crypto.randomBytes(16).toString('hex')
   const timestamp = Math.floor(Date.now() / 1000).toString()
-  const params: Record<string, string> = {
+
+  // OAuth 1.0a requires the base URL (no query string) and query params included in the signature
+  const urlObj = new URL(fullUrl)
+  const baseUrl = `${urlObj.protocol}//${urlObj.host}${urlObj.pathname}`
+  const queryParams: Record<string, string> = {}
+  urlObj.searchParams.forEach((v, k) => { queryParams[k] = v })
+
+  const oauthParams: Record<string, string> = {
     oauth_consumer_key: creds.consumerKey,
     oauth_nonce: nonce,
     oauth_signature_method: 'HMAC-SHA1',
@@ -56,14 +63,17 @@ function buildOAuthHeader(method: string, url: string, creds: BLCredentials): st
     oauth_version: '1.0',
   }
 
-  const sortedParams = Object.entries(params).sort(([a], [b]) => a.localeCompare(b))
+  // Combine oauth + query params, sort, and build parameter string for signing
+  const allParams = { ...oauthParams, ...queryParams }
+  const sortedParams = Object.entries(allParams).sort(([a], [b]) => a.localeCompare(b))
   const paramStr = sortedParams.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
-  const base = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(paramStr)}`
+
+  const base = `${method}&${encodeURIComponent(baseUrl)}&${encodeURIComponent(paramStr)}`
   const sigKey = `${encodeURIComponent(creds.consumerSecret)}&${encodeURIComponent(creds.tokenSecret)}`
   const sig = crypto.createHmac('sha1', sigKey).update(base).digest('base64')
 
-  params['oauth_signature'] = sig
-  const header = Object.entries(params).map(([k, v]) => `${k}="${encodeURIComponent(v)}"`).join(', ')
+  oauthParams['oauth_signature'] = sig
+  const header = Object.entries(oauthParams).map(([k, v]) => `${k}="${encodeURIComponent(v)}"`).join(', ')
   return `OAuth ${header}`
 }
 
