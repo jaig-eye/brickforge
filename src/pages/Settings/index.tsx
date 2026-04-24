@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, RefreshCw } from 'lucide-react'
+import { Save, RefreshCw, CheckCircle, AlertCircle, Download } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -24,11 +24,11 @@ interface Settings {
 
 const MODELS: Record<'openai' | 'anthropic', { id: string; label: string }[]> = {
   openai: [
-    { id: 'gpt-4o-mini',    label: 'GPT-4o Mini  (fast · cheap)'        },
+    { id: 'gpt-4o-mini',    label: 'GPT-4o Mini  (fast \u00b7 cheap)'        },
     { id: 'gpt-4o',         label: 'GPT-4o  (best quality)'              },
   ],
   anthropic: [
-    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5  (fast · cheap)' },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5  (fast \u00b7 cheap)' },
     { id: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6  (balanced)'    },
     { id: 'claude-opus-4-6',           label: 'Claude Opus 4.6  (best quality)'  },
   ],
@@ -61,17 +61,41 @@ export default function SettingsPage() {
     toast.success('Settings saved')
   }
 
-  const [checking, setChecking] = useState(false)
+  type UpdateStatus =
+    | { type: 'idle' }
+    | { type: 'checking' }
+    | { type: 'upToDate' }
+    | { type: 'downloading'; version: string; percent: number }
+    | { type: 'ready'; version: string }
+    | { type: 'error'; message: string }
+
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ type: 'idle' })
+
+  useEffect(() => {
+    const offProgress = window.ipc.on(IPC.PUSH_UPDATE_PROGRESS, (...args: unknown[]) => {
+      const { percent } = args[1] as { percent: number }
+      setUpdateStatus((s) => s.type === 'downloading' ? { ...s, percent } : s)
+    })
+    const offDownloaded = window.ipc.on(IPC.PUSH_UPDATE_DOWNLOADED, (...args: unknown[]) => {
+      const { version } = args[1] as { version: string }
+      setUpdateStatus({ type: 'ready', version })
+    })
+    return () => { offProgress(); offDownloaded() }
+  }, [])
 
   const checkForUpdates = async () => {
-    setChecking(true)
+    setUpdateStatus({ type: 'checking' })
     try {
       const res = await window.ipc.invoke(IPC.UPDATE_CHECK) as { upToDate?: boolean; version?: string; error?: string }
-      if (res.error) toast.error(`Update check failed: ${res.error}`)
-      else if (res.upToDate) toast.success('You\'re on the latest version!')
-      else toast.success(`Update v${res.version} is downloading…`)
-    } finally {
-      setChecking(false)
+      if (res.error) {
+        setUpdateStatus({ type: 'error', message: res.error })
+      } else if (res.upToDate) {
+        setUpdateStatus({ type: 'upToDate' })
+      } else {
+        setUpdateStatus({ type: 'downloading', version: res.version!, percent: 0 })
+      }
+    } catch (err) {
+      setUpdateStatus({ type: 'error', message: String(err) })
     }
   }
 
@@ -159,7 +183,7 @@ export default function SettingsPage() {
               onChange={(e) => setSettings((s) => ({ ...s, rebrickableApiKey: e.target.value }))}
             />
             <p className="text-xs text-[var(--color-surface-muted)] mt-2">
-              Free key at rebrickable.com/api — required for set lookup &amp; image confirmation.
+              Free key at rebrickable.com/api &#8212; required for set lookup &amp; image confirmation.
             </p>
           </CardContent>
         </Card>
@@ -227,12 +251,75 @@ export default function SettingsPage() {
         {/* Updates */}
         <Card>
           <CardHeader stud><h2 className="text-sm font-bold font-display text-black">Updates</h2></CardHeader>
-          <CardContent className="py-5 flex items-center justify-between">
-            <p className="text-sm text-[var(--color-surface-muted)]">Check for a newer version of BrickForge.</p>
-            <Button variant="outline" onClick={checkForUpdates} disabled={checking} className="shrink-0">
-              <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
-              {checking ? 'Checking…' : 'Check for Updates'}
-            </Button>
+          <CardContent className="py-5 space-y-3">
+            {updateStatus.type === 'idle' && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-[var(--color-surface-muted)]">Check for a newer version of BrickForge.</p>
+                <Button variant="outline" onClick={checkForUpdates} className="shrink-0">
+                  <RefreshCw className="h-4 w-4" />
+                  Check for Updates
+                </Button>
+              </div>
+            )}
+            {updateStatus.type === 'checking' && (
+              <div className="flex items-center gap-3">
+                <RefreshCw className="h-4 w-4 animate-spin text-[var(--color-surface-muted)] shrink-0" />
+                <p className="text-sm text-[var(--color-surface-muted)]">Checking for updates\u2026</p>
+              </div>
+            )}
+            {updateStatus.type === 'upToDate' && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                  <p className="text-sm font-semibold">You&#39;re on the latest version.</p>
+                </div>
+                <Button variant="outline" onClick={checkForUpdates} className="shrink-0 text-xs">
+                  <RefreshCw className="h-3 w-3" />
+                  Re-check
+                </Button>
+              </div>
+            )}
+            {updateStatus.type === 'downloading' && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Download className="h-4 w-4 text-[var(--color-accent)] shrink-0 animate-pulse" />
+                  <p className="text-sm font-semibold">
+                    Downloading v{updateStatus.version}\u2026 {updateStatus.percent}%
+                  </p>
+                </div>
+                <div className="w-full h-2 rounded-full bg-[var(--color-surface-border)] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[var(--color-accent)] transition-all duration-300"
+                    style={{ width: `${updateStatus.percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            {updateStatus.type === 'ready' && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+                  <p className="text-sm font-semibold">Update v{updateStatus.version} ready to install.</p>
+                </div>
+                <Button
+                  onClick={() => window.ipc.invoke(IPC.UPDATE_INSTALL)}
+                  className="shrink-0"
+                >
+                  Restart &amp; Install
+                </Button>
+              </div>
+            )}
+            {updateStatus.type === 'error' && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start gap-2 min-w-0">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-500 truncate">{updateStatus.message}</p>
+                </div>
+                <Button variant="outline" onClick={checkForUpdates} className="shrink-0 text-xs">
+                  Retry
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -5,7 +5,7 @@ const path = require('path')
 module.exports = {
   appId: 'com.jaig-eye.brickforge',
   productName: 'BrickForge',
-  copyright: 'Copyright © 2026 jaig-eye',
+  copyright: 'Copyright \u00a9 2026 jaig-eye',
 
   directories: {
     output: 'release',
@@ -15,7 +15,7 @@ module.exports = {
   files: [
     // Vite renderer build (separate from electron-builder output dir)
     'renderer/**/*',
-    // Compiled Electron main process (tsc rootDir="." → dist-electron/electron/...)
+    // Compiled Electron main process (tsc rootDir="." \u2192 dist-electron/electron/...)
     'dist-electron/electron/**/*',
     // Shared src types compiled by tsconfig.node.json
     'dist-electron/src/**/*',
@@ -44,9 +44,9 @@ module.exports = {
     signAndEditExecutable: false,
   },
   nsis: {
-    oneClick: false,
-    perMachine: true,
-    allowToChangeInstallationDirectory: true,
+    oneClick: true,
+    perMachine: false,
+    runAfterFinish: true,
     shortcutName: 'BrickForge',
     createDesktopShortcut: 'always',
   },

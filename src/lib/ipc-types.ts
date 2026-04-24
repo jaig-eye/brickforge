@@ -74,6 +74,7 @@ export const IPC = {
   PUSH_PRICE_UPDATED:      'bf:push:priceUpdated',
   PUSH_AI_PROGRESS:        'bf:push:aiProgress',
   PUSH_UPDATE_AVAILABLE:   'bf:push:updateAvailable',
+  PUSH_UPDATE_PROGRESS:    'bf:push:updateProgress',
   PUSH_UPDATE_DOWNLOADED:  'bf:push:updateDownloaded',
 } as const
 
