@@ -103,50 +103,62 @@ export interface PriceResult {
 }
 
 /**
+ * Normalize a set number for BrickLink — sets need the "-1" variant suffix.
+ * Rebrickable always includes it; manual entries may not.
+ */
+function normItemNum(itemNum: string, itemType: 'S' | 'M'): string {
+  if (itemType === 'S' && !itemNum.includes('-')) return `${itemNum}-1`
+  return itemNum
+}
+
+/**
  * Fetch BrickLink price for a set (itemType='S') or minifig (itemType='M').
  * Strategy: try guide_type=sold first; if no recent sales (total_quantity=0),
  * fall back to guide_type=stock and return the lowest current listing price.
+ * Throws on API errors so callers can surface them properly.
  */
 export async function fetchBricklinkPrice(
   itemNum: string,
   condition: string,
   itemType: 'S' | 'M' = 'S',
 ): Promise<PriceResult | null> {
-  try {
-    const newUsed = toBLCondition(condition)
-    const blType = BL_TYPE[itemType]
-    const base = `/items/${blType}/${itemNum}/price?new_or_used=${newUsed}&currency_code=USD&region=north_america`
+  const newUsed = toBLCondition(condition)
+  const blType = BL_TYPE[itemType]
+  const num = normItemNum(itemNum, itemType)
+  const base = `/items/${blType}/${num}/price?new_or_used=${newUsed}&currency_code=USD&region=north_america`
 
-    // 1. Try recently sold
-    const soldRes = await blGet<{ data: PriceGuide }>(`${base}&guide_type=sold`)
-    if (soldRes.data && soldRes.data.total_quantity > 0) {
-      const d = soldRes.data
-      return {
-        avg_price:    parseFloat(d.avg_price as string),
-        min_price:    parseFloat(d.min_price as string),
-        max_price:    parseFloat(d.max_price as string),
-        sample_count: d.total_quantity,
-        source:       'sold',
-      }
-    }
-
-    // 2. Fall back to current stock listings — use min_price as the reference value
-    const stockRes = await blGet<{ data: PriceGuide }>(`${base}&guide_type=stock`)
-    if (stockRes.data && stockRes.data.unit_quantity > 0) {
-      const d = stockRes.data
-      const minP = parseFloat(d.min_price as string)
-      return {
-        avg_price:    minP,           // lowest current listing as the reference
-        min_price:    minP,
-        max_price:    parseFloat(d.max_price as string),
-        sample_count: d.unit_quantity,
-        source:       'stock',
-      }
-    }
-
-    return null
-  } catch (err) {
-    log.warn('[BrickLink] fetchPrice failed:', err)
-    return null
+  // 1. Try recently sold
+  const soldRes = await blGet<{ meta: { code: number; message: string }; data: PriceGuide }>(`${base}&guide_type=sold`)
+  if (soldRes.meta?.code && soldRes.meta.code !== 200) {
+    throw new Error(`BrickLink API error ${soldRes.meta.code}: ${soldRes.meta.message}`)
   }
+  if (soldRes.data && soldRes.data.total_quantity > 0) {
+    const d = soldRes.data
+    return {
+      avg_price:    parseFloat(d.avg_price as string),
+      min_price:    parseFloat(d.min_price as string),
+      max_price:    parseFloat(d.max_price as string),
+      sample_count: d.total_quantity,
+      source:       'sold',
+    }
+  }
+
+  // 2. Fall back to current stock listings — use min_price as the reference value
+  const stockRes = await blGet<{ meta: { code: number; message: string }; data: PriceGuide }>(`${base}&guide_type=stock`)
+  if (stockRes.meta?.code && stockRes.meta.code !== 200) {
+    throw new Error(`BrickLink API error ${stockRes.meta.code}: ${stockRes.meta.message}`)
+  }
+  if (stockRes.data && stockRes.data.unit_quantity > 0) {
+    const d = stockRes.data
+    const minP = parseFloat(d.min_price as string)
+    return {
+      avg_price:    minP,
+      min_price:    minP,
+      max_price:    parseFloat(d.max_price as string),
+      sample_count: d.unit_quantity,
+      source:       'stock',
+    }
+  }
+
+  return null
 }

@@ -63,6 +63,7 @@ export function registerPricingHandlers(): void {
     if (!hasBricklinkCredentials()) throw new Error('BrickLink credentials not configured — add them in Settings')
     const sets = listSets({ is_owned: 1 })
     let refreshed = 0
+    const errors: string[] = []
     for (const s of sets) {
       const norm = normCondition(s.condition)
       try {
@@ -80,16 +81,21 @@ export function registerPricingHandlers(): void {
             currency: 'USD',
           })
           refreshed++
+        } else {
+          errors.push(`${s.set_number}: no price data found`)
         }
       } catch (err) {
-        log.warn(`[Pricing] refresh failed for ${s.set_number}:`, err)
+        const msg = err instanceof Error ? err.message : String(err)
+        log.warn(`[Pricing] refresh failed for ${s.set_number}:`, msg)
+        errors.push(`${s.set_number}: ${msg}`)
       }
-      await new Promise((r) => setTimeout(r, 250))
+      await new Promise((r) => setTimeout(r, 300))
     }
-    return { refreshed, total: sets.length }
+    if (errors.length) log.warn('[Pricing] refresh errors:', errors)
+    return { refreshed, total: sets.length, errors }
   })
 
-  // ── Minifig pricing ───────────────────────────────────────────────────────
+  // ── Minifig pricing ─────────────────────────────────────────────────────
 
   /** Fetch fresh BrickLink price for a single minifig. */
   ipcMain.handle(IPC.PRICE_FETCH_FIG, async (_e, figNum: string, condition: string) => {
@@ -121,6 +127,7 @@ export function registerPricingHandlers(): void {
     if (!hasBricklinkCredentials()) throw new Error('BrickLink credentials not configured — add them in Settings')
     const figs = listMinifigures({ is_owned: 1 })
     let refreshed = 0
+    const errors: string[] = []
     for (const f of figs) {
       const norm = normFigCondition(f.condition)
       try {
@@ -138,13 +145,18 @@ export function registerPricingHandlers(): void {
             currency: 'USD',
           })
           refreshed++
+        } else {
+          errors.push(`${f.fig_number}: no price data found`)
         }
       } catch (err) {
-        log.warn(`[Pricing] fig refresh failed for ${f.fig_number}:`, err)
+        const msg = err instanceof Error ? err.message : String(err)
+        log.warn(`[Pricing] fig refresh failed for ${f.fig_number}:`, msg)
+        errors.push(`${f.fig_number}: ${msg}`)
       }
-      await new Promise((r) => setTimeout(r, 250))
+      await new Promise((r) => setTimeout(r, 300))
     }
-    return { refreshed, total: figs.length }
+    if (errors.length) log.warn('[Pricing] fig refresh errors:', errors)
+    return { refreshed, total: figs.length, errors }
   })
 
   ipcMain.handle(IPC.PRICE_ALERTS_LIST, () => listAlerts())
