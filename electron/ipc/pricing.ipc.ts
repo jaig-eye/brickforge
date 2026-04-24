@@ -4,9 +4,8 @@ import {
   getPriceHistory, insertPricePoint, listAlerts, upsertAlert,
   getBulkLatestPrices, getBulkLatestFigPrices, getPortfolioStats,
 } from '../db/queries/pricing.queries'
-import { listSets, listMinifigures, setMinifigBricklinkId } from '../db/queries/collection.queries'
+import { listSets, listMinifigures } from '../db/queries/collection.queries'
 import { fetchBricklinkPrice, hasBricklinkCredentials } from '../api/bricklink'
-import { fetchMinifigBricklinkId } from '../api/rebrickable'
 import log from '../main/logger'
 
 /**
@@ -99,16 +98,9 @@ export function registerPricingHandlers(): void {
 
   /** Fetch fresh BrickLink price for a single minifig. */
   ipcMain.handle(IPC.PRICE_FETCH_FIG, async (_e, figNum: string, condition: string) => {
+    if (figNum.startsWith('fig-')) return null  // Rebrickable-only ID — no BrickLink equivalent exists
     const norm = normFigCondition(condition)
-    // Rebrickable-only IDs need to be resolved to a BrickLink ID first
-    let blId = figNum
-    if (figNum.startsWith('fig-')) {
-      const resolved = await fetchMinifigBricklinkId(figNum)
-      if (!resolved) return null
-      setMinifigBricklinkId(figNum, resolved)
-      blId = resolved
-    }
-    const result = await fetchBricklinkPrice(blId, norm, 'M')
+    const result = await fetchBricklinkPrice(figNum, norm, 'M')
     if (result) {
       insertPricePoint({
         entity_type: 'minifig',
@@ -137,26 +129,10 @@ export function registerPricingHandlers(): void {
     let refreshed = 0
     const errors: string[] = []
     for (const f of figs) {
+      if (f.fig_number.startsWith('fig-')) continue  // Rebrickable-only ID — no BrickLink equivalent exists
       const norm = normFigCondition(f.condition)
-      // Rebrickable-only figs need cross-referencing to a BrickLink ID
-      let blId = f.fig_number
-      if (f.fig_number.startsWith('fig-')) {
-        // Use cached bricklink_id if available, otherwise fetch from Rebrickable
-        const cached = f.bricklink_id
-        if (cached) {
-          blId = cached
-        } else {
-          const resolved = await fetchMinifigBricklinkId(f.fig_number)
-          if (!resolved) {
-            errors.push(`${f.fig_number}: no BrickLink ID found on Rebrickable`)
-            continue
-          }
-          setMinifigBricklinkId(f.fig_number, resolved)
-          blId = resolved
-        }
-      }
       try {
-        const result = await fetchBricklinkPrice(blId, norm, 'M')
+        const result = await fetchBricklinkPrice(f.fig_number, norm, 'M')
         if (result) {
           insertPricePoint({
             entity_type: 'minifig',

@@ -1,6 +1,6 @@
 {
   "name": "brickforge",
-  "version": "0.1.0-alpha.9",
+  "version": "0.1.0-alpha.10",
   "description": "A playful yet modern LEGO companion app — collection tracking, AI identification, value tracking, and more.",
   "main": "dist-electron/electron/main/index.js",
   "author": {

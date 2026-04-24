@@ -428,6 +428,41 @@ function InspectFigModal({
   onOwn: (item: RbFig) => void
   onWishlist: (item: RbFig) => void
 }) {
+  const [prices, setPrices]               = useState<{ new?: number; used?: number } | null>(null)
+  const [priceFetching, setPriceFetching] = useState(false)
+
+  useEffect(() => {
+    if (!item || !open) { setPrices(null); return }
+    window.ipc.invoke(IPC.PRICE_GET_BULK_FIGS, [item.set_num])
+      .then((r) => {
+        const map = r as Record<string, { new?: number; used?: number }>
+        setPrices(map[item.set_num] ?? null)
+      })
+      .catch(() => {})
+  }, [item, open])
+
+  const fetchPrice = async () => {
+    if (!item) return
+    setPriceFetching(true)
+    try {
+      await Promise.all([
+        window.ipc.invoke(IPC.PRICE_FETCH_FIG, item.set_num, 'used'),
+        window.ipc.invoke(IPC.PRICE_FETCH_FIG, item.set_num, 'new'),
+      ])
+      const map = await window.ipc.invoke(IPC.PRICE_GET_BULK_FIGS, [item.set_num]) as Record<string, { new?: number; used?: number }>
+      setPrices(map[item.set_num] ?? null)
+    } catch (err) {
+      const msg = String(err).replace(/^Error:\s*/i, '')
+      if (msg.includes('credentials not configured')) {
+        toast.error('BrickLink API keys not configured — add them in Settings')
+      } else {
+        toast.error(`Price fetch failed: ${msg}`)
+      }
+    } finally {
+      setPriceFetching(false)
+    }
+  }
+
   if (!item) return null
   const blUrl = `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${item.set_num}`
 
@@ -454,6 +489,45 @@ function InspectFigModal({
               </a>
             </div>
           </div>
+        </div>
+
+        {/* BrickLink market prices */}
+        <div className="border-t border-[var(--color-surface-border)] pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-surface-muted)]">
+              BrickLink Market Prices (US)
+            </p>
+            <button
+              onClick={fetchPrice}
+              disabled={priceFetching}
+              className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-current border border-[var(--color-surface-border)] rounded-lg px-2 py-1 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={cn('h-3 w-3', priceFetching && 'animate-spin')} />
+              {priceFetching ? 'Fetching...' : prices ? 'Refresh' : 'Fetch Price'}
+            </button>
+          </div>
+          {prices && (prices.used != null || prices.new != null) ? (
+            <div className="grid grid-cols-2 gap-3 mb-1">
+              {prices.used != null && (
+                <div className="rounded-lg bg-[var(--color-surface-overlay)] p-3 text-center">
+                  <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Used</p>
+                  <p className="text-base font-bold tabular-nums">{formatCurrency(prices.used)}</p>
+                </div>
+              )}
+              {prices.new != null && (
+                <div className="rounded-lg bg-[var(--color-surface-overlay)] p-3 text-center">
+                  <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">New</p>
+                  <p className="text-base font-bold tabular-nums">{formatCurrency(prices.new)}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            !priceFetching && (
+              <p className="text-xs text-[var(--color-surface-muted)] mb-1">
+                No cached price. Click "Fetch Price" to pull from BrickLink.
+              </p>
+            )
+          )}
         </div>
 
         <div className="border-t border-[var(--color-surface-border)] pt-4">
@@ -683,7 +757,9 @@ export default function Browse() {
         setSets(res.results); setTotalCount(res.count)
       } else {
         const res = await window.ipc.invoke(IPC.CATALOG_BROWSE_MINIFIGS, opts) as { count: number; results: RbFig[] }
-        setFigs(res.results); setTotalCount(res.count)
+        // Filter to BrickLink-compatible IDs only — fig-XXXXXX are Rebrickable-internal with no BrickLink equivalent
+        const blFigs = res.results.filter((f) => !f.set_num.startsWith('fig-'))
+        setFigs(blFigs); setTotalCount(res.count)
       }
     } catch (err) { toast.error(String(err)) }
     finally { setLoading(false) }
