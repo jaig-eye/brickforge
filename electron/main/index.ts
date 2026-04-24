@@ -60,8 +60,6 @@ function createWindow(): BrowserWindow {
 }
 
 // ── Single-instance lock (production only) ───────────────────────────────────
-// In dev, skip the lock so `npm run dev` always spawns a fresh instance with
-// updated handlers instead of focusing the stale running one.
 if (!isDev) {
   if (!app.requestSingleInstanceLock()) {
     log.warn('Another instance is already running — quitting')
@@ -79,7 +77,6 @@ if (!isDev) {
 app.whenReady().then(async () => {
   log.info(`BrickForge ${app.getVersion()} starting…`)
 
-  // Run DB migrations before anything else
   try {
     await runMigrations()
     log.info('DB migrations complete')
@@ -91,7 +88,6 @@ app.whenReady().then(async () => {
 
   const win = createWindow()
 
-  // Register all IPC handlers
   try {
     registerAllHandlers()
     log.info('IPC handlers registered')
@@ -99,7 +95,6 @@ app.whenReady().then(async () => {
     log.error('IPC handler registration failed:', err)
   }
 
-  // Auto-updater (production only — dev builds have no published release to check)
   if (!isDev) {
     try {
       setupAutoUpdater(win)
@@ -117,7 +112,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-// Security: prevent new window creation except via shell.openExternal
 app.on('web-contents-created', (_e, contents) => {
   contents.on('will-navigate', (e, url) => {
     if (!isDev && !url.startsWith('file://')) {
