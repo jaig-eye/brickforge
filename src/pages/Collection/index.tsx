@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import {
   Plus, Search, Package, User, RefreshCw, TrendingUp, TrendingDown, Minus,
-  ExternalLink, CheckCircle2,
+  ExternalLink, CheckCircle2, Trash2,
 } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
 import { Button } from '@/components/ui/Button'
@@ -75,12 +75,28 @@ function StatCard({ label, value, sub, trend }: {
 
 // ── Set Detail Dialog ──────────────────────────────────────────────────────────
 
-function SetDetailDialog({ set, marketPrice, open, onClose }: {
+function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
   set: LegoSetDetail | null
   marketPrice?: number | null
   open: boolean
   onClose: () => void
+  onDeleted: () => void
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    if (!set) return
+    setDeleting(true)
+    try {
+      await window.ipc.invoke(IPC.SETS_DELETE, set.id)
+      toast.success(`Removed ${set.name}`)
+      onClose()
+      onDeleted()
+    } catch (err) { toast.error(String(err)) }
+    finally { setDeleting(false); setConfirmDelete(false) }
+  }
+
   if (!set) return null
   const paid = set.acquired_price ?? null
   const gain = paid != null && marketPrice != null ? marketPrice - paid : null
@@ -160,6 +176,25 @@ function SetDetailDialog({ set, marketPrice, open, onClose }: {
             <p className="text-sm">{set.notes}</p>
           </div>
         )}
+        <div className="border-t border-[var(--color-surface-border)] pt-3 flex justify-end">
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />Remove from collection
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-red-400">Remove {set.name}?</p>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="text-xs h-7">Cancel</Button>
+              <Button size="sm" onClick={handleDelete} disabled={deleting}
+                className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
+                {deleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Remove
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </Dialog>
   )
@@ -167,12 +202,28 @@ function SetDetailDialog({ set, marketPrice, open, onClose }: {
 
 // ── Fig Detail Dialog ──────────────────────────────────────────────────────────
 
-function FigDetailDialog({ fig, marketPrices, open, onClose }: {
+function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
   fig: MinifigDetail | null
   marketPrices?: { new?: number; used?: number }
   open: boolean
   onClose: () => void
+  onDeleted: () => void
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    if (!fig) return
+    setDeleting(true)
+    try {
+      await window.ipc.invoke(IPC.FIGS_DELETE, fig.id)
+      toast.success(`Removed ${fig.name}`)
+      onClose()
+      onDeleted()
+    } catch (err) { toast.error(String(err)) }
+    finally { setDeleting(false); setConfirmDelete(false) }
+  }
+
   if (!fig) return null
   const blUrl = fig.bricklink_url ?? `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${fig.fig_number}`
   const COND_LABEL: Record<string, string> = { new: 'New', used: 'Used', cracked: 'Cracked' }
@@ -230,6 +281,25 @@ function FigDetailDialog({ fig, marketPrices, open, onClose }: {
               </a>
             </div>
           </div>
+        </div>
+        <div className="border-t border-[var(--color-surface-border)] pt-3 flex justify-end">
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />Remove from collection
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-red-400">Remove {fig.name}?</p>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="text-xs h-7">Cancel</Button>
+              <Button size="sm" onClick={handleDelete} disabled={deleting}
+                className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
+                {deleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Remove
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Dialog>
@@ -827,12 +897,14 @@ export default function Collection() {
         ) ?? null : null}
         open={!!detailSet}
         onClose={() => setDetailSet(null)}
+        onDeleted={() => { setDetailSet(null); refetchSets() }}
       />
       <FigDetailDialog
         fig={detailFig}
         marketPrices={detailFig ? figPriceMap[detailFig.fig_number] : undefined}
         open={!!detailFig}
         onClose={() => setDetailFig(null)}
+        onDeleted={() => { setDetailFig(null); refetchFigs() }}
       />
     </PageShell>
   )

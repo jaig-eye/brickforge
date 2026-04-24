@@ -757,9 +757,7 @@ export default function Browse() {
         setSets(res.results); setTotalCount(res.count)
       } else {
         const res = await window.ipc.invoke(IPC.CATALOG_BROWSE_MINIFIGS, opts) as { count: number; results: RbFig[] }
-        // Filter to BrickLink-compatible IDs only — fig-XXXXXX are Rebrickable-internal with no BrickLink equivalent
-        const blFigs = res.results.filter((f) => !f.set_num.startsWith('fig-'))
-        setFigs(blFigs); setTotalCount(res.count)
+        setFigs(res.results); setTotalCount(res.count)
       }
     } catch (err) { toast.error(String(err)) }
     finally { setLoading(false) }
