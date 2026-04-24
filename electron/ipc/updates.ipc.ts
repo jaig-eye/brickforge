@@ -27,6 +27,19 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
     autoUpdater.quitAndInstall()
   })
 
+  // Manual check triggered from Settings
+  ipcMain.handle(IPC.UPDATE_CHECK, async () => {
+    try {
+      const result = await autoUpdater.checkForUpdates()
+      if (!result || !result.updateInfo) return { upToDate: true }
+      const { version } = result.updateInfo
+      return { upToDate: false, version }
+    } catch (err) {
+      log.warn('[updater] Manual check failed:', err)
+      return { error: String(err) }
+    }
+  })
+
   // Check for updates a few seconds after startup (non-blocking)
   setTimeout(() => {
     autoUpdater.checkForUpdates().catch((err) => log.warn('[updater] Check failed:', err))

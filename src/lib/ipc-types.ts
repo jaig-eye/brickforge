@@ -68,6 +68,7 @@ export const IPC = {
 
   // ── Auto-update ──────────────────────────────────────────────────────────
   UPDATE_INSTALL:       'bf:update:install',
+  UPDATE_CHECK:         'bf:update:check',
 
   // ── Push events (main → renderer) ───────────────────────────────────────
   PUSH_PRICE_UPDATED:      'bf:push:priceUpdated',

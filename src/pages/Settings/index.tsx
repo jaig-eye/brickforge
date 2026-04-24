@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save } from 'lucide-react'
+import { Save, RefreshCw } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -61,6 +61,20 @@ export default function SettingsPage() {
     toast.success('Settings saved')
   }
 
+  const [checking, setChecking] = useState(false)
+
+  const checkForUpdates = async () => {
+    setChecking(true)
+    try {
+      const res = await window.ipc.invoke(IPC.UPDATE_CHECK) as { upToDate?: boolean; version?: string; error?: string }
+      if (res.error) toast.error(`Update check failed: ${res.error}`)
+      else if (res.upToDate) toast.success('You\'re on the latest version!')
+      else toast.success(`Update v${res.version} is downloading…`)
+    } finally {
+      setChecking(false)
+    }
+  }
+
   const toggleFlag = async (key: string, current: 0 | 1) => {
     await window.ipc.invoke(IPC.FLAGS_SET, key, current === 1 ? 0 : 1)
     toast.success(`${key} ${current === 1 ? 'disabled' : 'enabled'}`)
@@ -77,7 +91,6 @@ export default function SettingsPage() {
         <Card>
           <CardHeader stud><h2 className="text-sm font-bold font-display text-black">AI Provider</h2></CardHeader>
           <CardContent className="py-5 space-y-4">
-            {/* Provider toggle */}
             <div className="flex gap-2">
               {(['openai', 'anthropic'] as const).map((p) => (
                 <button
@@ -94,8 +107,6 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-
-            {/* Model selector */}
             <div>
               <label className="block text-xs font-semibold mb-1.5 text-[var(--color-surface-muted)] uppercase tracking-wide">
                 Model
@@ -110,8 +121,6 @@ export default function SettingsPage() {
                 ))}
               </select>
             </div>
-
-            {/* OpenAI API key — shown when OpenAI is active */}
             {provider === 'openai' && (
               <Input
                 label="OpenAI API Key"
@@ -121,8 +130,6 @@ export default function SettingsPage() {
                 onChange={(e) => setSettings((s) => ({ ...s, openaiApiKey: e.target.value }))}
               />
             )}
-
-            {/* Anthropic API key — shown when Anthropic is active */}
             {provider === 'anthropic' && (
               <Input
                 label="Anthropic API Key"
@@ -132,7 +139,6 @@ export default function SettingsPage() {
                 onChange={(e) => setSettings((s) => ({ ...s, anthropicApiKey: e.target.value }))}
               />
             )}
-
             <p className="text-xs text-[var(--color-surface-muted)]">
               {provider === 'openai'
                 ? 'Used for eBay Listing Generator (vision + text). Get a key at platform.openai.com.'
@@ -215,6 +221,18 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Updates */}
+        <Card>
+          <CardHeader stud><h2 className="text-sm font-bold font-display text-black">Updates</h2></CardHeader>
+          <CardContent className="py-5 flex items-center justify-between">
+            <p className="text-sm text-[var(--color-surface-muted)]">Check for a newer version of BrickForge.</p>
+            <Button variant="outline" onClick={checkForUpdates} disabled={checking} className="shrink-0">
+              <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
+              {checking ? 'Checking…' : 'Check for Updates'}
+            </Button>
           </CardContent>
         </Card>
 
