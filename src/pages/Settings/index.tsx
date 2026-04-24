@@ -83,14 +83,33 @@ export default function SettingsPage() {
     return () => { offProgress(); offDownloaded() }
   }, [])
 
+  // Sync with any download already in progress from the startup auto-check
+  useEffect(() => {
+    window.ipc.invoke(IPC.UPDATE_GET_STATE).then((s) => {
+      const st = s as { status: string; version?: string; percent?: number }
+      if (st.status === 'downloading') {
+        setUpdateStatus({ type: 'downloading', version: st.version!, percent: st.percent ?? 0 })
+      } else if (st.status === 'ready') {
+        setUpdateStatus({ type: 'ready', version: st.version! })
+      }
+    }).catch(() => {})
+  }, [])
+
   const checkForUpdates = async () => {
     setUpdateStatus({ type: 'checking' })
     try {
-      const res = await window.ipc.invoke(IPC.UPDATE_CHECK) as { upToDate?: boolean; version?: string; error?: string }
+      const res = await window.ipc.invoke(IPC.UPDATE_CHECK) as {
+        upToDate?: boolean; version?: string; error?: string
+        downloading?: boolean; percent?: number; ready?: boolean
+      }
       if (res.error) {
         setUpdateStatus({ type: 'error', message: res.error })
       } else if (res.upToDate) {
         setUpdateStatus({ type: 'upToDate' })
+      } else if (res.ready) {
+        setUpdateStatus({ type: 'ready', version: res.version! })
+      } else if (res.downloading) {
+        setUpdateStatus({ type: 'downloading', version: res.version!, percent: res.percent ?? 0 })
       } else {
         setUpdateStatus({ type: 'downloading', version: res.version!, percent: 0 })
       }
@@ -264,7 +283,7 @@ export default function SettingsPage() {
             {updateStatus.type === 'checking' && (
               <div className="flex items-center gap-3">
                 <RefreshCw className="h-4 w-4 animate-spin text-[var(--color-surface-muted)] shrink-0" />
-                <p className="text-sm text-[var(--color-surface-muted)]">Checking for updates\u2026</p>
+                <p className="text-sm text-[var(--color-surface-muted)]">Checking for updates...</p>
               </div>
             )}
             {updateStatus.type === 'upToDate' && (
@@ -284,7 +303,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <Download className="h-4 w-4 text-[var(--color-accent)] shrink-0 animate-pulse" />
                   <p className="text-sm font-semibold">
-                    Downloading v{updateStatus.version}\u2026 {updateStatus.percent}%
+                    Downloading v{updateStatus.version}... {updateStatus.percent}%
                   </p>
                 </div>
                 <div className="w-full h-2 rounded-full bg-[var(--color-surface-border)] overflow-hidden">
