@@ -16,11 +16,11 @@ function UpdateListener() {
   useEffect(() => {
     const offAvailable = window.ipc.on(IPC.PUSH_UPDATE_AVAILABLE, (...args: unknown[]) => {
       const { version } = args[1] as { version: string }
-      toast.loading(`Downloading update ${version}\u2026 0%`, { id: 'update-dl' })
+      toast.loading(`Update ${version} found, starting download...`, { id: 'update-dl' })
     })
     const offProgress = window.ipc.on(IPC.PUSH_UPDATE_PROGRESS, (...args: unknown[]) => {
       const { percent } = args[1] as { percent: number }
-      toast.loading(`Downloading update\u2026 ${percent}%`, { id: 'update-dl' })
+      toast.loading(`Downloading update... ${percent}%`, { id: 'update-dl' })
     })
     const offDownloaded = window.ipc.on(IPC.PUSH_UPDATE_DOWNLOADED, (...args: unknown[]) => {
       const { version } = args[1] as { version: string }
@@ -40,7 +40,7 @@ function UpdateListener() {
             </button>
           </span>
         ),
-        { duration: Infinity, icon: '\u2705' },
+        { duration: Infinity, icon: '✅' },
       )
     })
     return () => { offAvailable(); offProgress(); offDownloaded() }
