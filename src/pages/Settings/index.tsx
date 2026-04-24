@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save } from 'lucide-react'
+import { Save, RefreshCw } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -59,6 +59,20 @@ export default function SettingsPage() {
   const save = async () => {
     await window.ipc.invoke(IPC.SETTINGS_SET, settings)
     toast.success('Settings saved')
+  }
+
+  const [checking, setChecking] = useState(false)
+
+  const checkForUpdates = async () => {
+    setChecking(true)
+    try {
+      const res = await window.ipc.invoke(IPC.UPDATE_CHECK) as { upToDate?: boolean; version?: string; error?: string }
+      if (res.error) toast.error(`Update check failed: ${res.error}`)
+      else if (res.upToDate) toast.success('You\'re on the latest version!')
+      else toast.success(`Update v${res.version} is downloading…`)
+    } finally {
+      setChecking(false)
+    }
   }
 
   const toggleFlag = async (key: string, current: 0 | 1) => {
@@ -215,6 +229,18 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Updates */}
+        <Card>
+          <CardHeader stud><h2 className="text-sm font-bold font-display text-black">Updates</h2></CardHeader>
+          <CardContent className="py-5 flex items-center justify-between">
+            <p className="text-sm text-[var(--color-surface-muted)]">Check for a newer version of BrickForge.</p>
+            <Button variant="outline" onClick={checkForUpdates} disabled={checking} className="shrink-0">
+              <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
+              {checking ? 'Checking…' : 'Check for Updates'}
+            </Button>
           </CardContent>
         </Card>
 
