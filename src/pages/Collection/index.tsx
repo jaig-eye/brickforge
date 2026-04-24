@@ -575,10 +575,21 @@ export default function Collection() {
     setRefreshing(true)
     try {
       const [setRes, figRes] = await Promise.all([
-        window.ipc.invoke(IPC.PRICE_REFRESH_COLLECTION) as Promise<{ refreshed: number; total: number }>,
-        window.ipc.invoke(IPC.PRICE_REFRESH_FIGS)       as Promise<{ refreshed: number; total: number }>,
+        window.ipc.invoke(IPC.PRICE_REFRESH_COLLECTION) as Promise<{ refreshed: number; total: number; errors?: string[] }>,
+        window.ipc.invoke(IPC.PRICE_REFRESH_FIGS)       as Promise<{ refreshed: number; total: number; errors?: string[] }>,
       ])
-      toast.success(`Updated ${setRes.refreshed + figRes.refreshed} prices (${setRes.refreshed} sets, ${figRes.refreshed} figs)`)
+      const totalRefreshed = setRes.refreshed + figRes.refreshed
+      const allErrors = [...(setRes.errors ?? []), ...(figRes.errors ?? [])]
+      if (totalRefreshed > 0) {
+        toast.success(`Updated ${totalRefreshed} prices (${setRes.refreshed} sets, ${figRes.refreshed} figs)`)
+      }
+      if (allErrors.length > 0 && totalRefreshed === 0) {
+        toast.error(`Price refresh failed: ${allErrors[0]}`)
+      } else if (allErrors.length > 0) {
+        toast.error(`${allErrors.length} item(s) failed: ${allErrors[0]}`)
+      } else if (totalRefreshed === 0) {
+        toast(`No prices updated — collection may be empty`, { icon: 'ℹ️' })
+      }
       const setNums = (sets as { set_number: string; is_owned: number }[]).filter((s) => s.is_owned).map((s) => s.set_number)
       const figNums = (figs as { fig_number: string; is_owned: number }[]).filter((f) => f.is_owned).map((f) => f.fig_number)
       const [setMap, figMap] = await Promise.all([
