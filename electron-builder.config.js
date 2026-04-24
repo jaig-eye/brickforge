@@ -1,3 +1,6 @@
+const fs = require('fs')
+const path = require('path')
+
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId: 'com.jaig-eye.brickforge',
@@ -5,30 +8,32 @@ module.exports = {
   copyright: 'Copyright © 2026 jaig-eye',
 
   directories: {
-    output: 'dist-electron',
+    output: 'release',
     buildResources: 'resources',
   },
 
   files: [
+    // Vite renderer build
     'dist/**/*',
-    'dist-electron/main/**/*',
-    'dist-electron/ipc/**/*',
-    'dist-electron/db/**/*',
-    'dist-electron/api/**/*',
-    'dist-electron/preload/**/*',
-    'resources/**/*',
+    // Compiled Electron main process (tsc rootDir="." → dist-electron/electron/...)
+    'dist-electron/electron/**/*',
+    // Shared src types compiled by tsconfig.node.json
+    'dist-electron/src/**/*',
+    // Exclude heavy test/doc files from node_modules
     'node_modules/**/*',
     '!node_modules/**/{CHANGELOG.md,README.md,readme.md,.editorconfig}',
     '!node_modules/**/{test,__tests__,tests,powered-test,example,examples}/**',
+    '!node_modules/**/.*',
   ],
 
-  extraResources: [
-    {
+  // Only bundle the sidecar if it has been built
+  ...(fs.existsSync(path.join(__dirname, 'sidecar', 'dist')) ? {
+    extraResources: [{
       from: 'sidecar/dist/',
       to: 'sidecar/',
       filter: ['**/*'],
-    },
-  ],
+    }],
+  } : {}),
 
   nativeRebuilder: 'sequential',
   nodeGypRebuild: false,
@@ -36,19 +41,17 @@ module.exports = {
 
   win: {
     target: [{ target: 'nsis', arch: ['x64'] }],
-    icon: 'resources/icon.ico',
     signAndEditExecutable: false,
   },
   nsis: {
     oneClick: false,
     allowToChangeInstallationDirectory: true,
-    installerIcon: 'resources/icon.ico',
     shortcutName: 'BrickForge',
+    createDesktopShortcut: 'always',
   },
 
   mac: {
     target: [{ target: 'dmg', arch: ['x64', 'arm64'] }],
-    icon: 'resources/icon.icns',
     category: 'public.app-category.lifestyle',
     hardenedRuntime: true,
     gatekeeperAssess: false,
@@ -56,7 +59,6 @@ module.exports = {
 
   linux: {
     target: [{ target: 'AppImage', arch: ['x64'] }],
-    icon: 'resources/icon.png',
     category: 'Utility',
   },
 
@@ -64,6 +66,6 @@ module.exports = {
     provider: 'github',
     owner: 'jaig-eye',
     repo: 'brickforge',
-    releaseType: 'draft',
+    releaseType: 'release',
   },
 }

@@ -12,22 +12,51 @@ import toast from 'react-hot-toast'
 
 interface Settings {
   sidecarPort?: number
+  aiProvider?: 'openai' | 'anthropic'
+  aiModel?: string
   rebrickableApiKey?: string
   bricklinkConsumerKey?: string
   bricklinkConsumerSecret?: string
   bricklinkToken?: string
   bricklinkTokenSecret?: string
   openaiApiKey?: string
+  anthropicApiKey?: string
 }
 
-export default function Settings() {
+const MODELS: Record<'openai' | 'anthropic', { id: string; label: string }[]> = {
+  openai: [
+    { id: 'gpt-4o-mini',    label: 'GPT-4o Mini  (fast · cheap)'        },
+    { id: 'gpt-4o',         label: 'GPT-4o  (best quality)'              },
+  ],
+  anthropic: [
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5  (fast · cheap)' },
+    { id: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6  (balanced)'    },
+    { id: 'claude-opus-4-6',           label: 'Claude Opus 4.6  (best quality)'  },
+  ],
+}
+
+const DEFAULT_MODELS: Record<'openai' | 'anthropic', string> = {
+  openai:    'gpt-4o-mini',
+  anthropic: 'claude-haiku-4-5-20251001',
+}
+
+export default function SettingsPage() {
   const { sidecarReady } = useUiStore()
-  const { flags, isEnabled } = useFeatureFlags()
-  const [settings, setSettings] = useState<Settings>({})
+  const { flags } = useFeatureFlags()
+  const [settings, setSettings] = useState<Settings>({ aiProvider: 'openai', aiModel: 'gpt-4o-mini' })
 
   useEffect(() => {
-    window.ipc.invoke(IPC.SETTINGS_GET).then((s) => setSettings(s as Settings))
+    window.ipc.invoke(IPC.SETTINGS_GET).then((s) => {
+      const loaded = s as Settings
+      if (!loaded.aiProvider) loaded.aiProvider = 'openai'
+      if (!loaded.aiModel)    loaded.aiModel    = DEFAULT_MODELS[loaded.aiProvider]
+      setSettings(loaded)
+    })
   }, [])
+
+  const setProvider = (p: 'openai' | 'anthropic') => {
+    setSettings((s) => ({ ...s, aiProvider: p, aiModel: DEFAULT_MODELS[p] }))
+  }
 
   const save = async () => {
     await window.ipc.invoke(IPC.SETTINGS_SET, settings)
@@ -44,9 +73,81 @@ export default function Settings() {
     toast.success(`${key} ${current === 1 ? 'disabled' : 'enabled'}`)
   }
 
+  const provider = settings.aiProvider ?? 'openai'
+  const models   = MODELS[provider]
+
   return (
     <PageShell title="Settings" subtitle="Configure API keys and app preferences">
       <div className="p-6 max-w-2xl mx-auto space-y-6">
+
+        {/* AI Provider */}
+        <Card>
+          <CardHeader stud><h2 className="text-sm font-bold font-display text-black">AI Provider</h2></CardHeader>
+          <CardContent className="py-5 space-y-4">
+            {/* Provider toggle */}
+            <div className="flex gap-2">
+              {(['openai', 'anthropic'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setProvider(p)}
+                  className={[
+                    'flex-1 py-2 px-4 rounded-lg text-sm font-semibold font-display border transition-all',
+                    provider === p
+                      ? 'bg-[var(--color-accent)] text-[var(--color-accent-text)] border-[var(--color-accent)]'
+                      : 'border-[var(--color-surface-border)] hover:bg-[var(--color-surface-overlay)]',
+                  ].join(' ')}
+                >
+                  {p === 'openai' ? 'OpenAI' : 'Anthropic'}
+                </button>
+              ))}
+            </div>
+
+            {/* Model selector */}
+            <div>
+              <label className="block text-xs font-semibold mb-1.5 text-[var(--color-surface-muted)] uppercase tracking-wide">
+                Model
+              </label>
+              <select
+                value={settings.aiModel ?? DEFAULT_MODELS[provider]}
+                onChange={(e) => setSettings((s) => ({ ...s, aiModel: e.target.value }))}
+                className="w-full rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              >
+                {models.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* OpenAI API key — shown when OpenAI is active */}
+            {provider === 'openai' && (
+              <Input
+                label="OpenAI API Key"
+                type="password"
+                placeholder="sk-..."
+                value={settings.openaiApiKey ?? ''}
+                onChange={(e) => setSettings((s) => ({ ...s, openaiApiKey: e.target.value }))}
+              />
+            )}
+
+            {/* Anthropic API key — shown when Anthropic is active */}
+            {provider === 'anthropic' && (
+              <Input
+                label="Anthropic API Key"
+                type="password"
+                placeholder="sk-ant-..."
+                value={settings.anthropicApiKey ?? ''}
+                onChange={(e) => setSettings((s) => ({ ...s, anthropicApiKey: e.target.value }))}
+              />
+            )}
+
+            <p className="text-xs text-[var(--color-surface-muted)]">
+              {provider === 'openai'
+                ? 'Used for eBay Listing Generator (vision + text). Get a key at platform.openai.com.'
+                : 'Used for eBay Listing Generator (vision + text). Get a key at console.anthropic.com.'}
+            </p>
+          </CardContent>
+        </Card>
+
         {/* AI Sidecar */}
         <Card>
           <CardHeader stud><h2 className="text-sm font-bold font-display text-black">AI Sidecar</h2></CardHeader>
@@ -62,13 +163,6 @@ export default function Settings() {
                 <RefreshCw className="h-3.5 w-3.5" />Restart
               </Button>
             </div>
-            <Input
-              label="OpenAI API Key (for AI features)"
-              type="password"
-              placeholder="sk-..."
-              value={settings.openaiApiKey ?? ''}
-              onChange={(e) => setSettings((s) => ({ ...s, openaiApiKey: e.target.value }))}
-            />
           </CardContent>
         </Card>
 
@@ -83,7 +177,9 @@ export default function Settings() {
               value={settings.rebrickableApiKey ?? ''}
               onChange={(e) => setSettings((s) => ({ ...s, rebrickableApiKey: e.target.value }))}
             />
-            <p className="text-xs text-[var(--color-surface-muted)] mt-2">Get a free key at rebrickable.com/api</p>
+            <p className="text-xs text-[var(--color-surface-muted)] mt-2">
+              Free key at rebrickable.com/api — required for set lookup &amp; image confirmation.
+            </p>
           </CardContent>
         </Card>
 

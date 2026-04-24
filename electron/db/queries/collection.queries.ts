@@ -14,7 +14,7 @@ export interface LegoSet {
   notes: string | null
   is_owned: 0 | 1
   is_wanted: 0 | 1
-  condition: 'new' | 'used' | 'sealed'
+  condition: 'sealed' | 'open_complete' | 'open_incomplete'
   acquired_date: string | null
   acquired_price: number | null
   created_at: string
@@ -34,6 +34,8 @@ export interface Minifigure {
   is_owned: 0 | 1
   is_wanted: 0 | 1
   quantity: number
+  condition: 'new' | 'used' | 'cracked'
+  acquired_price: number | null
   created_at: string
   updated_at: string
 }
@@ -112,18 +114,20 @@ export function upsertMinifigure(data: Omit<Minifigure, 'id' | 'created_at' | 'u
   const db = getDb()
   db.prepare(`
     INSERT INTO minifigures (fig_number, name, character, theme, year, image_url,
-      bricklink_url, notes, is_owned, is_wanted, quantity)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      bricklink_url, notes, is_owned, is_wanted, quantity, condition, acquired_price)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(fig_number) DO UPDATE SET
       name = excluded.name, character = excluded.character, theme = excluded.theme,
       year = excluded.year, image_url = excluded.image_url,
       bricklink_url = excluded.bricklink_url, notes = excluded.notes,
       is_owned = excluded.is_owned, is_wanted = excluded.is_wanted,
-      quantity = excluded.quantity, updated_at = datetime('now')
+      quantity = excluded.quantity, condition = excluded.condition,
+      acquired_price = excluded.acquired_price, updated_at = datetime('now')
   `).run(
     data.fig_number, data.name, data.character, data.theme, data.year,
     data.image_url, data.bricklink_url, data.notes,
-    data.is_owned, data.is_wanted, data.quantity
+    data.is_owned, data.is_wanted, data.quantity,
+    data.condition ?? 'used', data.acquired_price ?? null,
   )
   return db.prepare('SELECT * FROM minifigures WHERE fig_number = ?').get(data.fig_number) as Minifigure
 }

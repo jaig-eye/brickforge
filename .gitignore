@@ -57,3 +57,7 @@ Desktop.ini
 # Electron
 app-update.yml
 dev-app-update.yml
+
+# Compiled artifacts that can leak into src/ from misconfigured tsc runs
+src/**/*.js
+src/**/*.js.map

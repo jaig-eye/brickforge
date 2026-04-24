@@ -1,8 +1,26 @@
 import { app, BrowserWindow } from 'electron'
-import { ChildProcess, spawn } from 'child_process'
+import { ChildProcess, spawn, execSync } from 'child_process'
 import path from 'path'
 import http from 'http'
 import log from './logger'
+
+/** Kill whatever process is holding the given port (handles stale sidecar from previous session). */
+function killPortHolder(port: number): void {
+  try {
+    if (process.platform === 'win32') {
+      const out = execSync(`netstat -ano | findstr :${port} | findstr LISTENING`, { encoding: 'utf8' })
+      const pid = out.trim().split(/\s+/).pop()
+      if (pid && pid !== '0') {
+        execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' })
+        log.info(`[sidecar] Killed stale process PID ${pid} on port ${port}`)
+      }
+    } else {
+      execSync(`lsof -ti :${port} | xargs kill -9 2>/dev/null || true`, { shell: '/bin/sh' })
+    }
+  } catch {
+    // Nothing to kill — that's fine
+  }
+}
 
 const SIDECAR_PORT = parseInt(process.env.BF_SIDECAR_PORT ?? '8741', 10)
 const HEALTH_INTERVAL_MS = 500
@@ -23,7 +41,7 @@ function getSidecarPath(): string {
 
 function getSidecarArgs(): string[] {
   if (app.isPackaged) return []
-  return [path.join(__dirname, '../../sidecar/main.py')]
+  return ['-m', 'sidecar.main']
 }
 
 function pollHealth(): Promise<void> {
@@ -46,12 +64,19 @@ function pollHealth(): Promise<void> {
 
 export async function startSidecar(mainWindow: BrowserWindow): Promise<void> {
   stopping = false
+  // Always kill whatever is holding the port before spawning. On crash-restart
+  // the exited Python process may leave orphaned uvicorn worker processes that
+  // still hold the socket, causing EADDRINUSE (10048 on Windows).
+  killPortHolder(SIDECAR_PORT)
+  // Give Windows time to release the TCP socket before binding again
+  await new Promise((r) => setTimeout(r, 600))
   const bin = getSidecarPath()
   const args = getSidecarArgs()
 
   log.info(`[sidecar] Spawning: ${bin} ${args.join(' ')}`)
 
   sidecarProcess = spawn(bin, args, {
+    cwd: app.isPackaged ? undefined : app.getAppPath(),
     env: {
       ...process.env,
       BF_SIDECAR_PORT: String(SIDECAR_PORT),

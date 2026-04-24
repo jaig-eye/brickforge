@@ -27,16 +27,39 @@ export const IPC = {
   PIECES_LIST:          'bf:pieces:list',
   PIECES_UPSERT:        'bf:pieces:upsert',
 
+  // ── Catalog Browser ──────────────────────────────────────────────────────
+  CATALOG_BROWSE_SETS:    'bf:catalog:browseSets',
+  CATALOG_BROWSE_MINIFIGS:'bf:catalog:browseMinifigs',
+  CATALOG_THEMES:         'bf:catalog:themes',
+  CATALOG_OWNED_NUMS:     'bf:catalog:ownedNums',
+  CATALOG_ADD_SET:        'bf:catalog:addSet',
+  CATALOG_ADD_FIG:        'bf:catalog:addFig',
+  CATALOG_INSPECT_SET:    'bf:catalog:inspectSet',
+
   // ── Value Tracking ───────────────────────────────────────────────────────
-  PRICE_HISTORY_GET:    'bf:price:history',
-  PRICE_FETCH_CURRENT:  'bf:price:fetchCurrent',
-  PRICE_ALERTS_LIST:    'bf:price:alertsList',
-  PRICE_ALERTS_SET:     'bf:price:alertsSet',
+  PRICE_HISTORY_GET:        'bf:price:history',
+  PRICE_FETCH_CURRENT:      'bf:price:fetchCurrent',
+  PRICE_GET_BULK:           'bf:price:getBulk',
+  PRICE_PORTFOLIO_STATS:    'bf:price:portfolioStats',
+  PRICE_REFRESH_COLLECTION: 'bf:price:refreshCollection',
+  PRICE_ALERTS_LIST:        'bf:price:alertsList',
+  PRICE_ALERTS_SET:         'bf:price:alertsSet',
+  PRICE_FETCH_FIG:          'bf:price:fetchFig',
+  PRICE_GET_BULK_FIGS:      'bf:price:getBulkFigs',
+  PRICE_REFRESH_FIGS:       'bf:price:refreshFigs',
 
   // ── AI (proxied to sidecar) ──────────────────────────────────────────────
   AI_PICTURE_LOOKUP:    'bf:ai:pictureLookup',
   AI_PIECE_IDENTIFY:    'bf:ai:pieceIdentify',
   AI_BUILDER_GENERATE:  'bf:ai:builderGenerate',
+
+  // ── eBay Listing Generator ───────────────────────────────────────────────
+  LISTING_IDENTIFY_SET:      'bf:listing:identifySet',
+  LISTING_GENERATE:          'bf:listing:generate',
+  LISTING_HISTORY_LIST:      'bf:listing:historyList',
+  LISTING_HISTORY_DELETE:    'bf:listing:historyDelete',
+  SETS_LOOKUP_REBRICK:       'bf:sets:lookupRebrickable',
+  SETS_MINIFIG_COUNT_REBRICK:'bf:sets:minifigCountRebrickable',
 
   // ── Sidecar lifecycle ────────────────────────────────────────────────────
   SIDECAR_STATUS:       'bf:sidecar:status',
@@ -47,11 +70,16 @@ export const IPC = {
   APP_OPEN_EXTERNAL:    'bf:app:openExternal',
   APP_SHOW_SAVE_DIALOG: 'bf:app:saveDialog',
 
+  // ── Auto-update ──────────────────────────────────────────────────────────
+  UPDATE_INSTALL:       'bf:update:install',
+
   // ── Push events (main → renderer) ───────────────────────────────────────
-  PUSH_SIDECAR_READY:   'bf:push:sidecarReady',
-  PUSH_SIDECAR_DOWN:    'bf:push:sidecarDown',
-  PUSH_PRICE_UPDATED:   'bf:push:priceUpdated',
-  PUSH_AI_PROGRESS:     'bf:push:aiProgress',
+  PUSH_SIDECAR_READY:      'bf:push:sidecarReady',
+  PUSH_SIDECAR_DOWN:       'bf:push:sidecarDown',
+  PUSH_PRICE_UPDATED:      'bf:push:priceUpdated',
+  PUSH_AI_PROGRESS:        'bf:push:aiProgress',
+  PUSH_UPDATE_AVAILABLE:   'bf:push:updateAvailable',
+  PUSH_UPDATE_DOWNLOADED:  'bf:push:updateDownloaded',
 } as const
 
 export type IpcChannel = typeof IPC[keyof typeof IPC]

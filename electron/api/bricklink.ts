@@ -14,12 +14,16 @@ interface BLCredentials {
 }
 
 interface PriceGuide {
-  avg_price: number
-  min_price: number
-  max_price: number
-  qty_avg_price: number
+  avg_price: string | number
+  min_price: string | number
+  max_price: string | number
+  qty_avg_price: string | number
   total_quantity: number
   unit_quantity: number
+}
+
+export function hasBricklinkCredentials(): boolean {
+  return getCredentials() !== null
 }
 
 function getCredentials(): BLCredentials | null {
@@ -81,25 +85,66 @@ function blGet<T>(path: string): Promise<T> {
   })
 }
 
+/** Map app condition strings to BrickLink N/U values. */
+function toBLCondition(condition: string): 'N' | 'U' {
+  return (condition === 'new' || condition === 'sealed') ? 'N' : 'U'
+}
+
+/** BrickLink REST API requires full type names in the URL path, not single-letter codes. */
+const BL_TYPE: Record<'S' | 'M', string> = { S: 'SET', M: 'MINIFIG' }
+
 export interface PriceResult {
   avg_price: number
   min_price: number | null
   max_price: number | null
   sample_count: number | null
+  /** Whether the price came from recently-sold listings or current stock. */
+  source: 'sold' | 'stock'
 }
 
-export async function fetchBricklinkPrice(setNum: string, condition: string): Promise<PriceResult | null> {
+/**
+ * Fetch BrickLink price for a set (itemType='S') or minifig (itemType='M').
+ * Strategy: try guide_type=sold first; if no recent sales (total_quantity=0),
+ * fall back to guide_type=stock and return the lowest current listing price.
+ */
+export async function fetchBricklinkPrice(
+  itemNum: string,
+  condition: string,
+  itemType: 'S' | 'M' = 'S',
+): Promise<PriceResult | null> {
   try {
-    const type = 'S' // set
-    const newUsed = condition === 'new' ? 'N' : 'U'
-    const res = await blGet<{ data: PriceGuide }>(`/items/${type}/${setNum}/price?guide_type=sold&new_or_used=${newUsed}&currency_code=USD`)
-    const d = res.data
-    return {
-      avg_price: parseFloat(d.avg_price as unknown as string),
-      min_price: parseFloat(d.min_price as unknown as string),
-      max_price: parseFloat(d.max_price as unknown as string),
-      sample_count: d.total_quantity,
+    const newUsed = toBLCondition(condition)
+    const blType = BL_TYPE[itemType]
+    const base = `/items/${blType}/${itemNum}/price?new_or_used=${newUsed}&currency_code=USD&region=north_america`
+
+    // 1. Try recently sold
+    const soldRes = await blGet<{ data: PriceGuide }>(`${base}&guide_type=sold`)
+    if (soldRes.data && soldRes.data.total_quantity > 0) {
+      const d = soldRes.data
+      return {
+        avg_price:    parseFloat(d.avg_price as string),
+        min_price:    parseFloat(d.min_price as string),
+        max_price:    parseFloat(d.max_price as string),
+        sample_count: d.total_quantity,
+        source:       'sold',
+      }
     }
+
+    // 2. Fall back to current stock listings — use min_price as the reference value
+    const stockRes = await blGet<{ data: PriceGuide }>(`${base}&guide_type=stock`)
+    if (stockRes.data && stockRes.data.unit_quantity > 0) {
+      const d = stockRes.data
+      const minP = parseFloat(d.min_price as string)
+      return {
+        avg_price:    minP,           // lowest current listing as the reference
+        min_price:    minP,
+        max_price:    parseFloat(d.max_price as string),
+        sample_count: d.unit_quantity,
+        source:       'stock',
+      }
+    }
+
+    return null
   } catch (err) {
     log.warn('[BrickLink] fetchPrice failed:', err)
     return null

@@ -4,6 +4,7 @@ import log from './logger'
 import { startSidecar, stopSidecar } from './sidecar'
 import { runMigrations } from '../db/migrate'
 import { registerAllHandlers } from '../ipc/index'
+import { setupAutoUpdater } from '../ipc/updates.ipc'
 
 const isDev = process.env.NODE_ENV === 'development'
 const PRELOAD_PATH = path.join(__dirname, '../preload/index.js')
@@ -31,7 +32,9 @@ function createWindow(): BrowserWindow {
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+    if (process.env.BF_DEVTOOLS === '1') {
+      mainWindow.webContents.openDevTools()
+    }
   } else {
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))
   }
@@ -57,6 +60,23 @@ function createWindow(): BrowserWindow {
   return mainWindow
 }
 
+// ── Single-instance lock (production only) ───────────────────────────────────
+// In dev, skip the lock so `npm run dev` always spawns a fresh instance with
+// updated handlers instead of focusing the stale running one.
+if (!isDev) {
+  if (!app.requestSingleInstanceLock()) {
+    log.warn('Another instance is already running — quitting')
+    app.quit()
+  }
+
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+}
+
 app.whenReady().then(async () => {
   log.info(`BrickForge ${app.getVersion()} starting…`)
 
@@ -73,7 +93,21 @@ app.whenReady().then(async () => {
   const win = createWindow()
 
   // Register all IPC handlers
-  registerAllHandlers()
+  try {
+    registerAllHandlers()
+    log.info('IPC handlers registered')
+  } catch (err) {
+    log.error('IPC handler registration failed:', err)
+  }
+
+  // Auto-updater (production only — dev builds have no published release to check)
+  if (!isDev) {
+    try {
+      setupAutoUpdater(win)
+    } catch (err) {
+      log.warn('[updater] Setup failed:', err)
+    }
+  }
 
   // Start Python AI sidecar
   startSidecar(win).catch((err) => log.error('Sidecar start error:', err))

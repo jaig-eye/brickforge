@@ -12,10 +12,12 @@ import { IPC } from '@/lib/ipc-types'
 
 const Dashboard       = lazy(() => import('@/pages/Dashboard'))
 const Collection      = lazy(() => import('@/pages/Collection'))
+const Browse          = lazy(() => import('@/pages/Browse'))
 const ValueTracker    = lazy(() => import('@/pages/ValueTracker'))
 const PictureLookup   = lazy(() => import('@/pages/PictureLookup'))
 const PieceIdentifier = lazy(() => import('@/pages/PieceIdentifier'))
 const AIBuilder       = lazy(() => import('@/pages/AIBuilder'))
+const EbayListing     = lazy(() => import('@/pages/EbayListing'))
 const Profile         = lazy(() => import('@/pages/Profile'))
 const Settings        = lazy(() => import('@/pages/Settings'))
 
@@ -85,10 +87,12 @@ export const router = createHashRouter([
     children: [
       { index: true,          element: wrap(Dashboard)       },
       { path: 'collection/*', element: wrap(Collection)      },
+      { path: 'browse',       element: wrap(Browse)          },
       { path: 'value/*',      element: wrap(ValueTracker)    },
       { path: 'lookup/*',     element: wrap(PictureLookup)   },
       { path: 'piece-id/*',   element: wrap(PieceIdentifier) },
       { path: 'builder',      element: wrap(AIBuilder)       },
+      { path: 'listing',      element: wrap(EbayListing)     },
       { path: 'profile',      element: wrap(Profile)         },
       { path: 'settings',     element: wrap(Settings)        },
     ],

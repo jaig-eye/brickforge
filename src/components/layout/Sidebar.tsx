@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, Package, TrendingUp, Camera, Puzzle,
-  Wand2, User, Settings, ChevronLeft, ChevronRight,
+  LayoutDashboard, Package, BookOpen, Camera, Puzzle,
+  Wand2, Tag, User, Settings, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useUiStore } from '@/store/ui.store'
 import { useFeatureFlags } from '@/hooks/useFeatureFlags'
@@ -11,10 +11,11 @@ import { cn } from '@/lib/cn'
 const NAV = [
   { to: '/',           icon: LayoutDashboard, label: 'Dashboard'      },
   { to: '/collection', icon: Package,         label: 'Collection'     },
-  { to: '/value',      icon: TrendingUp,      label: 'Value Tracker'  },
+  { to: '/browse',     icon: BookOpen,        label: 'Browse Catalog' },
   { to: '/lookup',     icon: Camera,          label: 'Picture Lookup' },
   { to: '/piece-id',   icon: Puzzle,          label: 'Piece ID'       },
   { to: '/builder',    icon: Wand2,           label: 'AI Builder'     },
+  { to: '/listing',    icon: Tag,             label: 'eBay Listing'   },
 ] as const
 
 export function Sidebar() {

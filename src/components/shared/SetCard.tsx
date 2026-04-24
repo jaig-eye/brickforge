@@ -1,8 +1,17 @@
-import { Package, CheckCircle2, Heart } from 'lucide-react'
+import { Package, CheckCircle2, Heart, TrendingUp, TrendingDown } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatPieceCount, formatCurrency } from '@/lib/formatters'
 import { cn } from '@/lib/cn'
+
+const CONDITION_BADGE: Record<string, { label: string; variant: 'info' | 'warning' | 'success' }> = {
+  sealed:           { label: 'Sealed',           variant: 'success' },
+  open_complete:    { label: 'Open · Complete',   variant: 'info'    },
+  open_incomplete:  { label: 'Open · Incomplete', variant: 'warning' },
+  // legacy fallbacks
+  new:              { label: 'New/Sealed',        variant: 'success' },
+  used:             { label: 'Open/Used',         variant: 'warning' },
+}
 
 interface SetCardProps {
   set: {
@@ -15,13 +24,21 @@ interface SetCardProps {
     image_url: string | null
     is_owned: 0 | 1
     is_wanted: 0 | 1
-    retail_price_usd: number | null
+    condition?: 'sealed' | 'open_complete' | 'open_incomplete' | 'new' | 'used'
+    acquired_price?: number | null
+    retail_price_usd?: number | null
   }
+  /** Latest BrickLink market price relevant to the set's condition (new or used). */
+  marketPrice?: number | null
   onClick?: () => void
   className?: string
 }
 
-export function SetCard({ set, onClick, className }: SetCardProps) {
+export function SetCard({ set, marketPrice, onClick, className }: SetCardProps) {
+  const condInfo = set.condition ? CONDITION_BADGE[set.condition] : null
+  const paid     = set.acquired_price ?? null
+  const gain     = (paid != null && marketPrice != null) ? marketPrice - paid : null
+
   return (
     <Card
       className={cn('cursor-pointer hover:border-[var(--color-accent)] transition-colors duration-150 group', className)}
@@ -37,20 +54,46 @@ export function SetCard({ set, onClick, className }: SetCardProps) {
           {set.is_wanted === 1 && <Heart className="h-4 w-4 text-red-400 drop-shadow" />}
         </div>
       </div>
+
       <CardContent className="pt-3 pb-3">
         <p className="text-xs font-mono text-[var(--color-accent)] mb-0.5">{set.set_number}</p>
         <p className="text-sm font-semibold font-display leading-tight line-clamp-2">{set.name}</p>
-        <div className="flex items-center justify-between mt-2">
+
+        {/* Year / condition / pieces row */}
+        <div className="flex items-center justify-between mt-2 gap-1 flex-wrap">
           <div className="flex gap-1 flex-wrap">
             {set.year && <Badge variant="outline" className="text-xs">{set.year}</Badge>}
-            {set.theme && <Badge variant="muted" className="text-xs">{set.theme}</Badge>}
+            {condInfo && <Badge variant={condInfo.variant} className="text-xs">{condInfo.label}</Badge>}
           </div>
-          <div className="text-xs text-[var(--color-surface-muted)]">
+          <span className="text-xs text-[var(--color-surface-muted)] shrink-0">
             {set.piece_count ? formatPieceCount(set.piece_count) : ''}
-          </div>
+          </span>
         </div>
-        {set.retail_price_usd && (
-          <p className="text-xs text-[var(--color-surface-muted)] mt-1">{formatCurrency(set.retail_price_usd)}</p>
+
+        {/* Pricing row — only when there's something to show */}
+        {(paid != null || marketPrice != null) && (
+          <div className="mt-2 pt-2 border-t border-[var(--color-surface-border)] flex items-center justify-between gap-2 text-xs">
+            <div className="flex flex-col gap-0.5">
+              {paid != null && (
+                <span className="text-[var(--color-surface-muted)]">Paid {formatCurrency(paid)}</span>
+              )}
+              {marketPrice != null && (
+                <span className="font-semibold">Mkt {formatCurrency(marketPrice)}</span>
+              )}
+            </div>
+            {gain != null && (
+              <div className={cn(
+                'flex items-center gap-0.5 font-bold text-xs shrink-0',
+                gain >= 0 ? 'text-green-400' : 'text-red-400',
+              )}>
+                {gain >= 0
+                  ? <TrendingUp className="h-3 w-3" />
+                  : <TrendingDown className="h-3 w-3" />
+                }
+                {gain >= 0 ? '+' : ''}{formatCurrency(gain)}
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

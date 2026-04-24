@@ -10,7 +10,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from sidecar.routers import health, picture_lookup, piece_id, builder
+from sidecar.routers import health, picture_lookup, piece_id, builder, listing
 from sidecar.config import get_settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s")
@@ -45,6 +45,7 @@ app.include_router(health.router)
 app.include_router(picture_lookup.router, prefix="/api/v1")
 app.include_router(piece_id.router, prefix="/api/v1")
 app.include_router(builder.router, prefix="/api/v1")
+app.include_router(listing.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

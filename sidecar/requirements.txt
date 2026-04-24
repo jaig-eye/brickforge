@@ -13,8 +13,9 @@ aiofiles>=24.1.0
 Pillow>=11.0.0
 opencv-python-headless>=4.10.0
 
-# AI — Vision (choose one or both)
+# AI — Vision + generation
 openai>=1.50.0           # GPT-4o Vision (API key required)
+anthropic>=0.40.0        # Claude Vision + text (Haiku for ID, Sonnet for listing)
 # torch>=2.5.0           # Uncomment for local PyTorch models
 # torchvision>=0.20.0
 # transformers>=4.46.0   # CLIP / ViT local inference

@@ -4,21 +4,26 @@ import fs from 'fs'
 import { IPC } from '../../src/lib/ipc-types'
 import { getAllFlags, setFlag } from '../db/queries/flags.queries'
 
-const SETTINGS_PATH = path.join(app.getPath('userData'), 'settings.json')
+function getSettingsPath(): string {
+  return path.join(app.getPath('userData'), 'settings.json')
+}
 
 interface AppSettings {
   sidecarPort: number
+  aiProvider?: 'openai' | 'anthropic'
+  aiModel?: string
   rebrickableApiKey?: string
   bricklinkConsumerKey?: string
   bricklinkConsumerSecret?: string
   bricklinkToken?: string
   bricklinkTokenSecret?: string
   openaiApiKey?: string
+  anthropicApiKey?: string
 }
 
 function readSettings(): AppSettings {
   try {
-    const raw = fs.readFileSync(SETTINGS_PATH, 'utf8')
+    const raw = fs.readFileSync(getSettingsPath(), 'utf8')
     return JSON.parse(raw)
   } catch {
     return { sidecarPort: 8741 }
@@ -26,7 +31,7 @@ function readSettings(): AppSettings {
 }
 
 function writeSettings(settings: AppSettings): void {
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), 'utf8')
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8')
 }
 
 export function registerSettingsHandlers(): void {

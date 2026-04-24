@@ -49,9 +49,49 @@ export interface RebrickableSet {
   last_modified_dt: string
 }
 
+export interface RebrickableMinifig {
+  id: number
+  set_num: string
+  set_name: string
+  quantity: number
+  set_img_url: string
+}
+
+export interface RebrickableMinifigCatalog {
+  set_num: string   // fig_number, e.g. "sw0001"
+  name: string
+  num_parts: number
+  set_img_url: string
+}
+
+export interface RebrickableTheme {
+  id: number
+  parent_id: number | null
+  name: string
+}
+
+export interface BrowseOpts {
+  search?: string
+  theme_id?: number | null
+  page?: number
+  page_size?: number
+  ordering?: string
+}
+
 interface RebrickableListResponse<T> {
   count: number
   results: T[]
+}
+
+/** Look up a single set by number without saving to the database. */
+export async function lookupRebrickableSet(setNum: string): Promise<RebrickableSet | null> {
+  const normalised = setNum.includes('-') ? setNum : `${setNum}-1`
+  try {
+    return await get<RebrickableSet>(`/sets/${normalised}/`)
+  } catch (err) {
+    log.error('[Rebrickable] lookup failed:', err)
+    return null
+  }
 }
 
 export async function searchRebrickableSets(query: string): Promise<RebrickableSet[]> {
@@ -65,6 +105,81 @@ export async function searchRebrickableSets(query: string): Promise<RebrickableS
   } catch (err) {
     log.error('[Rebrickable] search failed:', err)
     return []
+  }
+}
+
+/** Get the total minifigure count for a set (sum of quantities across all minifigs). */
+export async function getSetMinifigCount(setNum: string): Promise<number> {
+  const normalised = setNum.includes('-') ? setNum : `${setNum}-1`
+  try {
+    const res = await get<RebrickableListResponse<RebrickableMinifig>>(`/sets/${normalised}/minifigs/`, { page_size: '100' })
+    return res.results.reduce((sum, fig) => sum + fig.quantity, 0)
+  } catch (err) {
+    log.error('[Rebrickable] getSetMinifigCount failed:', err)
+    return 0
+  }
+}
+
+export async function browseRebrickableSets(opts: BrowseOpts = {}): Promise<{ count: number; results: RebrickableSet[] }> {
+  try {
+    const params: Record<string, string> = {
+      page: String(opts.page ?? 1),
+      page_size: String(opts.page_size ?? 24),
+      ordering: opts.ordering ?? '-year',
+    }
+    if (opts.search?.trim()) params.search = opts.search.trim()
+    if (opts.theme_id) params.theme_id = String(opts.theme_id)
+    const res = await get<RebrickableListResponse<RebrickableSet>>('/sets/', params)
+    return { count: res.count, results: res.results }
+  } catch (err) {
+    log.error('[Rebrickable] browseRebrickableSets failed:', err)
+    return { count: 0, results: [] }
+  }
+}
+
+export async function browseRebrickableMinifigs(opts: BrowseOpts = {}): Promise<{ count: number; results: RebrickableMinifigCatalog[] }> {
+  try {
+    const params: Record<string, string> = {
+      page: String(opts.page ?? 1),
+      page_size: String(opts.page_size ?? 24),
+      ordering: opts.ordering ?? 'name',
+    }
+    if (opts.search?.trim()) params.search = opts.search.trim()
+    if (opts.theme_id) params.in_theme_id = String(opts.theme_id)
+    const res = await get<RebrickableListResponse<RebrickableMinifigCatalog>>('/minifigs/', params)
+    return { count: res.count, results: res.results }
+  } catch (err) {
+    log.error('[Rebrickable] browseRebrickableMinifigs failed:', err)
+    return { count: 0, results: [] }
+  }
+}
+
+export async function getThemes(): Promise<RebrickableTheme[]> {
+  try {
+    const res = await get<RebrickableListResponse<RebrickableTheme>>('/themes/', { page_size: '1000' })
+    return res.results.sort((a, b) => a.name.localeCompare(b.name))
+  } catch (err) {
+    log.error('[Rebrickable] getThemes failed:', err)
+    return []
+  }
+}
+
+export interface SetDetailResult {
+  set: RebrickableSet
+  minifigs: { set_num: string; set_name: string; quantity: number; set_img_url: string }[]
+}
+
+export async function inspectRebrickableSet(setNum: string): Promise<SetDetailResult | null> {
+  const normalised = setNum.includes('-') ? setNum : `${setNum}-1`
+  try {
+    const [set, figRes] = await Promise.all([
+      get<RebrickableSet>(`/sets/${normalised}/`),
+      get<RebrickableListResponse<RebrickableMinifig>>(`/sets/${normalised}/minifigs/`, { page_size: '100' }),
+    ])
+    return { set, minifigs: figRes.results }
+  } catch (err) {
+    log.error('[Rebrickable] inspectRebrickableSet failed:', err)
+    return null
   }
 }
 
@@ -84,7 +199,7 @@ export async function importRebrickableSet(setNum: string): Promise<LegoSet | nu
       notes: null,
       is_owned: 0,
       is_wanted: 0,
-      condition: 'new',
+      condition: 'sealed',
       acquired_date: null,
       acquired_price: null,
     })
