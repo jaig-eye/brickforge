@@ -22,7 +22,7 @@
     "build:renderer": "vite build",
     "build:electron": "tsc -p tsconfig.node.json && node scripts/copy-assets.js",
     "package": "npm run build && electron-builder",
-    "package:win": "npm run build && node scripts/prep-codesign-cache.js && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
+    "package:win": "npm run build && node scripts/prep-codesign-cache.js && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --config electron-builder.config.js",
     "package:win:portable": "npm run build && node scripts/prep-codesign-cache.js && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win dir",
     "package:mac": "npm run build && electron-builder --mac",
     "package:linux": "npm run build && electron-builder --linux",

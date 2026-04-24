@@ -7,8 +7,6 @@ import { Topbar } from '@/components/layout/Topbar'
 import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { useProfileStore } from '@/store/profile.store'
-import { useUiStore } from '@/store/ui.store'
-import { IPC } from '@/lib/ipc-types'
 
 const Dashboard       = lazy(() => import('@/pages/Dashboard'))
 const Collection      = lazy(() => import('@/pages/Collection'))
@@ -39,17 +37,9 @@ function wrap(Component: React.ComponentType) {
 
 function AppLayout() {
   const { fetch: fetchProfile } = useProfileStore()
-  const { setSidecarReady } = useUiStore()
 
   useEffect(() => {
     fetchProfile()
-    const offReady = window.ipc.on(IPC.PUSH_SIDECAR_READY, (data) => {
-      setSidecarReady(true, (data as { port: number }).port)
-    })
-    const offDown = window.ipc.on(IPC.PUSH_SIDECAR_DOWN, () => {
-      setSidecarReady(false)
-    })
-    return () => { offReady(); offDown() }
   }, [])
 
   const location = useLocation()

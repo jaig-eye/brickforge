@@ -48,7 +48,7 @@ export const IPC = {
   PRICE_GET_BULK_FIGS:      'bf:price:getBulkFigs',
   PRICE_REFRESH_FIGS:       'bf:price:refreshFigs',
 
-  // ── AI (proxied to sidecar) ──────────────────────────────────────────────
+  // ── AI (direct Node.js calls — no sidecar) ──────────────────────────────
   AI_PICTURE_LOOKUP:    'bf:ai:pictureLookup',
   AI_PIECE_IDENTIFY:    'bf:ai:pieceIdentify',
   AI_BUILDER_GENERATE:  'bf:ai:builderGenerate',
@@ -61,10 +61,6 @@ export const IPC = {
   SETS_LOOKUP_REBRICK:       'bf:sets:lookupRebrickable',
   SETS_MINIFIG_COUNT_REBRICK:'bf:sets:minifigCountRebrickable',
 
-  // ── Sidecar lifecycle ────────────────────────────────────────────────────
-  SIDECAR_STATUS:       'bf:sidecar:status',
-  SIDECAR_RESTART:      'bf:sidecar:restart',
-
   // ── App ──────────────────────────────────────────────────────────────────
   APP_VERSION:          'bf:app:version',
   APP_OPEN_EXTERNAL:    'bf:app:openExternal',
@@ -74,8 +70,6 @@ export const IPC = {
   UPDATE_INSTALL:       'bf:update:install',
 
   // ── Push events (main → renderer) ───────────────────────────────────────
-  PUSH_SIDECAR_READY:      'bf:push:sidecarReady',
-  PUSH_SIDECAR_DOWN:       'bf:push:sidecarDown',
   PUSH_PRICE_UPDATED:      'bf:push:priceUpdated',
   PUSH_AI_PROGRESS:        'bf:push:aiProgress',
   PUSH_UPDATE_AVAILABLE:   'bf:push:updateAvailable',

@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { ChildProcess, spawn, execSync } from 'child_process'
 import path from 'path'
+import fs from 'fs'
 import http from 'http'
 import log from './logger'
 
@@ -64,13 +65,23 @@ function pollHealth(): Promise<void> {
 
 export async function startSidecar(mainWindow: BrowserWindow): Promise<void> {
   stopping = false
+
+  const bin = getSidecarPath()
+
+  // In production, skip silently if the sidecar binary wasn't bundled.
+  if (app.isPackaged && !fs.existsSync(bin)) {
+    log.warn('[sidecar] Binary not found — AI features disabled:', bin)
+    mainWindow.webContents.send('bf:push:sidecarDown')
+    return
+  }
+
   // Always kill whatever is holding the port before spawning. On crash-restart
   // the exited Python process may leave orphaned uvicorn worker processes that
   // still hold the socket, causing EADDRINUSE (10048 on Windows).
   killPortHolder(SIDECAR_PORT)
   // Give Windows time to release the TCP socket before binding again
   await new Promise((r) => setTimeout(r, 600))
-  const bin = getSidecarPath()
+
   const args = getSidecarArgs()
 
   log.info(`[sidecar] Spawning: ${bin} ${args.join(' ')}`)
@@ -83,6 +94,12 @@ export async function startSidecar(mainWindow: BrowserWindow): Promise<void> {
       BF_ENV: process.env.NODE_ENV ?? 'production',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
+  })
+
+  // Catch spawn errors (e.g. binary missing at runtime) without crashing the app.
+  sidecarProcess.on('error', (err) => {
+    log.error('[sidecar] Spawn error:', err)
+    mainWindow.webContents.send('bf:push:sidecarDown')
   })
 
   sidecarProcess.stdout?.on('data', (d) => log.debug('[sidecar]', d.toString().trim()))

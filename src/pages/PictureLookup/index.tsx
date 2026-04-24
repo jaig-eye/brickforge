@@ -96,11 +96,11 @@ export default function PictureLookup() {
                 <pre className="text-xs font-mono bg-[var(--color-surface-overlay)] rounded-lg p-3 overflow-auto max-h-48">
                   {JSON.stringify(result, null, 2)}
                 </pre>
-                {result.bricklink_url && (
+                {!!(result as Record<string, unknown>).bricklink_url && (
                   <Button
                     variant="outline"
                     className="mt-3"
-                    onClick={() => window.ipc.invoke(IPC.APP_OPEN_EXTERNAL, result.bricklink_url as string)}
+                    onClick={() => window.ipc.invoke(IPC.APP_OPEN_EXTERNAL, (result as Record<string, unknown>).bricklink_url as string)}
                   >
                     View on BrickLink
                   </Button>

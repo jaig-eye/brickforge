@@ -13,8 +13,8 @@ module.exports = {
   },
 
   files: [
-    // Vite renderer build
-    'dist/**/*',
+    // Vite renderer build (separate from electron-builder output dir)
+    'renderer/**/*',
     // Compiled Electron main process (tsc rootDir="." → dist-electron/electron/...)
     'dist-electron/electron/**/*',
     // Shared src types compiled by tsconfig.node.json
@@ -45,6 +45,7 @@ module.exports = {
   },
   nsis: {
     oneClick: false,
+    perMachine: true,
     allowToChangeInstallationDirectory: true,
     shortcutName: 'BrickForge',
     createDesktopShortcut: 'always',

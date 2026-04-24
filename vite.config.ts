@@ -15,7 +15,7 @@ export default defineConfig(async () => {
       },
     },
     build: {
-      outDir: 'dist',
+      outDir: 'renderer',
       emptyOutDir: true,
       rollupOptions: {
         input: { main: path.resolve(__dirname, 'index.html') },

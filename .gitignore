@@ -1,6 +1,7 @@
 # Build outputs
 dist/
 dist-electron/
+renderer/
 out/
 release/
 

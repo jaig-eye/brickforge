@@ -1,7 +1,6 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import path from 'path'
 import log from './logger'
-import { startSidecar, stopSidecar } from './sidecar'
 import { runMigrations } from '../db/migrate'
 import { registerAllHandlers } from '../ipc/index'
 import { setupAutoUpdater } from '../ipc/updates.ipc'
@@ -36,7 +35,7 @@ function createWindow(): BrowserWindow {
       mainWindow.webContents.openDevTools()
     }
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../../../renderer/index.html'))
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -109,9 +108,6 @@ app.whenReady().then(async () => {
     }
   }
 
-  // Start Python AI sidecar
-  startSidecar(win).catch((err) => log.error('Sidecar start error:', err))
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -119,10 +115,6 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
-})
-
-app.on('before-quit', () => {
-  stopSidecar()
 })
 
 // Security: prevent new window creation except via shell.openExternal
