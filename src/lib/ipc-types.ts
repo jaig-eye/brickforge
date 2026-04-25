@@ -22,6 +22,7 @@ export const IPC = {
   FIGS_GET:             'bf:figs:get',
   FIGS_UPSERT:          'bf:figs:upsert',
   FIGS_DELETE:          'bf:figs:delete',
+  FIGS_SET_BRICKLINK_ID:'bf:figs:setBricklinkId',
 
   // ── Collection — Pieces ──────────────────────────────────────────────────
   PIECES_LIST:          'bf:pieces:list',

@@ -50,6 +50,7 @@ interface LegoSetDetail {
 interface MinifigDetail {
   id: number; fig_number: string; name: string; character: string | null
   theme: string | null; image_url: string | null; bricklink_url: string | null
+  bricklink_id: string | null
   is_owned: 0 | 1; is_wanted: 0 | 1; quantity: number
   condition: 'new' | 'used' | 'cracked'; acquired_price: number | null
 }
@@ -211,6 +212,16 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [blId, setBlId] = useState(fig?.bricklink_id ?? '')
+
+  useEffect(() => { setBlId(fig?.bricklink_id ?? '') }, [fig])
+
+  const saveBricklinkId = async () => {
+    if (!fig) return
+    const trimmed = blId.trim()
+    await window.ipc.invoke(IPC.FIGS_SET_BRICKLINK_ID, fig.fig_number, trimmed)
+    toast.success(trimmed ? `BrickLink ID saved: ${trimmed}` : 'BrickLink ID cleared')
+  }
 
   const handleDelete = async () => {
     if (!fig) return
@@ -273,12 +284,32 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
                 </div>
               </div>
             )}
-            <div className="pt-1">
+            <div className="pt-1 space-y-2">
               <a href={blUrl} target="_blank" rel="noreferrer"
                 className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-current border border-[var(--color-surface-border)] rounded-lg px-2.5 py-1.5 transition-colors w-fit"
                 onClick={(e) => { e.preventDefault(); window.ipc.invoke('bf:app:openExternal', blUrl) }}>
                 <ExternalLink className="h-3.5 w-3.5" />BrickLink
               </a>
+              <div>
+                <label className="block text-xs font-semibold mb-1 text-[var(--color-surface-muted)] uppercase tracking-wide">
+                  BrickLink ID
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={blId}
+                    onChange={(e) => setBlId(e.target.value)}
+                    placeholder="e.g. sw0001"
+                    className="flex-1 rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                  <Button variant="outline" onClick={saveBricklinkId} className="shrink-0 text-xs">
+                    Save
+                  </Button>
+                </div>
+                <p className="text-xs text-[var(--color-surface-muted)] mt-1">
+                  Used for price lookups. Find it at bricklink.com.
+                </p>
+              </div>
             </div>
           </div>
         </div>

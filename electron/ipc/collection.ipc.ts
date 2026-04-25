@@ -2,13 +2,13 @@ import { ipcMain } from 'electron'
 import { IPC } from '../../src/lib/ipc-types'
 import {
   listSets, getSet, upsertSet, deleteSet,
-  listMinifigures, upsertMinifigure, deleteMinifigure,
+  listMinifigures, upsertMinifigure, deleteMinifigure, setMinifigBricklinkId,
   type SetFilter,
 } from '../db/queries/collection.queries'
 import {
   searchRebrickableSets, importRebrickableSet, lookupRebrickableSet, getSetMinifigCount,
   browseRebrickableSets, browseRebrickableMinifigs, getThemes,
-  inspectRebrickableSet, fetchMinifigBricklinkId,
+  inspectRebrickableSet,
   type BrowseOpts,
 } from '../api/rebrickable'
 
@@ -29,6 +29,9 @@ export function registerCollectionHandlers(): void {
   })
   ipcMain.handle(IPC.FIGS_UPSERT, (_e, data) => upsertMinifigure(data))
   ipcMain.handle(IPC.FIGS_DELETE, (_e, id: number) => deleteMinifigure(id))
+  ipcMain.handle(IPC.FIGS_SET_BRICKLINK_ID, (_e, figNumber: string, bricklinkId: string) =>
+    setMinifigBricklinkId(figNumber, bricklinkId)
+  )
 
   // ── Catalog Browser ────────────────────────────────────────────────────────
   ipcMain.handle(IPC.CATALOG_BROWSE_SETS,    (_e, opts: BrowseOpts) => browseRebrickableSets(opts))
@@ -64,34 +67,25 @@ export function registerCollectionHandlers(): void {
 
   ipcMain.handle(IPC.CATALOG_INSPECT_SET, (_e, setNum: string) => inspectRebrickableSet(setNum))
 
-  ipcMain.handle(IPC.CATALOG_ADD_FIG, async (_e, data: {
+  ipcMain.handle(IPC.CATALOG_ADD_FIG, (_e, data: {
     set_num: string; name: string; set_img_url: string
     is_owned: 0 | 1; is_wanted: 0 | 1
     condition?: 'new' | 'used' | 'cracked'
     acquired_price?: number | null
-  }) => {
-    // For Rebrickable-only fig IDs, resolve the BrickLink equivalent up front so pricing works later
-    let bricklinkId: string | null = null
-    if (data.set_num.startsWith('fig-')) {
-      bricklinkId = await fetchMinifigBricklinkId(data.set_num)
-    }
-    return upsertMinifigure({
-      fig_number: data.set_num,
-      name: data.name,
-      character: null,
-      theme: null,
-      year: null,
-      image_url: data.set_img_url,
-      bricklink_url: bricklinkId
-        ? `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${bricklinkId}`
-        : `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${data.set_num}`,
-      bricklink_id: bricklinkId,
-      notes: null,
-      is_owned: data.is_owned,
-      is_wanted: data.is_wanted,
-      quantity: 1,
-      condition: data.condition ?? 'used',
-      acquired_price: data.acquired_price ?? null,
-    })
-  })
+  }) => upsertMinifigure({
+    fig_number: data.set_num,
+    name: data.name,
+    character: null,
+    theme: null,
+    year: null,
+    image_url: data.set_img_url,
+    bricklink_url: `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${data.set_num}`,
+    bricklink_id: null,
+    notes: null,
+    is_owned: data.is_owned,
+    is_wanted: data.is_wanted,
+    quantity: 1,
+    condition: data.condition ?? 'used',
+    acquired_price: data.acquired_price ?? null,
+  }))
 }

@@ -97,14 +97,16 @@ export function registerPricingHandlers(): void {
   // ── Minifig pricing ──────────────────────────────────────────────────────────────────
 
   /** Fetch fresh BrickLink price for a single minifig. */
-  ipcMain.handle(IPC.PRICE_FETCH_FIG, async (_e, figNum: string, condition: string) => {
-    if (figNum.startsWith('fig-')) return null  // Rebrickable-only ID — no BrickLink equivalent exists
+  ipcMain.handle(IPC.PRICE_FETCH_FIG, async (_e, figNum: string, condition: string, bricklinkId?: string | null) => {
+    const lookupId = bricklinkId?.trim() || figNum
+    if (lookupId.startsWith('fig-')) return null  // no BrickLink ID available
+    if (!hasBricklinkCredentials()) throw new Error('BrickLink credentials not configured — add them in Settings')
     const norm = normFigCondition(condition)
-    const result = await fetchBricklinkPrice(figNum, norm, 'M')
+    const result = await fetchBricklinkPrice(lookupId, norm, 'M')
     if (result) {
       insertPricePoint({
         entity_type: 'minifig',
-        entity_id: figNum,
+        entity_id: figNum,   // store under Rebrickable ID so history lookup still works
         source: result.source,
         condition: norm,
         avg_price: result.avg_price,
@@ -129,14 +131,15 @@ export function registerPricingHandlers(): void {
     let refreshed = 0
     const errors: string[] = []
     for (const f of figs) {
-      if (f.fig_number.startsWith('fig-')) continue  // Rebrickable-only ID — no BrickLink equivalent exists
+      const lookupId = f.bricklink_id?.trim() || f.fig_number
+      if (lookupId.startsWith('fig-')) continue  // no BrickLink ID set — skip
       const norm = normFigCondition(f.condition)
       try {
-        const result = await fetchBricklinkPrice(f.fig_number, norm, 'M')
+        const result = await fetchBricklinkPrice(lookupId, norm, 'M')
         if (result) {
           insertPricePoint({
             entity_type: 'minifig',
-            entity_id: f.fig_number,
+            entity_id: f.fig_number,   // store under Rebrickable ID
             source: result.source,
             condition: norm,
             avg_price: result.avg_price,
