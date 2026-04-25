@@ -28,6 +28,11 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: npm run build && npx electron-builder --win --publish always --config electron-builder.config.js
 
+      - name: Upload app.asar to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.ref_name }} release/win-unpacked/resources/app.asar --clobber
+
   release-mac:
     runs-on: macos-latest
     steps:
