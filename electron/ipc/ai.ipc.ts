@@ -100,72 +100,102 @@ function extractText(result: unknown, provider: string): string {
 // ── Prompts ────────────────────────────────────────────────────────────────────
 
 function buildIdentifyPrompt(themeHint = '', contextHint = ''): string {
-  const hints: string[] = []
-  if (themeHint)   hints.push(`Theme: '${themeHint}'`)
-  if (contextHint) hints.push(`Additional context from seller: "${contextHint}"`)
-  const themeLine = hints.length
-    ? `Seller hints — use these to narrow your search:\n${hints.map(h => `  • ${h}`).join('\n')}\n\n`
+  const contextBlock = contextHint
+    ? `⚠️  SELLER-PROVIDED CONTEXT — THIS IS AUTHORITATIVE:
+"${contextHint}"
+Your identification MUST be consistent with every word above. If the seller names a specific scene, location, vehicle, or event (e.g. "Mos Espa pod race", "trench run", "Eiffel Tower", "Technic truck"), the set you return MUST match those exact terms. Do NOT return a visually similar set that doesn't match the context. If you cannot find a perfect match, lower your confidence rather than ignoring the context.
+
+`
     : ''
+  const themeBlock = themeHint
+    ? `Theme filter: '${themeHint}' — restrict your search to sets within this theme.\n\n`
+    : ''
+
   return `You are a world-class LEGO expert and set identifier. Carefully examine the image.
 
-Your goal is to identify the specific LEGO set shown. Analyse these clues in priority order:
+${contextBlock}${themeBlock}Analyse clues in this priority order:
 
-1. MINIFIGURES (highest confidence signal)
-   - Name every minifigure you can see — their outfit, helmet, face print, accessories
-   - Exclusive or rare minifigures appear in only one or very few sets — if you spot one, confidence should be HIGH (0.85+)
-   - List which minifigures you identified in the notes field
+1. SELLER CONTEXT (if provided above — authoritative, must match)
+   - Every named scene, location, character, or vehicle must appear in the set's official name or description
+   - Example: "pod race" → only Podrace sets qualify; "Mos Espa" → only Mos Espa sets qualify
+   - A visually similar set that contradicts the seller context is WRONG — lower confidence instead
 
 2. SET NUMBER
-   - Printed on the box, instruction booklet cover, or stickers visible in the image
+   - Printed on the box, instruction booklet cover, or visible stickers — highest certainty if readable
 
-3. DISTINCTIVE BUILD FEATURES
-   - Unique shapes, colour schemes, or structural elements specific to one set
+3. MINIFIGURES (strong signal for named sets)
+   - Name every minifigure — outfit, helmet, face print, accessories
+   - Exclusive or rare minifigures narrow it to one or very few sets → confidence 0.85+
 
-4. TEXT / BRANDING
-   - Any text, logos, ship names, location names visible in the image
+4. SET FORMAT — distinguish carefully between these types:
+   - DIORAMA: flat scene display base, captures one specific moment/location (e.g. "Mos Espa Podrace Diorama" ≠ "Death Star Trench Run Diorama" — they depict different scenes)
+   - UCS / ULTIMATE COLLECTOR SERIES: large adult-display model, single vehicle, $200–$800+
+   - MIDSCALE: medium-size vehicle, NOT the flagship UCS version of the same ship
+   - VEHICLE COLLECTION / PACK: multiple small vehicles in one box
+   - PLAYSET: functional environment with characters and play features
+   - Never conflate two different dioramas, or a midscale with a UCS, or a collection pack with a large single set
+
+5. DISTINCTIVE BUILD FEATURES
+   - Unique shapes, colour schemes, structural elements specific to one set
+
+6. TEXT / BRANDING
+   - Any visible text, logos, ship names, location names
 
 IMPORTANT: Always provide your best guess. Do NOT return empty fields unless the image contains no LEGO content whatsoever.
 
-${themeLine}Return ONLY a valid JSON object — no markdown, no extra text:
-{"set_number": "75192", "set_name": "Millennium Falcon", "confidence": 0.85, "notes": "Identified Han Solo and Chewbacca minifigures"}
+Return ONLY a valid JSON object — no markdown, no extra text:
+{"set_number": "75380", "set_name": "Mos Espa Podrace Diorama", "confidence": 0.92, "notes": "Podrace scene, sandy desert base, Anakin's pod visible — matches seller context 'Mos Espa pod race'"}
 
 set_number: official LEGO set number, digits only, no -1 suffix.
 set_name: full official name.
 confidence: 0.0–1.0.
-notes: list which minifigures you spotted and other specific visual clues used.`
+notes: list every specific clue used — minifigures spotted, text seen, format identified, and whether seller context was matched or not.`
 }
 
 function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<string, unknown>): string {
-  const completeness    = (prefs.completeness as string) ?? 'complete'
-  const hasManual       = prefs.includes_instructions !== false
-  const hasFigs         = prefs.includes_figures !== false
-  const smokeFree       = !!prefs.smoke_free_home
-  const cleanSet        = !!prefs.clean_set
+  const completeness  = (prefs.completeness as string) ?? 'complete'
+  const hasManual     = prefs.includes_instructions !== false
+  const hasFigs       = prefs.includes_figures !== false
+  const smokeFree     = !!prefs.smoke_free_home
+  const cleanSet      = !!prefs.clean_set
 
-  const condToken    = completeness === 'complete' ? 'Complete' : completeness === 'partial' ? '99% Complete' : 'Incomplete'
+  const condToken     = completeness === 'complete' ? 'Complete' : completeness === 'partial' ? '99% Complete' : 'Incomplete'
   const conditionDesc =
-    completeness === 'complete'   ? 'Complete — all pieces present and verified' :
-    completeness === 'partial'    ? '99% Complete — may be missing a very small number of minor pieces' :
-                                    'Incomplete — some pieces are missing'
+    completeness === 'complete' ? 'Complete — all pieces present and verified' :
+    completeness === 'partial'  ? '99% Complete — may be missing a small number of minor pieces' :
+                                  'Incomplete — some pieces are missing'
+
+  const minifigs  = (setData.num_minifigures ?? setData.minifig_count ?? 0) as number
+  const pieces    = setData.piece_count ?? setData.num_parts ?? ''
+  const year      = setData.year ?? ''
+  const theme     = setData.theme ?? ''
+  const name      = setData.name ?? ''
+  const setNo     = setData.set_number ?? ''
+
+  // Minifig handling: 3 distinct cases
+  // Case 1: set has no minifigs (minifigs === 0) — omit from listing entirely
+  // Case 2: set has minifigs AND seller is including them
+  // Case 3: set has minifigs BUT seller is NOT including them
+  const setHasFigs = minifigs > 0
+  const figAttr = !setHasFigs ? null : hasFigs ? `All ${minifigs} minifigure${minifigs !== 1 ? 's' : ''} included` : `Minifigures NOT included (sold separately)`
+  const figNote = !setHasFigs ? '' : hasFigs ? '' : '\nIMPORTANT: This set normally includes minifigures but the seller is NOT including them. Make this clearly visible in the description.'
 
   const attrs: string[] = []
   if (smokeFree) attrs.push('From a smoke-free home')
   if (cleanSet)  attrs.push('Clean, well-maintained set')
   attrs.push(hasManual ? 'Includes original instruction manual' : 'No instruction manual included')
-  attrs.push(hasFigs   ? 'All minifigures included'            : 'Minifigures NOT included')
-
-  const minifigs   = (setData.num_minifigures ?? setData.minifig_count ?? 0) as number
-  const pieces     = setData.piece_count ?? setData.num_parts ?? ''
-  const year       = setData.year ?? ''
-  const theme      = setData.theme ?? ''
-  const name       = setData.name ?? ''
-  const setNo      = setData.set_number ?? ''
+  if (figAttr) attrs.push(figAttr)
 
   const manualToken = hasManual ? 'w/ Manual' : 'No Manual'
-  const figsToken   = hasFigs ? (minifigs ? `w/ ${minifigs} Minifigs` : 'w/ Figs') : 'No Figs'
+  const figsToken   = !setHasFigs ? '' : hasFigs ? `w/ ${minifigs} Minifig${minifigs !== 1 ? 's' : ''}` : 'No Figs'
   const extraTokens = [cleanSet ? 'Clean' : '', smokeFree ? 'Smoke-Free' : ''].filter(Boolean).join(' ')
 
-  return `You are an expert eBay seller specialising in LEGO sets. Generate a keyword-optimised eBay listing for the set below.
+  // Build minifigs table row only when set actually has figs
+  const figTableRow = setHasFigs
+    ? `\n      - Minifigures row: "${hasFigs ? `${minifigs} included` : 'NOT included — sold separately'}"`
+    : `\n      - Minifigures: OMIT THIS ROW ENTIRELY — this set has no minifigures`
+
+  return `You are an expert eBay seller specialising in LEGO sets. Generate a premium keyword-optimised eBay listing.
 
 SET DETAILS
 Set Number : ${setNo}
@@ -173,28 +203,42 @@ Name       : ${name}
 Year       : ${year}
 Theme      : ${theme || 'LEGO'}
 Pieces     : ${pieces}
-Minifigs   : ${minifigs || 'Unknown'}
+Minifigs   : ${minifigs > 0 ? minifigs : 'None — this set does not include minifigures'}
 
 SELLER ATTRIBUTES
 ${attrs.map(a => `• ${a}`).join('\n')}
 Condition  : ${conditionDesc}
-
+${figNote}
 OUTPUT FORMAT — return ONLY a JSON object with exactly TWO keys: "title" and "description".
 
 "title" — eBay title rules:
-  • HARD LIMIT: 80 characters. NEVER exceed this. eBay rejects longer titles.
-  • Goal: pack as close to 80 as possible. Count every character before finalising.
+  • HARD LIMIT: 80 characters. NEVER exceed this.
   • Pack keywords in this priority order:
-      1. LEGO  2. Theme: ${theme}  3. Set number: ${setNo}  4. Set name: ${name}
-      5. Year: ${year}  6. Piece count: ${pieces}pcs  7. Condition: ${condToken}
-      8. Manual: ${manualToken}  9. Figures: ${figsToken}  10. Extras: ${extraTokens || '(none)'}
+      1. LEGO  2. Theme: ${theme}  3. Set#: ${setNo}  4. Name: ${name}
+      5. Year: ${year}  6. ${pieces}pcs  7. ${condToken}  8. ${manualToken}${figsToken ? `  9. ${figsToken}` : ''}${extraTokens ? `  10. ${extraTokens}` : ''}
   • Abbreviations: "pcs", "w/", "&", drop articles.
-  • Example (74 chars): "LEGO Star Wars 75154 TIE Striker 2016 543pcs Complete w/ Manual & Figs"
 
-"description" — Full eBay description in clean HTML. No shipping/payment info. Structure:
-  <h2>About This Set</h2> — 2–3 sentences of enthusiastic retail-style copy
-  <h2>Set Details</h2> — HTML table: Set Number | Name | Year | Theme | Piece Count | Minifigures | Condition
-  <h2>What's Included</h2> — <ul> of seller attribute bullets
+"description" — Rich eBay HTML listing with full inline CSS. Dark theme, gold accents. Structure:
+
+  WRAPPER: <div style="font-family:Arial,Helvetica,sans-serif;max-width:680px;margin:0 auto;background:#0d0d0d;border-radius:8px;overflow:hidden;border:2px solid #FFD700;">
+
+  HEADER BANNER: gold gradient background (#FFD700 → #FFA500), black text. Show: "Official LEGO® Set" label (uppercase, small), set name (large bold), set# • year • pieces on one line below.
+
+  ABOUT SECTION: dark background (#111), gold uppercase label "About This Set", then 4–6 sentences of enthusiastic, detailed retail-style copy. Cover: what the set depicts/builds, why it's special, who it appeals to, any notable features (display-worthy, complex build, part of a series, etc.). Do NOT mention shipping, payment, or returns.
+
+  SET DETAILS TABLE: dark background (#0d0d0d), gold uppercase label "Set Details". Full-width table, alternating row backgrounds (#111 and #0d0d0d), left column labels in #888, right column values in white bold. Rows:
+      - Set Number
+      - Name
+      - Year
+      - Theme${figTableRow}
+      - Piece Count: "${pieces} pieces"
+      - Condition: "${conditionDesc}"
+
+  WHAT'S INCLUDED: dark background (#111), gold uppercase label "What's Included". Unstyled list — each item as: checkmark ✓ (color #FFD700) for positive items, ✗ (color #ff4444) for negative items (no manual, no figs). Use HTML entities &#10003; and &#10007;. Inline-style each li: no list-style, padding 8px 0, border-bottom 1px solid #1e1e1e, display flex, gap 10px, color #ddd, font-size 13px.
+
+  FOOTER: very dark background (#080808), centered small text in #555: "Authentic LEGO® product — not a third-party or counterfeit item. All items personally inspected and verified."
+
+  CLOSE wrapper div.
 
 Return ONLY the raw JSON object. No markdown fences. No extra text.`
 }
@@ -347,12 +391,12 @@ export function registerAiHandlers(): void {
       let result: unknown
       if (provider === 'anthropic') {
         result = await callAnthropic(apiKey, {
-          model, max_tokens: 2500,
+          model, max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }],
         })
       } else {
         result = await callOpenAI(apiKey, {
-          model, max_tokens: 2500,
+          model, max_tokens: 4000,
           messages: [{ role: 'user', content: prompt }],
         })
       }
