@@ -1,4 +1,5 @@
 import { app, ipcMain, BrowserWindow } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import https from 'https'
 import fs from 'fs'
 import path from 'path'
@@ -17,54 +18,6 @@ type UpdaterState =
   | { status: 'error'; message: string }
 
 let state: UpdaterState = { status: 'idle' }
-
-/** Returns true if semver string a is strictly greater than b. Handles pre-release (alpha.N). */
-function semverGt(a: string, b: string): boolean {
-  const parse = (v: string) => {
-    const [core, pre] = v.split('-')
-    const [major, minor, patch] = core.split('.').map(Number)
-    const preParts = pre ? pre.split('.').map(p => isNaN(Number(p)) ? p : Number(p)) : null
-    return { major, minor, patch, preParts }
-  }
-  const av = parse(a), bv = parse(b)
-  for (const k of ['major', 'minor', 'patch'] as const) {
-    if (av[k] !== bv[k]) return av[k] > bv[k]
-  }
-  if (!av.preParts && bv.preParts)  return true   // stable > pre-release
-  if (av.preParts  && !bv.preParts) return false   // pre-release < stable
-  if (!av.preParts && !bv.preParts) return false
-  const [ap, bp] = [av.preParts!, bv.preParts!]
-  for (let i = 0; i < Math.max(ap.length, bp.length); i++) {
-    if (ap[i] === undefined) return false
-    if (bp[i] === undefined) return true
-    if (ap[i] !== bp[i]) {
-      if (typeof ap[i] === 'number' && typeof bp[i] === 'number') return (ap[i] as number) > (bp[i] as number)
-      return String(ap[i]) > String(bp[i])
-    }
-  }
-  return false
-}
-
-function getJson(url: string): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const req = https.get(
-      url,
-      { headers: { 'User-Agent': 'BrickForge-Updater', Accept: 'application/vnd.github.v3+json' } },
-      (res) => {
-        if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-          resolve(getJson(res.headers.location))
-          return
-        }
-        let data = ''
-        res.on('data', c => (data += c))
-        res.on('end', () => { try { resolve(JSON.parse(data)) } catch (e) { reject(e) } })
-      },
-    )
-    req.on('error', reject)
-    req.setTimeout(15_000, () => { req.destroy(); reject(new Error('Update check timed out')) })
-    req.end()
-  })
-}
 
 function downloadFile(url: string, dest: string, onProgress: (pct: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -95,20 +48,8 @@ function downloadFile(url: string, dest: string, onProgress: (pct: number) => vo
   })
 }
 
-async function checkGitHub(): Promise<{ version: string; downloadUrl: string } | null> {
-  const release = await getJson(`https://api.github.com/repos/${REPO}/releases/latest`) as {
-    tag_name: string
-    assets: { name: string; browser_download_url: string }[]
-  }
-  const tagVersion = release.tag_name.replace(/^v/, '')
-  if (!semverGt(tagVersion, app.getVersion())) return null
-  const asset = release.assets.find(a => a.name === 'app.asar')
-  if (!asset) return null
-  return { version: tagVersion, downloadUrl: asset.browser_download_url }
-}
-
 export function setupAutoUpdater(mainWindow: BrowserWindow): void {
-  // On quit: atomically apply any staged update (safe — app.asar opened with Windows shared flags)
+  // Apply staged asar on quit — works because app.asar is opened with shared flags on Windows
   app.on('will-quit', () => {
     if (!fs.existsSync(ASAR_UPDATE)) return
     try {
@@ -119,6 +60,33 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
       log.error('[updater] Failed to apply update on quit:', err)
     }
   })
+
+  // ── electron-updater: detection only, no download ──────────────────────────
+  autoUpdater.logger = log
+  autoUpdater.autoDownload = false
+  autoUpdater.autoInstallOnAppQuit = false
+
+  autoUpdater.on('update-available', (info) => {
+    log.info('[updater] Update available:', info.version)
+    // Construct app.asar download URL from the release tag
+    const downloadUrl = `https://github.com/${REPO}/releases/download/v${info.version}/app.asar`
+    state = { status: 'available', version: info.version, downloadUrl }
+    mainWindow.webContents.send(IPC.PUSH_UPDATE_AVAILABLE, { version: info.version })
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    log.info('[updater] Already up to date')
+    if (state.status === 'idle') state = { status: 'idle' }
+  })
+
+  autoUpdater.on('error', (err) => {
+    log.error('[updater] Check error:', err)
+    if (state.status === 'idle') {
+      mainWindow.webContents.send(IPC.PUSH_UPDATE_ERROR, { message: err.message })
+    }
+  })
+
+  // ── IPC handlers ───────────────────────────────────────────────────────────
 
   ipcMain.handle(IPC.UPDATE_INSTALL, () => {
     app.relaunch()
@@ -157,10 +125,11 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
     if (state.status === 'downloading') return { downloading: true, version: state.version, percent: state.percent }
     if (state.status === 'ready')       return { ready: true,       version: state.version }
     try {
-      const found = await checkGitHub()
-      if (!found) return { upToDate: true }
-      state = { status: 'available', ...found }
-      return { available: true, version: found.version }
+      const result = await autoUpdater.checkForUpdates()
+      if (!result?.updateInfo) return { upToDate: true }
+      if (result.updateInfo.version === app.getVersion()) return { upToDate: true }
+      // update-available event will fire and set state
+      return { upToDate: false, version: result.updateInfo.version }
     } catch (err) {
       log.warn('[updater] Manual check failed:', err)
       return { error: String(err) }
@@ -169,15 +138,8 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
 
   ipcMain.handle(IPC.UPDATE_GET_STATE, () => state)
 
-  // Startup check — silent, no auto-download
-  setTimeout(async () => {
-    try {
-      const found = await checkGitHub()
-      if (!found) return
-      state = { status: 'available', ...found }
-      mainWindow.webContents.send(IPC.PUSH_UPDATE_AVAILABLE, { version: found.version })
-    } catch (err) {
-      log.warn('[updater] Startup check failed:', err)
-    }
+  // Startup check — silent
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((err) => log.warn('[updater] Startup check failed:', err))
   }, 5_000)
 }
