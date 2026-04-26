@@ -183,7 +183,7 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
 
   const condToken     = completeness === 'complete' ? 'Complete' : completeness === 'partial' ? '99% Complete' : 'Incomplete'
   const conditionDesc =
-    completeness === 'complete' ? 'Complete — all pieces present and verified' :
+    completeness === 'complete' ? 'Complete' :
     completeness === 'partial'  ? '99% Complete — may be missing a small number of minor pieces' :
                                   'Incomplete — missing pieces, listed as-is'
 
@@ -192,7 +192,8 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   const year      = setData.year ?? ''
   const theme     = setData.theme ?? ''
   const name      = setData.name ?? ''
-  const setNo     = setData.set_number ?? ''
+  const setNo        = setData.set_number ?? ''
+  const displaySetNo = (setNo as string).replace(/-\d+$/, '')
 
   // Minifig handling — 3 distinct cases
   const setHasFigs = minifigs > 0
@@ -203,7 +204,6 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   if (cleanSet)              attrs.push('Clean, well-maintained set')
   if (hasManual)             attrs.push('Includes original instruction manual')
   if (setHasFigs && hasFigs) attrs.push(`All ${minifigs} minifigure${minifigs !== 1 ? 's' : ''} included`)
-  if (sellerNotes)           attrs.push(`Seller notes: "${sellerNotes}"`)
 
   // Title tokens — empty when unchecked (not included in title at all)
   const manualToken = hasManual ? 'w/ Manual' : ''
@@ -224,7 +224,7 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   return `You are an expert eBay seller specialising in LEGO sets. Generate a premium keyword-optimised eBay listing.
 
 SET DETAILS
-Set Number : ${setNo}
+Set Number : ${displaySetNo}
 Name       : ${name}
 Year       : ${year}
 Theme      : ${theme || 'LEGO'}
@@ -240,19 +240,20 @@ OUTPUT FORMAT — return ONLY a JSON object with exactly TWO keys: "title" and "
 "title" — eBay title rules:
   • HARD LIMIT: 80 characters. NEVER exceed this.
   • NO emoji — plain text only.
-  • Lead with the product name, not a label. Structure: LEGO [Name] [SetNum] [pcs] | [details]
+  • Lead with the product name, not a label. Structure: LEGO [Theme] [Name] [SetNum] | [details]
   • Use " | " as a visual separator between the item identity and the condition/attribute details.
   • Keyword priority order:
-      1. LEGO  2. Name: ${name}  3. ${setNo}  4. ${pieces} pcs
+      1. LEGO  2. Theme: ${theme || ''}  3. Name: ${name}  4. ${displaySetNo}
       5. ${condToken}${manualToken ? `  6. ${manualToken}` : ''}${figsToken ? `  7. ${figsToken}` : ''}${extraTokens ? `  8. ${extraTokens}` : ''}
-  • Example format: "LEGO Millennium Falcon 75375-1 921 pcs | Complete w/ Manual"
+  • If Theme is blank or redundant with Name, omit it — never repeat the same word twice.
+  • Example format: "LEGO Star Wars Invisible Hand 75377 | Complete w/ Manual"
   • Abbreviations: "w/", "&", drop articles.
 
 "description" — Clean, modern eBay HTML listing with full inline CSS. Dark theme. Structure:
 
   WRAPPER: <div style="font-family:Arial,Helvetica,sans-serif;max-width:680px;margin:0 auto;background:#111;border-radius:10px;overflow:hidden;border:1px solid #2a2a2a;">
 
-  HEADER: background #1a1a1a, left border 4px solid #FFD700, padding 20px 24px. Show set name in large white bold text (font-size:22px), then the literal text "#${setNo} · ${year}" in small #888 text below.
+  HEADER: background #1a1a1a, left border 4px solid #FFD700, padding 20px 24px. Show set name in large white bold text (font-size:22px), then the literal text "#${displaySetNo} · ${year}" in small #888 text below.
 
   ABOUT SECTION: background #111, padding 20px 24px. Label: uppercase tracking-wide font-size:11px color:#FFD700 margin-bottom:10px. Then 4–6 sentences of natural, enthusiastic copy: what the set is, why it's collectible, who it's for, what makes it special. Do NOT mention shipping, payment, or returns.
 
