@@ -93,7 +93,7 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
     app.quit()
   })
 
-  ipcMain.handle(IPC.UPDATE_DOWNLOAD, async () => {
+  ipcMain.handle(IPC.UPDATE_DOWNLOAD, () => {
     if (state.status === 'downloading') return { ok: true }
     if (state.status === 'ready')       return { ok: true }
     if (state.status !== 'available')   return { error: 'No update available' }
@@ -101,23 +101,26 @@ export function setupAutoUpdater(mainWindow: BrowserWindow): void {
     const { version, downloadUrl } = state
     state = { status: 'downloading', version, percent: 0 }
 
-    try {
-      await downloadFile(downloadUrl, ASAR_UPDATE, (pct) => {
-        if (state.status === 'downloading') {
-          state = { ...state, percent: pct }
-          mainWindow.webContents.send(IPC.PUSH_UPDATE_PROGRESS, { percent: pct })
-        }
-      })
-      state = { status: 'ready', version }
-      mainWindow.webContents.send(IPC.PUSH_UPDATE_DOWNLOADED, { version })
-      return { ok: true }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      state = { status: 'error', message }
-      mainWindow.webContents.send(IPC.PUSH_UPDATE_ERROR, { message })
-      try { fs.unlinkSync(ASAR_UPDATE) } catch {}
-      return { error: message }
-    }
+    // Fire-and-forget — returns immediately; progress/complete/error come through push events
+    void (async () => {
+      try {
+        await downloadFile(downloadUrl, ASAR_UPDATE, (pct) => {
+          if (state.status === 'downloading') {
+            state = { ...state, percent: pct }
+            mainWindow.webContents.send(IPC.PUSH_UPDATE_PROGRESS, { percent: pct })
+          }
+        })
+        state = { status: 'ready', version }
+        mainWindow.webContents.send(IPC.PUSH_UPDATE_DOWNLOADED, { version })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        state = { status: 'error', message }
+        mainWindow.webContents.send(IPC.PUSH_UPDATE_ERROR, { message })
+        try { fs.unlinkSync(ASAR_UPDATE) } catch {}
+      }
+    })()
+
+    return { ok: true }
   })
 
   ipcMain.handle(IPC.UPDATE_CHECK, async () => {

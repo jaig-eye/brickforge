@@ -76,19 +76,39 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const offProgress = window.ipc.on(IPC.PUSH_UPDATE_PROGRESS, (...args: unknown[]) => {
-      const { percent } = args[1] as { percent: number }
+      const { percent } = args[0] as { percent: number }
       setUpdateStatus((s) => s.type === 'downloading' ? { ...s, percent } : s)
     })
     const offDownloaded = window.ipc.on(IPC.PUSH_UPDATE_DOWNLOADED, (...args: unknown[]) => {
-      const { version } = args[1] as { version: string }
+      const { version } = args[0] as { version: string }
       setUpdateStatus({ type: 'ready', version })
     })
     const offError = window.ipc.on(IPC.PUSH_UPDATE_ERROR, (...args: unknown[]) => {
-      const { message } = args[1] as { message: string }
+      const { message } = args[0] as { message: string }
       setUpdateStatus({ type: 'error', message })
     })
     return () => { offProgress(); offDownloaded(); offError() }
   }, [])
+
+  // Poll UPDATE_GET_STATE while downloading so the UI stays live even if push events are missed
+  useEffect(() => {
+    if (updateStatus.type !== 'downloading') return
+    const timer = setInterval(() => {
+      window.ipc.invoke(IPC.UPDATE_GET_STATE).then((s) => {
+        const st = s as { status: string; version?: string; percent?: number; message?: string }
+        if (st.status === 'downloading') {
+          setUpdateStatus((prev) =>
+            prev.type === 'downloading' ? { ...prev, percent: st.percent ?? prev.percent } : prev
+          )
+        } else if (st.status === 'ready') {
+          setUpdateStatus({ type: 'ready', version: st.version! })
+        } else if (st.status === 'error') {
+          setUpdateStatus({ type: 'error', message: st.message ?? 'Unknown error' })
+        }
+      }).catch(() => {})
+    }, 500)
+    return () => clearInterval(timer)
+  }, [updateStatus.type])
 
   // Sync with any in-progress state from the startup check
   useEffect(() => {
@@ -135,6 +155,7 @@ export default function SettingsPage() {
     setUpdateStatus({ type: 'downloading', version, percent: 0 })
     try {
       const res = await window.ipc.invoke(IPC.UPDATE_DOWNLOAD) as { ok?: boolean; error?: string }
+      // invoke returns immediately — progress/ready/error arrive via push events + polling
       if (res.error) setUpdateStatus({ type: 'error', message: res.error })
     } catch (err) {
       setUpdateStatus({ type: 'error', message: String(err) })
