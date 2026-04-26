@@ -1,4 +1,5 @@
-import { User, CheckCircle2, Heart } from 'lucide-react'
+import { useState } from 'react'
+import { User, CheckCircle2, Heart, Copy, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency } from '@/lib/formatters'
@@ -32,6 +33,15 @@ interface MinifigCardProps {
 export function MinifigCard({ fig, marketPrice, onClick, className }: MinifigCardProps) {
   const condInfo = fig.condition ? CONDITION_BADGE[fig.condition] : null
   const paid     = fig.acquired_price ?? null
+  const [copied, setCopied] = useState(false)
+
+  const copyName = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const text = fig.character || fig.name
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <Card
@@ -47,6 +57,21 @@ export function MinifigCard({ fig, marketPrice, onClick, className }: MinifigCar
           {fig.is_owned === 1 && <CheckCircle2 className="h-4 w-4 text-green-400 drop-shadow" />}
           {fig.is_wanted === 1 && <Heart className="h-4 w-4 text-red-400 drop-shadow" />}
         </div>
+        {/* Copy button — visible on hover */}
+        <button
+          onClick={copyName}
+          title="Copy name"
+          className={cn(
+            'absolute bottom-2 left-2 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono transition-all',
+            'bg-black/70 text-white opacity-0 group-hover:opacity-100',
+            copied && 'opacity-100 text-green-400',
+          )}
+        >
+          {copied
+            ? <><Check className="h-3 w-3" />Copied</>
+            : <><Copy className="h-3 w-3" />{fig.fig_number}</>
+          }
+        </button>
         {(fig.quantity ?? 0) > 1 && (
           <div className="absolute bottom-2 right-2 bg-black/60 rounded px-1.5 py-0.5 text-xs font-mono text-white">
             ×{fig.quantity}
@@ -55,9 +80,18 @@ export function MinifigCard({ fig, marketPrice, onClick, className }: MinifigCar
       </div>
       <CardContent className="pt-3 pb-3">
         <p className="text-xs font-mono text-[var(--color-accent)] mb-0.5">{fig.fig_number}</p>
-        <p className="text-sm font-semibold font-display leading-tight line-clamp-2">{fig.name}</p>
+        <p className="text-sm font-semibold font-display leading-tight line-clamp-2 select-text">{fig.name}</p>
         <div className="flex gap-1 flex-wrap mt-2">
-          {fig.character && <Badge variant="outline" className="text-xs">{fig.character}</Badge>}
+          {fig.character && (
+            <Badge
+              variant="outline"
+              className="text-xs cursor-copy select-text"
+              title="Click to copy"
+              onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(fig.character!) }}
+            >
+              {fig.character}
+            </Badge>
+          )}
           {fig.theme && <Badge variant="muted" className="text-xs">{fig.theme}</Badge>}
           {condInfo && <Badge variant={condInfo.variant} className="text-xs">{condInfo.label}</Badge>}
         </div>

@@ -1,4 +1,5 @@
-import { Package, CheckCircle2, Heart, TrendingUp, TrendingDown } from 'lucide-react'
+import { useState } from 'react'
+import { Package, CheckCircle2, Heart, TrendingUp, TrendingDown, Copy, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatPieceCount, formatCurrency } from '@/lib/formatters'
@@ -38,6 +39,14 @@ export function SetCard({ set, marketPrice, onClick, className }: SetCardProps) 
   const condInfo = set.condition ? CONDITION_BADGE[set.condition] : null
   const paid     = set.acquired_price ?? null
   const gain     = (paid != null && marketPrice != null) ? marketPrice - paid : null
+  const [copied, setCopied] = useState(false)
+
+  const copySetNum = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(set.set_number)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <Card
@@ -53,11 +62,26 @@ export function SetCard({ set, marketPrice, onClick, className }: SetCardProps) 
           {set.is_owned === 1 && <CheckCircle2 className="h-4 w-4 text-green-400 drop-shadow" />}
           {set.is_wanted === 1 && <Heart className="h-4 w-4 text-red-400 drop-shadow" />}
         </div>
+        {/* Copy button — visible on hover */}
+        <button
+          onClick={copySetNum}
+          title="Copy set number"
+          className={cn(
+            'absolute bottom-2 left-2 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono transition-all',
+            'bg-black/70 text-white opacity-0 group-hover:opacity-100',
+            copied && 'opacity-100 text-green-400',
+          )}
+        >
+          {copied
+            ? <><Check className="h-3 w-3" />Copied</>
+            : <><Copy className="h-3 w-3" />{set.set_number}</>
+          }
+        </button>
       </div>
 
       <CardContent className="pt-3 pb-3">
         <p className="text-xs font-mono text-[var(--color-accent)] mb-0.5">{set.set_number}</p>
-        <p className="text-sm font-semibold font-display leading-tight line-clamp-2">{set.name}</p>
+        <p className="text-sm font-semibold font-display leading-tight line-clamp-2 select-text">{set.name}</p>
 
         {/* Year / condition / pieces row */}
         <div className="flex items-center justify-between mt-2 gap-1 flex-wrap">
