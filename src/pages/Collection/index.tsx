@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Plus, Search, Package, User, RefreshCw, TrendingUp, TrendingDown, Minus,
-  ExternalLink, CheckCircle2, Trash2,
+  ExternalLink, CheckCircle2, Trash2, LayoutGrid, List,
 } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
 import { Button } from '@/components/ui/Button'
@@ -38,6 +38,13 @@ interface PortfolioStats {
   fig_acquired_total: number; fig_priced_count: number
 }
 type PriceMap = Record<string, { new?: number; used?: number }>
+type ViewMode = 'grid' | 'list'
+
+const SET_COND_LABEL: Record<string, string> = {
+  sealed: 'Sealed', open_complete: 'Open · Complete', open_incomplete: 'Open · Incomplete',
+  new: 'New/Sealed', used: 'Open/Used',
+}
+const FIG_COND_LABEL: Record<string, string> = { new: 'New', used: 'Used', cracked: 'Cracked' }
 
 interface LegoSetDetail {
   id: number; set_number: string; name: string; year: number | null
@@ -779,6 +786,171 @@ function AddFigDialog({ open, onClose, onAdded }: {
   )
 }
 
+// ── Indeterminate Checkbox ────────────────────────────────────────────────────
+
+function IndeterminateCheckbox({ checked, indeterminate, onChange }: {
+  checked: boolean; indeterminate: boolean; onChange: () => void
+}) {
+  const ref = useRef<HTMLInputElement>(null)
+  useEffect(() => { if (ref.current) ref.current.indeterminate = indeterminate })
+  return (
+    <input ref={ref} type="checkbox" checked={checked} onChange={onChange}
+      className="h-4 w-4 rounded cursor-pointer accent-[var(--color-accent)]"
+      onClick={(e) => e.stopPropagation()} />
+  )
+}
+
+// ── Set List View ─────────────────────────────────────────────────────────────
+
+function SetListView({ sets, priceMap, selectedIds, onToggle, onToggleAll, onClickDetail }: {
+  sets: LegoSetDetail[]; priceMap: PriceMap
+  selectedIds: Set<number>; onToggle: (id: number) => void
+  onToggleAll: () => void; onClickDetail: (set: LegoSetDetail) => void
+}) {
+  const allSelected = sets.length > 0 && selectedIds.size === sets.length
+  const someSelected = selectedIds.size > 0 && !allSelected
+  return (
+    <div className="rounded-xl border border-[var(--color-surface-border)] overflow-hidden">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)]">
+            <th className="w-10 px-3 py-2.5 text-left">
+              <IndeterminateCheckbox checked={allSelected} indeterminate={someSelected} onChange={onToggleAll} />
+            </th>
+            <th className="w-12 px-2 py-2.5" />
+            {['Set #', 'Name', 'Year', 'Condition'].map((h) => (
+              <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-surface-muted)]">{h}</th>
+            ))}
+            {['Pcs', 'Paid', 'Market'].map((h) => (
+              <th key={h} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-[var(--color-surface-muted)]">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sets.map((set, i) => {
+            const prices = priceMap[set.set_number]
+            const market = (set.condition === 'sealed' || set.condition === 'new') ? prices?.new : prices?.used
+            const isSelected = selectedIds.has(set.id)
+            return (
+              <tr
+                key={set.id}
+                onClick={() => onClickDetail(set)}
+                className={cn(
+                  'border-b border-[var(--color-surface-border)] last:border-0 cursor-pointer transition-colors',
+                  isSelected ? 'bg-[var(--color-accent)]/10' : i % 2 !== 0 ? 'bg-[var(--color-surface-overlay)]/30' : '',
+                  'hover:bg-[var(--color-surface-overlay)]',
+                )}
+              >
+                <td className="px-3 py-2" onClick={(e) => { e.stopPropagation(); onToggle(set.id) }}>
+                  <input type="checkbox" checked={isSelected} onChange={() => onToggle(set.id)}
+                    className="h-4 w-4 rounded cursor-pointer accent-[var(--color-accent)]"
+                    onClick={(e) => e.stopPropagation()} />
+                </td>
+                <td className="px-2 py-1.5">
+                  {set.image_url
+                    ? <img src={set.image_url} alt="" className="w-10 h-10 object-contain rounded bg-[var(--color-surface-overlay)]" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    : <div className="w-10 h-10 rounded bg-[var(--color-surface-overlay)] flex items-center justify-center"><Package className="h-4 w-4 text-[var(--color-surface-muted)]" /></div>
+                  }
+                </td>
+                <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-accent)] whitespace-nowrap">{set.set_number}</td>
+                <td className="px-3 py-2.5 font-semibold max-w-[220px]"><p className="truncate">{set.name}</p></td>
+                <td className="px-3 py-2.5 text-[var(--color-surface-muted)] whitespace-nowrap">{set.year ?? '—'}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-overlay)] border border-[var(--color-surface-border)]">
+                    {SET_COND_LABEL[set.condition] ?? set.condition}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums text-[var(--color-surface-muted)]">{set.piece_count?.toLocaleString() ?? '—'}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">{set.acquired_price != null ? formatCurrency(set.acquired_price) : '—'}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums font-semibold whitespace-nowrap">
+                  {market != null ? <span className="text-green-400">{formatCurrency(market)}</span> : <span className="text-[var(--color-surface-muted)]">—</span>}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ── Fig List View ─────────────────────────────────────────────────────────────
+
+function FigListView({ figs, figPriceMap, selectedIds, onToggle, onToggleAll, onClickDetail }: {
+  figs: MinifigDetail[]; figPriceMap: PriceMap
+  selectedIds: Set<number>; onToggle: (id: number) => void
+  onToggleAll: () => void; onClickDetail: (fig: MinifigDetail) => void
+}) {
+  const allSelected = figs.length > 0 && selectedIds.size === figs.length
+  const someSelected = selectedIds.size > 0 && !allSelected
+  return (
+    <div className="rounded-xl border border-[var(--color-surface-border)] overflow-hidden">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)]">
+            <th className="w-10 px-3 py-2.5 text-left">
+              <IndeterminateCheckbox checked={allSelected} indeterminate={someSelected} onChange={onToggleAll} />
+            </th>
+            <th className="w-12 px-2 py-2.5" />
+            {['Fig #', 'Name', 'Theme', 'Condition'].map((h) => (
+              <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--color-surface-muted)]">{h}</th>
+            ))}
+            {['Qty', 'Paid', 'Market'].map((h) => (
+              <th key={h} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-[var(--color-surface-muted)]">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {figs.map((fig, i) => {
+            const prices = figPriceMap[fig.fig_number]
+            const market = fig.condition === 'new' ? prices?.new : prices?.used
+            const isSelected = selectedIds.has(fig.id)
+            return (
+              <tr
+                key={fig.id}
+                onClick={() => onClickDetail(fig)}
+                className={cn(
+                  'border-b border-[var(--color-surface-border)] last:border-0 cursor-pointer transition-colors',
+                  isSelected ? 'bg-[var(--color-accent)]/10' : i % 2 !== 0 ? 'bg-[var(--color-surface-overlay)]/30' : '',
+                  'hover:bg-[var(--color-surface-overlay)]',
+                )}
+              >
+                <td className="px-3 py-2" onClick={(e) => { e.stopPropagation(); onToggle(fig.id) }}>
+                  <input type="checkbox" checked={isSelected} onChange={() => onToggle(fig.id)}
+                    className="h-4 w-4 rounded cursor-pointer accent-[var(--color-accent)]"
+                    onClick={(e) => e.stopPropagation()} />
+                </td>
+                <td className="px-2 py-1.5">
+                  {fig.image_url
+                    ? <img src={fig.image_url} alt="" className="w-10 h-10 object-contain rounded bg-[var(--color-surface-overlay)]" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    : <div className="w-10 h-10 rounded bg-[var(--color-surface-overlay)] flex items-center justify-center"><User className="h-4 w-4 text-[var(--color-surface-muted)]" /></div>
+                  }
+                </td>
+                <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-accent)] whitespace-nowrap">{fig.fig_number}</td>
+                <td className="px-3 py-2.5 font-semibold max-w-[200px]">
+                  <p className="truncate">{fig.name}</p>
+                  {fig.character && <p className="text-xs text-[var(--color-surface-muted)] truncate">{fig.character}</p>}
+                </td>
+                <td className="px-3 py-2.5 text-[var(--color-surface-muted)] whitespace-nowrap">{fig.theme ?? '—'}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-overlay)] border border-[var(--color-surface-border)]">
+                    {FIG_COND_LABEL[fig.condition] ?? fig.condition}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums text-[var(--color-surface-muted)]">{fig.quantity}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">{fig.acquired_price != null ? formatCurrency(fig.acquired_price) : '—'}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums font-semibold whitespace-nowrap">
+                  {market != null ? <span className="text-green-400">{formatCurrency(market)}</span> : <span className="text-[var(--color-surface-muted)]">—</span>}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Collection() {
@@ -794,6 +966,10 @@ export default function Collection() {
   const [priceMap, setPriceMap]     = useState<PriceMap>({})
   const [figPriceMap, setFigPriceMap] = useState<PriceMap>({})
   const [refreshing, setRefreshing] = useState(false)
+  const [viewMode, setViewMode]     = useState<ViewMode>('grid')
+  const [selectedIds, setSelectedIds]       = useState<Set<number>>(new Set())
+  const [bulkDeleting, setBulkDeleting]     = useState(false)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
 
   const setFilter = ownershipTab === 'owned' ? { is_owned: 1 as const } : ownershipTab === 'wanted' ? { is_wanted: 1 as const } : {}
   const figFilter = ownershipTab === 'owned' ? { is_owned: 1 as const } : ownershipTab === 'wanted' ? { is_wanted: 1 as const } : {}
@@ -873,6 +1049,47 @@ export default function Collection() {
   }
 
   const handleAdded = useCallback(() => { refetchSets(); refetchFigs() }, [refetchSets, refetchFigs])
+
+  // Clear selection when switching tabs
+  useEffect(() => { setSelectedIds(new Set()); setConfirmBulkDelete(false) }, [typeTab, ownershipTab])
+
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  const toggleSelectAll = useCallback((items: { id: number }[]) => {
+    setSelectedIds((prev) =>
+      prev.size === items.length ? new Set() : new Set(items.map((i) => i.id))
+    )
+  }, [])
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true)
+    const count = selectedIds.size
+    try {
+      if (typeTab === 'sets') {
+        await Promise.all([...selectedIds].map((id) => window.ipc.invoke(IPC.SETS_DELETE, id)))
+        toast.success(`Removed ${count} set${count !== 1 ? 's' : ''}`)
+        refetchSets()
+      } else {
+        await Promise.all([...selectedIds].map((id) => window.ipc.invoke(IPC.FIGS_DELETE, id)))
+        toast.success(`Removed ${count} minifigure${count !== 1 ? 's' : ''}`)
+        refetchFigs()
+      }
+      setSelectedIds(new Set())
+      setConfirmBulkDelete(false)
+      loadStats()
+    } catch (err) {
+      toast.error(String(err))
+    } finally {
+      setBulkDeleting(false)
+    }
+  }
 
   const filteredSets = search
     ? (sets as { name: string; set_number: string }[]).filter(
@@ -1028,12 +1245,36 @@ export default function Collection() {
           ))}
         </div>
 
-        <div className="mb-4 max-w-sm">
-          <Input
-            placeholder={`Search ${typeTab === 'sets' ? 'sets' : 'minifigures'}...`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex-1 max-w-sm">
+            <Input
+              placeholder={`Search ${typeTab === 'sets' ? 'sets' : 'minifigures'}...`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-0.5 bg-[var(--color-surface-overlay)] rounded-lg p-1 border border-[var(--color-surface-border)]">
+            <button
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+              className={cn(
+                'p-1.5 rounded transition-colors',
+                viewMode === 'grid' ? 'bg-[var(--color-accent)] text-[var(--color-accent-text)]' : 'hover:bg-[var(--color-surface-muted)]/30 text-[var(--color-surface-muted)]',
+              )}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              title="List view"
+              className={cn(
+                'p-1.5 rounded transition-colors',
+                viewMode === 'list' ? 'bg-[var(--color-accent)] text-[var(--color-accent-text)]' : 'hover:bg-[var(--color-surface-muted)]/30 text-[var(--color-surface-muted)]',
+              )}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -1045,6 +1286,15 @@ export default function Collection() {
               title="No sets yet"
               description="Use the Browse page to find sets, or click Add Set to search."
               action={<Button size="sm" onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" />Add Set</Button>}
+            />
+          ) : viewMode === 'list' ? (
+            <SetListView
+              sets={filteredSets as LegoSetDetail[]}
+              priceMap={priceMap}
+              selectedIds={selectedIds}
+              onToggle={toggleSelect}
+              onToggleAll={() => toggleSelectAll(filteredSets as LegoSetDetail[])}
+              onClickDetail={setDetailSet}
             />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -1071,6 +1321,15 @@ export default function Collection() {
               title="No minifigures yet"
               description="Browse the catalog to find and add minifigures to your collection."
             />
+          ) : viewMode === 'list' ? (
+            <FigListView
+              figs={filteredFigs as MinifigDetail[]}
+              figPriceMap={figPriceMap}
+              selectedIds={selectedIds}
+              onToggle={toggleSelect}
+              onToggleAll={() => toggleSelectAll(filteredFigs as MinifigDetail[])}
+              onClickDetail={setDetailFig}
+            />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {(filteredFigs as MinifigDetail[]).map((fig) => {
@@ -1089,6 +1348,38 @@ export default function Collection() {
           )
         )}
       </div>
+
+      {/* ── Bulk action bar ── */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[var(--color-surface-raised)] border border-[var(--color-surface-border)] rounded-2xl shadow-2xl px-5 py-3">
+          <span className="text-sm font-semibold tabular-nums">
+            {selectedIds.size} selected
+          </span>
+          <button
+            onClick={() => { setSelectedIds(new Set()); setConfirmBulkDelete(false) }}
+            className="text-xs text-[var(--color-surface-muted)] hover:text-current transition-colors px-2 py-1 rounded hover:bg-[var(--color-surface-overlay)]"
+          >
+            Clear
+          </button>
+          <div className="w-px h-5 bg-[var(--color-surface-border)]" />
+          {!confirmBulkDelete ? (
+            <Button size="sm" onClick={() => setConfirmBulkDelete(true)}
+              className="text-xs h-8 bg-red-500 hover:bg-red-600 border-red-500">
+              <Trash2 className="h-3.5 w-3.5" />
+              Remove {selectedIds.size} {typeTab === 'sets' ? (selectedIds.size === 1 ? 'set' : 'sets') : (selectedIds.size === 1 ? 'minifig' : 'minifigs')}
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-red-400">Confirm delete {selectedIds.size}?</span>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmBulkDelete(false)} className="text-xs h-7">Cancel</Button>
+              <Button size="sm" onClick={handleBulkDelete} disabled={bulkDeleting}
+                className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
+                {bulkDeleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Delete
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <AddSetDialog open={addOpen} onClose={() => setAddOpen(false)} onAdded={handleAdded} />
       <AddFigDialog open={addFigOpen} onClose={() => setAddFigOpen(false)} onAdded={handleAdded} />
