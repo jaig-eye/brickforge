@@ -3,6 +3,7 @@ import {
   Search, X, ChevronDown, CheckCircle2, Heart, Package, User,
   SlidersHorizontal, ExternalLink, ChevronLeft, ChevronRight, ArrowUpDown, RefreshCw,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { PageShell } from '@/components/layout/PageShell'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
@@ -14,8 +15,9 @@ import toast from 'react-hot-toast'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type BrowseType = 'sets' | 'minifigs'
-type Condition  = 'sealed' | 'open_complete' | 'open_incomplete'
+type BrowseType   = 'sets' | 'minifigs'
+type Condition    = 'sealed' | 'open_complete' | 'open_incomplete'
+type FigCondition = 'new' | 'used' | 'cracked'
 
 interface RbSet {
   set_num: string; name: string; year: number
@@ -425,11 +427,15 @@ function InspectFigModal({
 }: {
   item: RbFig | null; open: boolean; onClose: () => void
   owned: boolean; wanted: boolean
-  onOwn: (item: RbFig) => void
+  onOwn: (item: RbFig, condition: FigCondition, price: number | null) => void
   onWishlist: (item: RbFig) => void
 }) {
   const [prices, setPrices]               = useState<{ new?: number; used?: number } | null>(null)
   const [priceFetching, setPriceFetching] = useState(false)
+  const [expanding, setExpanding]         = useState(false)
+  const [condition, setCondition]         = useState<FigCondition>('used')
+  const [price, setPrice]                 = useState('')
+  const [saving, setSaving]               = useState(false)
 
   useEffect(() => {
     if (!item || !open) { setPrices(null); return }
@@ -530,18 +536,47 @@ function InspectFigModal({
           )}
         </div>
 
-        <div className="border-t border-[var(--color-surface-border)] pt-4">
+        <div className="border-t border-[var(--color-surface-border)] pt-4 space-y-3">
           {owned ? (
             <div className="flex items-center gap-2 text-green-400 font-semibold text-sm">
               <CheckCircle2 className="h-4 w-4" />In your collection
             </div>
-          ) : (
+          ) : !expanding ? (
             <div className="flex gap-2">
-              <Button onClick={() => { onOwn(item); onClose() }} className="flex-1">Own this minifigure</Button>
+              <Button onClick={() => setExpanding(true)} className="flex-1">Own this minifigure</Button>
               <Button variant="secondary" onClick={() => { onWishlist(item); onClose() }}
                 className={cn(wanted && 'border-amber-400 bg-amber-400/10')}>
                 {wanted ? <><Heart className="h-3.5 w-3.5" />On wishlist</> : 'Add to wishlist'}
               </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                {(['new', 'used', 'cracked'] as FigCondition[]).map((c) => (
+                  <button key={c} onClick={() => setCondition(c)}
+                    className={cn(
+                      'flex-1 py-1.5 rounded-lg border text-xs font-semibold capitalize transition-colors',
+                      condition === c ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/15' : 'border-[var(--color-surface-border)] text-[var(--color-surface-muted)] hover:border-[var(--color-surface-muted)]',
+                    )}>
+                    {c === 'new' ? 'New' : c === 'used' ? 'Used' : 'Cracked'}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 flex items-center gap-1.5 border border-[var(--color-surface-border)] rounded-lg px-2.5 py-1.5 bg-[var(--color-surface-overlay)]">
+                  <span className="text-xs text-[var(--color-surface-muted)]">$</span>
+                  <input type="number" min="0" step="0.01" className="flex-1 bg-transparent text-sm outline-none" placeholder="Price paid (optional)" value={price} onChange={(e) => setPrice(e.target.value)} />
+                </div>
+                <Button size="sm" onClick={async () => {
+                  setSaving(true)
+                  await onOwn(item, condition, price ? parseFloat(price) : null)
+                  setSaving(false)
+                  onClose()
+                }} disabled={saving}>
+                  {saving ? <Spinner size="sm" /> : <CheckCircle2 className="h-3.5 w-3.5" />}Confirm
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => { setExpanding(false); setPrice('') }}>Cancel</Button>
+              </div>
             </div>
           )}
         </div>
@@ -648,45 +683,97 @@ function FigItem({
   item, owned, wanted, onOwn, onWishlist, onInspect,
 }: {
   item: RbFig; owned: boolean; wanted: boolean
-  onOwn: (item: RbFig) => void
+  onOwn: (item: RbFig, condition: FigCondition, price: number | null) => void
   onWishlist: (item: RbFig) => void
   onInspect: (item: RbFig) => void
 }) {
+  const [expanding, setExpanding] = useState(false)
+  const [condition, setCondition] = useState<FigCondition>('used')
+  const [price, setPrice]         = useState('')
+  const [saving, setSaving]       = useState(false)
+
+  const confirm = async () => {
+    setSaving(true)
+    await onOwn(item, condition, price ? parseFloat(price) : null)
+    setSaving(false)
+    setExpanding(false)
+    setPrice('')
+  }
+
   return (
     <div className={cn(
-      'flex gap-3 p-3 rounded-xl border transition-colors',
+      'rounded-xl border overflow-hidden transition-colors',
       owned ? 'border-green-500/40' : wanted ? 'border-amber-500/30' : 'border-[var(--color-surface-border)]',
       'bg-[var(--color-surface-raised)]',
     )}>
-      <div className="w-14 h-14 shrink-0 rounded-lg bg-[var(--color-surface-overlay)] overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => onInspect(item)}>
-        {item.set_img_url
-          ? <img src={item.set_img_url} alt={item.name} className="w-full h-full object-contain p-1 hover:scale-110 transition-transform" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          : <User className="h-5 w-5 text-[var(--color-surface-muted)]" />
-        }
+      <div className="flex gap-3 p-3">
+        <div className="w-14 h-14 shrink-0 rounded-lg bg-[var(--color-surface-overlay)] overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => onInspect(item)}>
+          {item.set_img_url
+            ? <img src={item.set_img_url} alt={item.name} className="w-full h-full object-contain p-1 hover:scale-110 transition-transform" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            : <User className="h-5 w-5 text-[var(--color-surface-muted)]" />
+          }
+        </div>
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onInspect(item)}>
+          <p className="text-xs font-mono text-[var(--color-accent)]">{item.set_num}</p>
+          <p className="text-sm font-semibold leading-snug line-clamp-2">{item.name}</p>
+        </div>
+        <div className="flex flex-col gap-1.5 shrink-0 justify-center">
+          {owned ? (
+            <span className="flex items-center gap-1 text-xs text-green-400 font-semibold px-1 py-0.5"><CheckCircle2 className="h-3.5 w-3.5" />Owned</span>
+          ) : (
+            <>
+              <Button size="sm" onClick={() => setExpanding((x) => !x)} className="text-xs h-7 px-2.5">Own</Button>
+              <Button variant={wanted ? 'secondary' : 'ghost'} size="sm" onClick={() => onWishlist(item)} className="text-xs h-7 px-2.5">
+                {wanted ? <Heart className="h-3 w-3" /> : null}{wanted ? 'Listed' : 'Wishlist'}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
-      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onInspect(item)}>
-        <p className="text-xs font-mono text-[var(--color-accent)]">{item.set_num}</p>
-        <p className="text-sm font-semibold leading-snug line-clamp-2">{item.name}</p>
-      </div>
-      <div className="flex flex-col gap-1.5 shrink-0 justify-center">
-        {owned ? (
-          <span className="flex items-center gap-1 text-xs text-green-400 font-semibold px-1 py-0.5"><CheckCircle2 className="h-3.5 w-3.5" />Owned</span>
-        ) : (
-          <>
-            <Button size="sm" onClick={() => onOwn(item)} className="text-xs h-7 px-2.5">Own</Button>
-            <Button variant={wanted ? 'secondary' : 'ghost'} size="sm" onClick={() => onWishlist(item)} className="text-xs h-7 px-2.5">
-              {wanted ? <Heart className="h-3 w-3" /> : null}{wanted ? 'Listed' : 'Wishlist'}
-            </Button>
-          </>
-        )}
-      </div>
+      {expanding && !owned && (
+        <div className="border-t border-[var(--color-surface-border)] px-3 py-3 bg-[var(--color-surface-overlay)] space-y-3">
+          <div className="flex gap-2">
+            {(['new', 'used', 'cracked'] as FigCondition[]).map((c) => (
+              <button key={c} onClick={() => setCondition(c)}
+                className={cn(
+                  'flex-1 py-1.5 rounded-lg border text-xs font-semibold capitalize transition-colors',
+                  condition === c ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/15' : 'border-[var(--color-surface-border)] text-[var(--color-surface-muted)] hover:border-[var(--color-surface-muted)]',
+                )}>
+                {c === 'new' ? 'New' : c === 'used' ? 'Used' : 'Cracked'}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 items-center">
+            <div className="flex-1 flex items-center gap-1.5 border border-[var(--color-surface-border)] rounded-lg px-2.5 py-1.5 bg-[var(--color-surface-overlay)]">
+              <span className="text-xs text-[var(--color-surface-muted)]">$</span>
+              <input type="number" min="0" step="0.01" className="flex-1 bg-transparent text-sm outline-none" placeholder="Price paid (optional)" value={price} onChange={(e) => setPrice(e.target.value)} />
+            </div>
+            <Button size="sm" onClick={confirm} disabled={saving}>{saving ? <Spinner size="sm" /> : <CheckCircle2 className="h-3.5 w-3.5" />}Add</Button>
+            <Button variant="ghost" size="sm" onClick={() => { setExpanding(false); setPrice('') }}>Cancel</Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+function NavToast({ name, onNav }: { name: string; onNav: () => void }) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      Added {name}
+      <button onClick={onNav}
+        style={{ fontWeight: 700, textDecoration: 'underline', cursor: 'pointer',
+                 background: 'none', border: 'none', color: 'inherit', fontSize: 'inherit', padding: 0 }}>
+        View in Collection →
+      </button>
+    </span>
+  )
+}
+
 export default function Browse() {
+  const navigate = useNavigate()
   const [type, setType]           = useState<BrowseType>('sets')
   const [themes, setThemes]       = useState<Theme[]>([])
   const [themeId, setThemeId]     = useState<number | null>(null)
@@ -800,18 +887,26 @@ export default function Browse() {
       await window.ipc.invoke(IPC.CATALOG_ADD_SET, { ...item, is_owned: isOwned ? 1 : 0, is_wanted: isOwned ? 0 : 1, condition, acquired_price: price })
       if (isOwned) setOwnedSets((s) => new Set([...s, item.set_num]))
       else         setWantedSets((s) => new Set([...s, item.set_num]))
-      toast.success(isOwned ? `Added ${item.name}` : `${item.name} added to wishlist`)
+      if (isOwned) {
+        toast((t) => <NavToast name={item.name} onNav={() => { toast.dismiss(t.id); navigate('/collection') }} />, { duration: 5000 })
+      } else {
+        toast.success(`${item.name} added to wishlist`)
+      }
     } catch (err) { toast.error(String(err)) }
-  }, [])
+  }, [navigate])
 
-  const addFig = useCallback(async (item: RbFig, isOwned: boolean) => {
+  const addFig = useCallback(async (item: RbFig, condition: FigCondition, price: number | null, isOwned: boolean) => {
     try {
-      await window.ipc.invoke(IPC.CATALOG_ADD_FIG, { ...item, is_owned: isOwned ? 1 : 0, is_wanted: isOwned ? 0 : 1 })
+      await window.ipc.invoke(IPC.CATALOG_ADD_FIG, { ...item, is_owned: isOwned ? 1 : 0, is_wanted: isOwned ? 0 : 1, condition, acquired_price: price })
       if (isOwned) setOwnedFigs((s) => new Set([...s, item.set_num]))
       else         setWantedFigs((s) => new Set([...s, item.set_num]))
-      toast.success(isOwned ? `Added ${item.name}` : `${item.name} added to wishlist`)
+      if (isOwned) {
+        toast((t) => <NavToast name={item.name} onNav={() => { toast.dismiss(t.id); navigate('/collection') }} />, { duration: 5000 })
+      } else {
+        toast.success(`${item.name} added to wishlist`)
+      }
     } catch (err) { toast.error(String(err)) }
-  }, [])
+  }, [navigate])
 
   const visibleSets  = hideOwned ? sets.filter((s) => !ownedSets.has(s.set_num)) : sets
   const visibleFigs  = hideOwned ? figs.filter((f) => !ownedFigs.has(f.set_num)) : figs
@@ -922,8 +1017,8 @@ export default function Browse() {
                 : visibleFigs.map((f) => (
                     <FigItem key={f.set_num} item={f}
                       owned={ownedFigs.has(f.set_num)} wanted={wantedFigs.has(f.set_num)}
-                      onOwn={(item) => addFig(item, true)}
-                      onWishlist={(item) => addFig(item, false)}
+                      onOwn={(item, cond, price) => addFig(item, cond, price, true)}
+                      onWishlist={(item) => addFig(item, 'used', null, false)}
                       onInspect={setInspectFig}
                     />
                   ))
@@ -951,8 +1046,8 @@ export default function Browse() {
         onClose={() => setInspectFig(null)}
         owned={inspectFig ? ownedFigs.has(inspectFig.set_num) : false}
         wanted={inspectFig ? wantedFigs.has(inspectFig.set_num) : false}
-        onOwn={(item) => addFig(item, true)}
-        onWishlist={(item) => addFig(item, false)}
+        onOwn={(item, cond, price) => addFig(item, cond, price, true)}
+        onWishlist={(item) => addFig(item, 'used', null, false)}
       />
     </PageShell>
   )

@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Plus, Search, Package, User, RefreshCw, TrendingUp, TrendingDown, Minus,
-  ExternalLink, CheckCircle2, Trash2, LayoutGrid, List,
+  ExternalLink, CheckCircle2, Trash2, LayoutGrid, List, Pencil,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { PageShell } from '@/components/layout/PageShell'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -83,15 +84,30 @@ function StatCard({ label, value, sub, trend }: {
 
 // ── Set Detail Dialog ──────────────────────────────────────────────────────────
 
-function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
+function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted, onSaved }: {
   set: LegoSetDetail | null
   marketPrice?: number | null
   open: boolean
   onClose: () => void
   onDeleted: () => void
+  onSaved?: () => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting]           = useState(false)
+  const [isEditing, setIsEditing]         = useState(false)
+  const [saving, setSaving]               = useState(false)
+  const [editCondition, setEditCondition] = useState(set?.condition ?? 'open_complete')
+  const [editPrice, setEditPrice]         = useState(set?.acquired_price?.toString() ?? '')
+  const [editNotes, setEditNotes]         = useState(set?.notes ?? '')
+
+  // Sync edit fields when set prop changes
+  useEffect(() => {
+    setEditCondition(set?.condition ?? 'open_complete')
+    setEditPrice(set?.acquired_price?.toString() ?? '')
+    setEditNotes(set?.notes ?? '')
+    setIsEditing(false)
+    setConfirmDelete(false)
+  }, [set])
 
   const handleDelete = async () => {
     if (!set) return
@@ -105,19 +121,37 @@ function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
     finally { setDeleting(false); setConfirmDelete(false) }
   }
 
+  const handleSave = async () => {
+    if (!set) return
+    setSaving(true)
+    try {
+      await window.ipc.invoke(IPC.SETS_UPSERT, {
+        ...set,
+        condition: editCondition,
+        acquired_price: editPrice ? parseFloat(editPrice) : null,
+        notes: editNotes || null,
+      })
+      toast.success('Changes saved')
+      setIsEditing(false)
+      onSaved?.()
+    } catch (err) { toast.error(String(err)) }
+    finally { setSaving(false) }
+  }
+
   if (!set) return null
-  const paid = set.acquired_price ?? null
+  const paid = isEditing ? (editPrice ? parseFloat(editPrice) : null) : (set.acquired_price ?? null)
   const gain = paid != null && marketPrice != null ? marketPrice - paid : null
   const blUrl = set.bricklink_url ?? `https://www.bricklink.com/v2/catalog/catalogitem.page?S=${set.set_number}`
   const rbUrl = set.rebrickable_url
 
-  const COND_LABEL: Record<string, string> = {
-    sealed: 'Sealed', open_complete: 'Open · Complete', open_incomplete: 'Open · Incomplete',
-    new: 'New/Sealed', used: 'Open/Used',
-  }
+  const SET_COND_OPTIONS: { value: string; label: string }[] = [
+    { value: 'sealed',           label: 'Sealed'           },
+    { value: 'open_complete',    label: 'Open · Complete'   },
+    { value: 'open_incomplete',  label: 'Open · Incomplete' },
+  ]
 
   return (
-    <Dialog open={open} onClose={onClose} title={set.name} wide>
+    <Dialog open={open} onClose={() => { setIsEditing(false); onClose() }} title={set.name} wide>
       <div className="space-y-5">
         <div className="flex gap-5">
           <div className="w-64 h-64 shrink-0 rounded-xl bg-[var(--color-surface-overlay)] flex items-center justify-center overflow-hidden">
@@ -131,11 +165,29 @@ function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
               <p className="font-mono font-bold text-[var(--color-accent)] text-sm">#{set.set_number}</p>
               <p className="text-lg font-semibold font-display leading-tight">{set.name}</p>
             </div>
-            <div className="flex gap-1.5 flex-wrap">
-              {set.year && <Badge variant="outline" className="text-xs">{set.year}</Badge>}
-              {set.theme && <Badge variant="muted" className="text-xs">{set.theme}</Badge>}
-              {set.condition && <Badge variant="info" className="text-xs">{COND_LABEL[set.condition] ?? set.condition}</Badge>}
-            </div>
+            {/* Condition — view or edit */}
+            {isEditing ? (
+              <div>
+                <p className="text-xs text-[var(--color-surface-muted)] uppercase tracking-wide font-semibold mb-1.5">Condition</p>
+                <div className="flex gap-2">
+                  {SET_COND_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => setEditCondition(o.value as typeof editCondition)}
+                      className={cn(
+                        'flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-colors',
+                        editCondition === o.value ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/15' : 'border-[var(--color-surface-border)] text-[var(--color-surface-muted)] hover:border-[var(--color-surface-muted)]',
+                      )}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-1.5 flex-wrap">
+                {set.year && <Badge variant="outline" className="text-xs">{set.year}</Badge>}
+                {set.theme && <Badge variant="muted" className="text-xs">{set.theme}</Badge>}
+                {set.condition && <Badge variant="info" className="text-xs">{SET_COND_LABEL[set.condition] ?? set.condition}</Badge>}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               <div>
                 <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Pieces</p>
@@ -143,7 +195,14 @@ function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
               </div>
               <div>
                 <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Paid</p>
-                <p className="font-semibold">{paid != null ? formatCurrency(paid) : '—'}</p>
+                {isEditing ? (
+                  <div className="flex items-center gap-1 border border-[var(--color-surface-border)] rounded-lg px-2 py-1 bg-[var(--color-surface-overlay)]">
+                    <span className="text-xs text-[var(--color-surface-muted)]">$</span>
+                    <input type="number" min="0" step="0.01" className="w-full bg-transparent text-sm outline-none" placeholder="0.00" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                  </div>
+                ) : (
+                  <p className="font-semibold">{paid != null ? formatCurrency(paid) : '—'}</p>
+                )}
               </div>
               {set.retail_price_usd != null && (
                 <div>
@@ -178,29 +237,59 @@ function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
             </div>
           </div>
         </div>
-        {set.notes && (
+        {/* Notes — view or edit */}
+        {isEditing ? (
+          <div className="border-t border-[var(--color-surface-border)] pt-3">
+            <p className="text-xs font-semibold text-[var(--color-surface-muted)] uppercase tracking-wide mb-1">Notes</p>
+            <textarea
+              className="w-full rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-3 py-2 text-sm outline-none resize-none focus:border-[var(--color-accent)] transition-colors"
+              rows={2}
+              placeholder="Optional notes…"
+              value={editNotes}
+              onChange={(e) => setEditNotes(e.target.value)}
+            />
+          </div>
+        ) : set.notes ? (
           <div className="border-t border-[var(--color-surface-border)] pt-3">
             <p className="text-xs font-semibold text-[var(--color-surface-muted)] uppercase tracking-wide mb-1">Notes</p>
             <p className="text-sm">{set.notes}</p>
           </div>
-        )}
-        <div className="border-t border-[var(--color-surface-border)] pt-3 flex justify-end">
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-red-400 transition-colors"
-            >
-              <Trash2 className="h-3.5 w-3.5" />Remove from collection
-            </button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <p className="text-xs text-red-400">Remove {set.name}?</p>
-              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="text-xs h-7">Cancel</Button>
-              <Button size="sm" onClick={handleDelete} disabled={deleting}
-                className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
-                {deleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Remove
+        ) : null}
+        <div className="border-t border-[var(--color-surface-border)] pt-3 flex items-center justify-between">
+          {/* Edit / delete actions */}
+          {isEditing ? (
+            <div className="flex items-center gap-2 w-full justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-xs h-7">Cancel</Button>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="text-xs h-7">
+                {saving ? <Spinner size="sm" /> : null}Save Changes
               </Button>
             </div>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-current transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />Edit
+              </button>
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />Remove from collection
+                </button>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-red-400">Remove {set.name}?</p>
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="text-xs h-7">Cancel</Button>
+                  <Button size="sm" onClick={handleDelete} disabled={deleting}
+                    className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
+                    {deleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Remove
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -218,15 +307,21 @@ interface BLSearchResult {
   source: 'bricklink' | 'rebrickable'
 }
 
-function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
+function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted, onSaved }: {
   fig: MinifigDetail | null
   marketPrices?: { new?: number; used?: number }
   open: boolean
   onClose: () => void
   onDeleted: () => void
+  onSaved?: () => void
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [isEditing, setIsEditing]         = useState(false)
+  const [saving, setSaving]               = useState(false)
+  const [editCondition, setEditCondition] = useState<'new' | 'used' | 'cracked'>(fig?.condition ?? 'used')
+  const [editPrice, setEditPrice]         = useState(fig?.acquired_price?.toString() ?? '')
+  const [editQuantity, setEditQuantity]   = useState(fig?.quantity?.toString() ?? '1')
   const [blId, setBlId] = useState(fig?.bricklink_id ?? '')
   const [searching, setSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<BLSearchResult[]>([])
@@ -239,6 +334,10 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
     setSearchResults([])
     setAutoLookedUp(false)
     setFigSets([])
+    setIsEditing(false)
+    setEditCondition(fig?.condition ?? 'used')
+    setEditPrice(fig?.acquired_price?.toString() ?? '')
+    setEditQuantity(fig?.quantity?.toString() ?? '1')
   }, [fig])
 
   // Fetch sets containing this minifig when dialog opens
@@ -322,13 +421,36 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
     finally { setDeleting(false); setConfirmDelete(false) }
   }
 
+  const handleSave = async () => {
+    if (!fig) return
+    setSaving(true)
+    try {
+      await window.ipc.invoke(IPC.FIGS_UPSERT, {
+        ...fig,
+        condition: editCondition,
+        acquired_price: editPrice ? parseFloat(editPrice) : null,
+        quantity: parseInt(editQuantity) || 1,
+      })
+      toast.success('Changes saved')
+      setIsEditing(false)
+      onSaved?.()
+    } catch (err) { toast.error(String(err)) }
+    finally { setSaving(false) }
+  }
+
   if (!fig) return null
   const blUrl = fig.bricklink_url ?? `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${fig.fig_number}`
   const COND_LABEL: Record<string, string> = { new: 'New', used: 'Used', cracked: 'Cracked' }
   const figYear = figSets.length > 0 ? Math.min(...figSets.map(s => s.year)) : null
 
+  const FIG_COND_OPTIONS: { value: 'new' | 'used' | 'cracked'; label: string }[] = [
+    { value: 'new',     label: 'New'     },
+    { value: 'used',    label: 'Used'    },
+    { value: 'cracked', label: 'Cracked' },
+  ]
+
   return (
-    <Dialog open={open} onClose={onClose} title={fig.name} wide>
+    <Dialog open={open} onClose={() => { setIsEditing(false); onClose() }} title={fig.name} wide>
       <div className="space-y-5">
         <div className="flex gap-5">
           <div className="w-56 h-56 shrink-0 rounded-xl bg-[var(--color-surface-overlay)] flex items-center justify-center overflow-hidden">
@@ -342,16 +464,61 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
               <p className="font-mono font-bold text-[var(--color-accent)] text-sm">{fig.fig_number}</p>
               <p className="text-lg font-semibold font-display leading-tight">{fig.name}</p>
             </div>
-            <div className="flex gap-1.5 flex-wrap">
-              {fig.character && <Badge variant="outline" className="text-xs">{fig.character}</Badge>}
-              {fig.theme && <Badge variant="muted" className="text-xs">{fig.theme}</Badge>}
-              {fig.condition && <Badge variant="info" className="text-xs">{COND_LABEL[fig.condition] ?? fig.condition}</Badge>}
-              {figYear && <Badge variant="muted" className="text-xs font-mono">{figYear}</Badge>}
-            </div>
-            {fig.acquired_price != null && (
+            {/* Condition — view or edit */}
+            {isEditing ? (
               <div>
-                <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Paid</p>
-                <p className="text-sm font-semibold">{formatCurrency(fig.acquired_price)}</p>
+                <p className="text-xs text-[var(--color-surface-muted)] uppercase tracking-wide font-semibold mb-1.5">Condition</p>
+                <div className="flex gap-2">
+                  {FIG_COND_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => setEditCondition(o.value)}
+                      className={cn(
+                        'flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-colors',
+                        editCondition === o.value ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/15' : 'border-[var(--color-surface-border)] text-[var(--color-surface-muted)] hover:border-[var(--color-surface-muted)]',
+                      )}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-1.5 flex-wrap">
+                {fig.character && <Badge variant="outline" className="text-xs">{fig.character}</Badge>}
+                {fig.theme && <Badge variant="muted" className="text-xs">{fig.theme}</Badge>}
+                {fig.condition && <Badge variant="info" className="text-xs">{COND_LABEL[fig.condition] ?? fig.condition}</Badge>}
+                {figYear && <Badge variant="muted" className="text-xs font-mono">{figYear}</Badge>}
+              </div>
+            )}
+            {/* Paid + Qty — view or edit */}
+            {isEditing ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Paid</p>
+                  <div className="flex items-center gap-1 border border-[var(--color-surface-border)] rounded-lg px-2 py-1 bg-[var(--color-surface-overlay)]">
+                    <span className="text-xs text-[var(--color-surface-muted)]">$</span>
+                    <input type="number" min="0" step="0.01" className="w-full bg-transparent text-sm outline-none" placeholder="0.00" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Quantity</p>
+                  <div className="flex items-center gap-1 border border-[var(--color-surface-border)] rounded-lg px-2 py-1 bg-[var(--color-surface-overlay)]">
+                    <input type="number" min="1" step="1" className="w-full bg-transparent text-sm outline-none" placeholder="1" value={editQuantity} onChange={(e) => setEditQuantity(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-4">
+                {fig.acquired_price != null && (
+                  <div>
+                    <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Paid</p>
+                    <p className="text-sm font-semibold">{formatCurrency(fig.acquired_price)}</p>
+                  </div>
+                )}
+                {fig.quantity > 1 && (
+                  <div>
+                    <p className="text-xs text-[var(--color-surface-muted)] mb-0.5">Qty</p>
+                    <p className="text-sm font-semibold">{fig.quantity}</p>
+                  </div>
+                )}
               </div>
             )}
             {(marketPrices?.new != null || marketPrices?.used != null) && (
@@ -479,23 +646,40 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
           )}
         </div>
 
-        <div className="border-t border-[var(--color-surface-border)] pt-3 flex justify-end">
-          {!confirmDelete ? (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-red-400 transition-colors"
-            >
-              <Trash2 className="h-3.5 w-3.5" />Remove from collection
-            </button>
-          ) : (
-            <div className="flex items-center gap-3">
-              <p className="text-xs text-red-400">Remove {fig.name}?</p>
-              <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="text-xs h-7">Cancel</Button>
-              <Button size="sm" onClick={handleDelete} disabled={deleting}
-                className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
-                {deleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Remove
+        <div className="border-t border-[var(--color-surface-border)] pt-3 flex items-center justify-between">
+          {isEditing ? (
+            <div className="flex items-center gap-2 w-full justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="text-xs h-7">Cancel</Button>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="text-xs h-7">
+                {saving ? <Spinner size="sm" /> : null}Save Changes
               </Button>
             </div>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-current transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />Edit
+              </button>
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex items-center gap-1.5 text-xs text-[var(--color-surface-muted)] hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />Remove from collection
+                </button>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-red-400">Remove {fig.name}?</p>
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="text-xs h-7">Cancel</Button>
+                  <Button size="sm" onClick={handleDelete} disabled={deleting}
+                    className="text-xs h-7 bg-red-500 hover:bg-red-600 border-red-500">
+                    {deleting ? <Spinner size="sm" /> : <Trash2 className="h-3 w-3" />}Remove
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -508,6 +692,7 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
 function AddSetDialog({ open, onClose, onAdded }: {
   open: boolean; onClose: () => void; onAdded: () => void
 }) {
+  const navigate = useNavigate()
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<RebrickableResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -544,7 +729,26 @@ function AddSetDialog({ open, onClose, onAdded }: {
         condition: owned ? condition : 'open_complete',
         acquired_price: owned && price ? parseFloat(price) : null,
       })
-      toast.success(owned ? 'Added to collection!' : 'Added to wishlist!')
+      if (owned) {
+        const name = imported.set_number ?? r.name
+        toast(
+          (t) => (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              Added {name}
+              <button
+                onClick={() => { toast.dismiss(t.id); navigate('/collection') }}
+                style={{ fontWeight: 700, textDecoration: 'underline', cursor: 'pointer',
+                         background: 'none', border: 'none', color: 'inherit', fontSize: 'inherit', padding: 0 }}
+              >
+                View in Collection →
+              </button>
+            </span>
+          ),
+          { duration: 5000 },
+        )
+      } else {
+        toast.success('Added to wishlist!')
+      }
       setExpanding(null)
       setPrice('')
       onAdded()
@@ -637,6 +841,7 @@ function AddSetDialog({ open, onClose, onAdded }: {
 function AddFigDialog({ open, onClose, onAdded }: {
   open: boolean; onClose: () => void; onAdded: () => void
 }) {
+  const navigate = useNavigate()
   const [query, setQuery]     = useState('')
   const [results, setResults] = useState<RebrickableFigResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -684,8 +889,26 @@ function AddFigDialog({ open, onClose, onAdded }: {
         condition: cond,
         acquired_price: pricePaid ?? null,
       })
-      toast.success(owned ? `Added ${r.name}` : `Added ${r.name} to wishlist`)
-      if (owned) setOwnedFigNums((s) => new Set([...s, r.set_num]))
+      if (owned) {
+        toast(
+          (t) => (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              Added {r.name}
+              <button
+                onClick={() => { toast.dismiss(t.id); navigate('/collection') }}
+                style={{ fontWeight: 700, textDecoration: 'underline', cursor: 'pointer',
+                         background: 'none', border: 'none', color: 'inherit', fontSize: 'inherit', padding: 0 }}
+              >
+                View in Collection →
+              </button>
+            </span>
+          ),
+          { duration: 5000 },
+        )
+        setOwnedFigNums((s) => new Set([...s, r.set_num]))
+      } else {
+        toast.success(`Added ${r.name} to wishlist`)
+      }
       setExpanding(null)
       setPrice('')
       onAdded()
@@ -1121,18 +1344,36 @@ export default function Collection() {
       const price = f.condition === 'new' ? p?.new : p?.used
       return sum + (price ?? 0)
     }, 0)
-  const totalMarket   = totalSetMarket + totalFigMarket
+  const totalMarket = totalSetMarket + totalFigMarket
+
+  // Gain/loss only counts items that have a recorded purchase price
+  const trackedSetMarket = (sets as LegoSetDetail[])
+    .filter(s => s.is_owned && s.acquired_price != null)
+    .reduce((sum, s) => {
+      const p = priceMap[s.set_number]
+      return sum + ((s.condition === 'sealed' || s.condition === 'new') ? p?.new ?? 0 : p?.used ?? 0)
+    }, 0)
+  const trackedFigMarket = (figs as MinifigDetail[])
+    .filter(f => f.is_owned && f.acquired_price != null)
+    .reduce((sum, f) => {
+      const p = figPriceMap[f.fig_number]
+      return sum + (f.condition === 'new' ? p?.new ?? 0 : p?.used ?? 0)
+    }, 0)
+  const trackedMarket = trackedSetMarket + trackedFigMarket
   const totalInvested = stats ? stats.acquired_total + stats.fig_acquired_total : 0
-  const gainLoss      = totalMarket - totalInvested
+  const gainLoss      = trackedMarket - totalInvested
   const gainTrend     = gainLoss > 0 ? 'up' : gainLoss < 0 ? 'down' : 'flat'
   const gainPct       = totalInvested > 0 ? (gainLoss / totalInvested) * 100 : null
-  const hasFinancial  = !!(stats && totalInvested > 0 && totalMarket > 0)
+  const hasFinancial  = !!(totalInvested > 0 && trackedMarket > 0)
+
+  const trackedCount = (sets as LegoSetDetail[]).filter(s => s.is_owned && s.acquired_price != null).length
+                     + (figs as MinifigDetail[]).filter(f => f.is_owned && f.acquired_price != null).length
 
   const gainLossDisplay = hasFinancial
     ? `${gainLoss >= 0 ? '+' : ''}${formatCurrency(gainLoss)}${gainPct != null ? ` (${gainPct >= 0 ? '+' : ''}${gainPct.toFixed(1)}%)` : ''}`
     : '—'
   const gainLossSub = hasFinancial
-    ? `vs. ${formatCurrency(totalInvested)} invested`
+    ? `${trackedCount} priced item${trackedCount !== 1 ? 's' : ''} · ${formatCurrency(totalInvested)} invested`
     : stats && totalInvested > 0 ? 'Refresh prices to calculate' : 'Add purchase prices to track'
 
   return (
@@ -1394,6 +1635,7 @@ export default function Collection() {
         open={!!detailSet}
         onClose={() => setDetailSet(null)}
         onDeleted={() => { setDetailSet(null); refetchSets() }}
+        onSaved={() => refetchSets()}
       />
       <FigDetailDialog
         fig={detailFig}
@@ -1401,6 +1643,7 @@ export default function Collection() {
         open={!!detailFig}
         onClose={() => setDetailFig(null)}
         onDeleted={() => { setDetailFig(null); refetchFigs() }}
+        onSaved={() => refetchFigs()}
       />
     </PageShell>
   )
