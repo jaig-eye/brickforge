@@ -224,12 +224,25 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
   const [searching, setSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<BLSearchResult[]>([])
   const [autoLookedUp, setAutoLookedUp] = useState(false)
+  const [figSets, setFigSets] = useState<{ set_num: string; name: string; year: number; num_parts: number; set_img_url: string }[]>([])
+  const [loadingSets, setLoadingSets] = useState(false)
 
   useEffect(() => {
     setBlId(fig?.bricklink_id ?? '')
     setSearchResults([])
     setAutoLookedUp(false)
+    setFigSets([])
   }, [fig])
+
+  // Fetch sets containing this minifig when dialog opens
+  useEffect(() => {
+    if (!fig || !open) return
+    setLoadingSets(true)
+    window.ipc.invoke(IPC.FIGS_GET_SETS, fig.fig_number)
+      .then((res) => setFigSets((res as typeof figSets) ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingSets(false))
+  }, [fig?.fig_number, open])
 
   // Auto-lookup from Rebrickable when dialog opens and no BrickLink ID is set
   useEffect(() => {
@@ -305,6 +318,7 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
   if (!fig) return null
   const blUrl = fig.bricklink_url ?? `https://www.bricklink.com/v2/catalog/catalogitem.page?M=${fig.fig_number}`
   const COND_LABEL: Record<string, string> = { new: 'New', used: 'Used', cracked: 'Cracked' }
+  const figYear = figSets.length > 0 ? Math.min(...figSets.map(s => s.year)) : null
 
   return (
     <Dialog open={open} onClose={onClose} title={fig.name} wide>
@@ -325,6 +339,7 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
               {fig.character && <Badge variant="outline" className="text-xs">{fig.character}</Badge>}
               {fig.theme && <Badge variant="muted" className="text-xs">{fig.theme}</Badge>}
               {fig.condition && <Badge variant="info" className="text-xs">{COND_LABEL[fig.condition] ?? fig.condition}</Badge>}
+              {figYear && <Badge variant="muted" className="text-xs font-mono">{figYear}</Badge>}
             </div>
             {fig.acquired_price != null && (
               <div>
@@ -415,6 +430,48 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
             </div>
           </div>
         </div>
+
+        {/* Appears in sets */}
+        <div className="border-t border-[var(--color-surface-border)] pt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-surface-muted)] mb-3">
+            {loadingSets
+              ? 'Loading sets…'
+              : figSets.length > 0
+                ? `Appears in ${figSets.length} set${figSets.length !== 1 ? 's' : ''}`
+                : 'No sets found on Rebrickable'}
+          </p>
+          {loadingSets && (
+            <div className="flex items-center gap-2 text-sm text-[var(--color-surface-muted)]">
+              <Spinner size="sm" />Fetching from Rebrickable…
+            </div>
+          )}
+          {!loadingSets && figSets.length > 0 && (
+            <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+              {figSets.map((s) => {
+                const setUrl = `https://www.bricklink.com/v2/catalog/catalogitem.page?S=${s.set_num}`
+                return (
+                  <button
+                    key={s.set_num}
+                    onClick={() => window.ipc.invoke('bf:app:openExternal', setUrl)}
+                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--color-surface-overlay)] transition-colors text-left group"
+                  >
+                    <img
+                      src={s.set_img_url}
+                      alt={s.name}
+                      className="w-10 h-10 object-contain rounded bg-[var(--color-surface-overlay)] shrink-0"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold leading-tight truncate group-hover:text-[var(--color-accent)]">{s.name}</p>
+                      <p className="text-xs text-[var(--color-surface-muted)] font-mono">{s.set_num} · {s.year} · {s.num_parts} pcs</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
         <div className="border-t border-[var(--color-surface-border)] pt-3 flex justify-end">
           {!confirmDelete ? (
             <button

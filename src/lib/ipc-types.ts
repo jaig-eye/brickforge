@@ -25,6 +25,7 @@ export const IPC = {
   FIGS_SET_BRICKLINK_ID:  'bf:figs:setBricklinkId',
   FIGS_LOOKUP_BL_ID:      'bf:figs:lookupBricklinkId',
   FIGS_SEARCH_BL:         'bf:figs:searchBricklink',
+  FIGS_GET_SETS:          'bf:figs:getSets',
 
   // ── Collection — Pieces ──────────────────────────────────────────────────
   PIECES_LIST:          'bf:pieces:list',

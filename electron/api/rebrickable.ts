@@ -210,6 +210,23 @@ export async function importRebrickableSet(setNum: string): Promise<LegoSet | nu
 }
 
 /**
+ * Fetch all sets that contain a given minifigure.
+ * Returns a list of RebrickableSet objects sorted newest-first.
+ */
+export async function getMinifigSets(figNum: string): Promise<RebrickableSet[]> {
+  try {
+    const res = await get<RebrickableListResponse<RebrickableSet>>(
+      `/minifigs/${encodeURIComponent(figNum)}/sets/`,
+      { page_size: '100', ordering: '-year' },
+    )
+    return res.results
+  } catch (err) {
+    log.warn('[Rebrickable] getMinifigSets failed:', err)
+    return []
+  }
+}
+
+/**
  * Fetch external IDs for a minifig from Rebrickable.
  * Returns the BrickLink ID(s) if available, e.g. ["sw0093"].
  */

@@ -8,7 +8,7 @@ import {
 import {
   searchRebrickableSets, importRebrickableSet, lookupRebrickableSet, getSetMinifigCount,
   browseRebrickableSets, browseRebrickableMinifigs, getThemes,
-  inspectRebrickableSet, getMinifigExternalIds, searchRebrickableMinifigs,
+  inspectRebrickableSet, getMinifigExternalIds, searchRebrickableMinifigs, getMinifigSets,
   type BrowseOpts,
 } from '../api/rebrickable'
 import { searchBricklinkMinifigs } from '../api/bricklink'
@@ -35,6 +35,9 @@ export function registerCollectionHandlers(): void {
   )
   ipcMain.handle(IPC.FIGS_LOOKUP_BL_ID, (_e, figNumber: string) =>
     getMinifigExternalIds(figNumber)
+  )
+  ipcMain.handle(IPC.FIGS_GET_SETS, (_e, figNumber: string) =>
+    getMinifigSets(figNumber)
   )
   ipcMain.handle(IPC.FIGS_SEARCH_BL, async (_e, query: string) => {
     // Run both searches in parallel; BrickLink catalog search may return empty if endpoint unavailable
