@@ -158,12 +158,13 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   const hasFigs       = prefs.includes_figures !== false
   const smokeFree     = !!prefs.smoke_free_home
   const cleanSet      = !!prefs.clean_set
+  const sellerNotes   = (prefs.seller_notes as string | null) ?? null
 
   const condToken     = completeness === 'complete' ? 'Complete' : completeness === 'partial' ? '99% Complete' : 'Incomplete'
   const conditionDesc =
     completeness === 'complete' ? 'Complete — all pieces present and verified' :
     completeness === 'partial'  ? '99% Complete — may be missing a small number of minor pieces' :
-                                  'Incomplete — some pieces are missing'
+                                  'Incomplete — missing pieces, listed as-is'
 
   const minifigs  = (setData.num_minifigures ?? setData.minifig_count ?? 0) as number
   const pieces    = setData.piece_count ?? setData.num_parts ?? ''
@@ -173,9 +174,6 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   const setNo     = setData.set_number ?? ''
 
   // Minifig handling: 3 distinct cases
-  // Case 1: set has no minifigs (minifigs === 0) — omit from listing entirely
-  // Case 2: set has minifigs AND seller is including them
-  // Case 3: set has minifigs BUT seller is NOT including them
   const setHasFigs = minifigs > 0
   const figAttr = !setHasFigs ? null : hasFigs ? `All ${minifigs} minifigure${minifigs !== 1 ? 's' : ''} included` : `Minifigures NOT included (sold separately)`
   const figNote = !setHasFigs ? '' : hasFigs ? '' : '\nIMPORTANT: This set normally includes minifigures but the seller is NOT including them. Make this clearly visible in the description.'
@@ -185,6 +183,7 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   if (cleanSet)  attrs.push('Clean, well-maintained set')
   attrs.push(hasManual ? 'Includes original instruction manual' : 'No instruction manual included')
   if (figAttr) attrs.push(figAttr)
+  if (sellerNotes) attrs.push(`Seller notes: "${sellerNotes}"`)
 
   const manualToken = hasManual ? 'w/ Manual' : 'No Manual'
   const figsToken   = !setHasFigs ? '' : hasFigs ? `w/ ${minifigs} Minifig${minifigs !== 1 ? 's' : ''}` : 'No Figs'
@@ -194,6 +193,10 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   const figTableRow = setHasFigs
     ? `\n      - Minifigures row: "${hasFigs ? `${minifigs} included` : 'NOT included — sold separately'}"`
     : `\n      - Minifigures: OMIT THIS ROW ENTIRELY — this set has no minifigures`
+
+  const sellerNotesSection = sellerNotes
+    ? `\n  SELLER NOTES SECTION (only if seller_notes present): dark background (#111), amber/yellow label "Seller Notes". Display the seller's notes verbatim in white text, font-size 13px. This section communicates the exact condition details, quirks, or special info the seller provided.`
+    : ''
 
   return `You are an expert eBay seller specialising in LEGO sets. Generate a premium keyword-optimised eBay listing.
 
@@ -213,30 +216,30 @@ OUTPUT FORMAT — return ONLY a JSON object with exactly TWO keys: "title" and "
 
 "title" — eBay title rules:
   • HARD LIMIT: 80 characters. NEVER exceed this.
-  • Pack keywords in this priority order:
+  • Start with a single relevant emoji (🚀 🏰 🌿 🤖 ⚔️ 🛸 🏎️ 🦁 🌟 🎯 — match the theme/subject).
+  • Pack keywords in this priority order after the emoji:
       1. LEGO  2. Theme: ${theme}  3. Set#: ${setNo}  4. Name: ${name}
-      5. Year: ${year}  6. ${pieces}pcs  7. ${condToken}  8. ${manualToken}${figsToken ? `  9. ${figsToken}` : ''}${extraTokens ? `  10. ${extraTokens}` : ''}
-  • Abbreviations: "pcs", "w/", "&", drop articles.
+      5. ${condToken}  6. ${manualToken}${figsToken ? `  7. ${figsToken}` : ''}${extraTokens ? `  8. ${extraTokens}` : ''}
+  • Abbreviations: "w/", "&", drop articles. Do NOT include piece count — it wastes space.
 
-"description" — Rich eBay HTML listing with full inline CSS. Dark theme, gold accents. Structure:
+"description" — Clean, modern eBay HTML listing with full inline CSS. Dark theme. Structure:
 
-  WRAPPER: <div style="font-family:Arial,Helvetica,sans-serif;max-width:680px;margin:0 auto;background:#0d0d0d;border-radius:8px;overflow:hidden;border:2px solid #FFD700;">
+  WRAPPER: <div style="font-family:Arial,Helvetica,sans-serif;max-width:680px;margin:0 auto;background:#111;border-radius:10px;overflow:hidden;border:1px solid #2a2a2a;">
 
-  HEADER BANNER: gold gradient background (#FFD700 → #FFA500), black text. Show: "Official LEGO® Set" label (uppercase, small), set name (large bold), set# • year • pieces on one line below.
+  HEADER: background #1a1a1a, left border 4px solid #FFD700, padding 20px 24px. Show set name in large white bold text (font-size:22px), then set# · ${year} in small #888 text below.
 
-  ABOUT SECTION: dark background (#111), gold uppercase label "About This Set", then 4–6 sentences of enthusiastic, detailed retail-style copy. Cover: what the set depicts/builds, why it's special, who it appeals to, any notable features (display-worthy, complex build, part of a series, etc.). Do NOT mention shipping, payment, or returns.
+  ABOUT SECTION: background #111, padding 20px 24px. Label: uppercase tracking-wide font-size:11px color:#FFD700 margin-bottom:10px. Then 4–6 sentences of natural, enthusiastic copy: what the set is, why it's collectible, who it's for, what makes it special. Do NOT mention shipping, payment, or returns.
 
-  SET DETAILS TABLE: dark background (#0d0d0d), gold uppercase label "Set Details". Full-width table, alternating row backgrounds (#111 and #0d0d0d), left column labels in #888, right column values in white bold. Rows:
+  SET DETAILS TABLE: background #161616, padding 20px 24px. Label same style as above. Full-width table, border-collapse collapse. Alternating row backgrounds #1a1a1a and #161616, each row padding 10px 0, border-bottom 1px solid #222. Left cell: labels in #666, font-size:13px, width:40%. Right cell: values in #eee bold, font-size:13px. Rows:
       - Set Number
       - Name
       - Year
       - Theme${figTableRow}
-      - Piece Count: "${pieces} pieces"
       - Condition: "${conditionDesc}"
-
-  WHAT'S INCLUDED: dark background (#111), gold uppercase label "What's Included". Unstyled list — each item as: checkmark ✓ (color #FFD700) for positive items, ✗ (color #ff4444) for negative items (no manual, no figs). Use HTML entities &#10003; and &#10007;. Inline-style each li: no list-style, padding 8px 0, border-bottom 1px solid #1e1e1e, display flex, gap 10px, color #ddd, font-size 13px.
-
-  FOOTER: very dark background (#080808), centered small text in #555: "Authentic LEGO® product — not a third-party or counterfeit item. All items personally inspected and verified."
+${sellerNotes ? `      - Seller Notes: "${sellerNotes}"` : ''}
+  WHAT'S INCLUDED: background #111, padding 20px 24px. Label same style. Unstyled list — each item: ✓ (color #4ade80) for included, ✗ (color #f87171) for not included. Use HTML entities &#10003; and &#10007;. Each li: list-style none, padding 8px 0, border-bottom 1px solid #1e1e1e, display flex, gap 12px, align-items center, color #ccc, font-size 13px.
+${sellerNotesSection}
+  FOOTER: background #0d0d0d, padding 14px 24px, centered small text in #444, font-size:11px: "Authentic LEGO® product · Not a third-party or counterfeit item · All items personally inspected"
 
   CLOSE wrapper div.
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { useFeatureFlags } from '@/hooks/useFeatureFlags'
+import { useQueryClient } from '@tanstack/react-query'
 import { IPC } from '@/lib/ipc-types'
 import toast from 'react-hot-toast'
 
@@ -41,6 +42,7 @@ const DEFAULT_MODELS: Record<'openai' | 'anthropic', string> = {
 
 export default function SettingsPage() {
   const { flags } = useFeatureFlags()
+  const queryClient = useQueryClient()
   const [settings, setSettings] = useState<Settings>({ aiProvider: 'openai', aiModel: 'gpt-4o-mini' })
 
   useEffect(() => {
@@ -141,6 +143,7 @@ export default function SettingsPage() {
 
   const toggleFlag = async (key: string, current: 0 | 1) => {
     await window.ipc.invoke(IPC.FLAGS_SET, key, current === 1 ? 0 : 1)
+    await queryClient.invalidateQueries({ queryKey: ['feature-flags'] })
     toast.success(`${key} ${current === 1 ? 'disabled' : 'enabled'}`)
   }
 

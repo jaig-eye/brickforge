@@ -433,11 +433,11 @@ function AddSetDialog({ open, onClose, onAdded }: {
 
               {expanding === r.set_num && (
                 <div className="border-t border-[var(--color-surface-border)] px-3 py-3 bg-[var(--color-surface-overlay)] space-y-3">
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {(['sealed', 'open_complete', 'open_incomplete'] as const).map((c) => (
                       <button key={c} onClick={() => setCondition(c)}
                         className={cn(
-                          'flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-colors',
+                          'py-1.5 rounded-lg border text-xs font-semibold transition-colors text-center truncate px-1',
                           condition === c
                             ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/15'
                             : 'border-[var(--color-surface-border)] text-[var(--color-surface-muted)] hover:border-[var(--color-surface-muted)]',
@@ -730,7 +730,22 @@ export default function Collection() {
   const isLoading = typeTab === 'sets' ? setsLoading : figsLoading
 
   // ── Gain/loss calculations ───────────────────────────────────────────────
-  const totalMarket   = stats ? stats.used_value + stats.fig_used_value : 0
+  // Use the same condition-aware price per item as the individual cards do
+  const totalSetMarket = (sets as LegoSetDetail[])
+    .filter(s => s.is_owned)
+    .reduce((sum, s) => {
+      const p = priceMap[s.set_number]
+      const price = (s.condition === 'sealed' || s.condition === 'new') ? p?.new : p?.used
+      return sum + (price ?? 0)
+    }, 0)
+  const totalFigMarket = (figs as MinifigDetail[])
+    .filter(f => f.is_owned)
+    .reduce((sum, f) => {
+      const p = figPriceMap[f.fig_number]
+      const price = f.condition === 'new' ? p?.new : p?.used
+      return sum + (price ?? 0)
+    }, 0)
+  const totalMarket   = totalSetMarket + totalFigMarket
   const totalInvested = stats ? stats.acquired_total + stats.fig_acquired_total : 0
   const gainLoss      = totalMarket - totalInvested
   const gainTrend     = gainLoss > 0 ? 'up' : gainLoss < 0 ? 'down' : 'flat'

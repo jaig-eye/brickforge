@@ -43,6 +43,7 @@ interface ListingPrefs {
   includesInstructions: boolean
   includesFigures: boolean
   completeness: Completeness
+  sellerNotes: string
 }
 
 interface GeneratedListing {
@@ -337,6 +338,7 @@ export default function EbayListing() {
     includesInstructions: true,
     includesFigures: true,
     completeness: 'complete',
+    sellerNotes: '',
   })
 
   // ── Upload ────────────────────────────────────────────────────────────────
@@ -443,6 +445,7 @@ export default function EbayListing() {
         includes_instructions: prefs.includesInstructions,
         includes_figures: prefs.includesFigures,
         completeness: prefs.completeness,
+        seller_notes: prefs.sellerNotes.trim() || null,
       }
       const result = await window.ipc.invoke(IPC.LISTING_GENERATE, setData, prefsPayload) as GeneratedListing
       if (result.error) { toast.error(result.error); setStep('configure'); return }
@@ -732,6 +735,21 @@ export default function EbayListing() {
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Seller notes */}
+                  <div className="pt-1">
+                    <label className="block text-sm font-medium mb-1.5">
+                      Seller Notes
+                      <span className="ml-2 text-xs font-normal text-[var(--color-surface-muted)]">optional — included verbatim in the listing</span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      className="w-full rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-3 py-2 text-sm outline-none placeholder:text-[var(--color-surface-muted)] focus:border-[var(--color-accent)] transition-colors resize-none"
+                      placeholder="e.g. New aftermarket stickers applied, minor scratch on back panel, visually complete but not counted piece-by-piece, all named minifigures present…"
+                      value={prefs.sellerNotes}
+                      onChange={(e) => setPrefs((p) => ({ ...p, sellerNotes: e.target.value }))}
+                    />
                   </div>
                 </CardContent>
               </Card>
