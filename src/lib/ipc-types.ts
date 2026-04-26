@@ -61,6 +61,7 @@ export const IPC = {
   LISTING_GENERATE:          'bf:listing:generate',
   LISTING_HISTORY_LIST:      'bf:listing:historyList',
   LISTING_HISTORY_DELETE:    'bf:listing:historyDelete',
+  LISTING_PRICE_SUGGEST:     'bf:listing:priceSuggest',
   SETS_LOOKUP_REBRICK:       'bf:sets:lookupRebrickable',
   SETS_MINIFIG_COUNT_REBRICK:'bf:sets:minifigCountRebrickable',
 

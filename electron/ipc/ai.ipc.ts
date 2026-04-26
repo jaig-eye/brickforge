@@ -240,16 +240,19 @@ OUTPUT FORMAT — return ONLY a JSON object with exactly TWO keys: "title" and "
 "title" — eBay title rules:
   • HARD LIMIT: 80 characters. NEVER exceed this.
   • NO emoji — plain text only.
-  • Pack keywords in this priority order:
-      1. LEGO  2. Set#: ${setNo}  3. Name: ${name}  4. ${pieces} pcs
+  • Lead with the product name, not a label. Structure: LEGO [Name] [SetNum] [pcs] | [details]
+  • Use " | " as a visual separator between the item identity and the condition/attribute details.
+  • Keyword priority order:
+      1. LEGO  2. Name: ${name}  3. ${setNo}  4. ${pieces} pcs
       5. ${condToken}${manualToken ? `  6. ${manualToken}` : ''}${figsToken ? `  7. ${figsToken}` : ''}${extraTokens ? `  8. ${extraTokens}` : ''}
+  • Example format: "LEGO Millennium Falcon 75375-1 921 pcs | Complete w/ Manual"
   • Abbreviations: "w/", "&", drop articles.
 
 "description" — Clean, modern eBay HTML listing with full inline CSS. Dark theme. Structure:
 
   WRAPPER: <div style="font-family:Arial,Helvetica,sans-serif;max-width:680px;margin:0 auto;background:#111;border-radius:10px;overflow:hidden;border:1px solid #2a2a2a;">
 
-  HEADER: background #1a1a1a, left border 4px solid #FFD700, padding 20px 24px. Show set name in large white bold text (font-size:22px), then set# · ${year} in small #888 text below.
+  HEADER: background #1a1a1a, left border 4px solid #FFD700, padding 20px 24px. Show set name in large white bold text (font-size:22px), then the literal text "#${setNo} · ${year}" in small #888 text below.
 
   ABOUT SECTION: background #111, padding 20px 24px. Label: uppercase tracking-wide font-size:11px color:#FFD700 margin-bottom:10px. Then 4–6 sentences of natural, enthusiastic copy: what the set is, why it's collectible, who it's for, what makes it special. Do NOT mention shipping, payment, or returns.
 
@@ -277,6 +280,87 @@ function enforceTitleLimit(result: Record<string, unknown>): Record<string, unkn
     result.title = (lastSpace > 60 ? truncated.slice(0, lastSpace) : truncated).trimEnd()
   }
   return result
+}
+
+// ── eBay Sold Price Scraper ────────────────────────────────────────────────────
+
+interface EbaySoldData {
+  prices: number[]
+  median: number
+  low: number
+  high: number
+  count: number
+  url: string
+}
+
+function ebayGet(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const follow = (u: string, hops = 0) => {
+      if (hops > 5) return reject(new Error('Too many redirects'))
+      https.get(u, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Encoding': 'identity',
+        },
+      }, (res) => {
+        if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
+          follow(res.headers.location, hops + 1); return
+        }
+        let data = ''
+        res.on('data', c => (data += c))
+        res.on('end', () => resolve(data))
+      }).on('error', reject).setTimeout(15_000, function (this: { destroy(): void }) { this.destroy(); reject(new Error('eBay request timed out')) })
+    }
+    follow(url)
+  })
+}
+
+async function fetchEbaySoldPrices(
+  setNum: string,
+  name: string,
+  condition: 'new' | 'used',
+): Promise<EbaySoldData | null> {
+  const shortName = name.split(' ').slice(0, 4).join(' ')
+  const query = encodeURIComponent(`LEGO ${setNum} ${shortName}`)
+  const condFilter = condition === 'new' ? '&LH_ItemCondition=1000' : '&LH_ItemCondition=3000'
+  const url = `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&LH_Complete=1&_sop=13${condFilter}&_ipg=25`
+  try {
+    const html = await ebayGet(url)
+    const prices: number[] = []
+
+    // Primary: POSITIVE spans = sold prices (eBay displays in green)
+    const posRe = /class="[^"]*POSITIVE[^"]*"[^>]*>\$?\s*([\d,]+\.?\d*)/g
+    let m: RegExpExecArray | null
+    while ((m = posRe.exec(html)) !== null) {
+      const p = parseFloat(m[1].replace(/,/g, ''))
+      if (p >= 1 && p <= 20000) prices.push(p)
+    }
+    // Fallback: s-item__price spans
+    if (prices.length < 3) {
+      const itemRe = /s-item__price[^>]*>(?:<[^>]+>)*\$?\s*([\d,]+\.?\d*)/g
+      while ((m = itemRe.exec(html)) !== null) {
+        const p = parseFloat(m[1].replace(/,/g, ''))
+        if (p >= 1 && p <= 20000) prices.push(p)
+      }
+    }
+    if (prices.length === 0) return null
+
+    // IQR filter — removes shipping costs and outliers
+    const sorted = [...prices].sort((a, b) => a - b)
+    const q1 = sorted[Math.floor(sorted.length * 0.25)]
+    const q3 = sorted[Math.floor(sorted.length * 0.75)]
+    const iqr = q3 - q1
+    const filtered = sorted.filter(p => p >= Math.max(q1 - 1.5 * iqr, 5) && p <= q3 + 1.5 * iqr)
+    if (filtered.length === 0) return null
+
+    const median = filtered[Math.floor(filtered.length / 2)]
+    return { prices: filtered, median, low: filtered[0], high: filtered[filtered.length - 1], count: filtered.length, url }
+  } catch (err) {
+    log.warn('[eBay] price scrape failed:', err)
+    return null
+  }
 }
 
 // ── IPC Handlers ──────────────────────────────────────────────────────────────
@@ -459,6 +543,12 @@ export function registerAiHandlers(): void {
 
   ipcMain.handle(IPC.LISTING_HISTORY_LIST,   () => getListingHistory())
   ipcMain.handle(IPC.LISTING_HISTORY_DELETE, (_e, id: number) => deleteListingHistory(id))
+
+  ipcMain.handle(IPC.LISTING_PRICE_SUGGEST, async (
+    _e, setNum: string, name: string, condition: 'new' | 'used',
+  ) => {
+    return fetchEbaySoldPrices(setNum, name, condition)
+  })
 
   // Sidecar stubs — no-ops kept so any cached renderer calls don't throw
   ipcMain.handle('bf:sidecar:status',  () => ({ running: false, message: 'sidecar removed — AI runs directly in Node.js' }))

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Upload, CheckCircle, XCircle, Search, Wand2,
   Copy, Check, RefreshCw, Tag, AlertCircle, ChevronDown, X,
-  History, Trash2, ChevronRight,
+  History, Trash2, ChevronRight, DollarSign, ExternalLink, TrendingUp,
 } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
@@ -52,6 +52,21 @@ interface GeneratedListing {
   subtitle?: string
   error?: string
 }
+
+interface EbaySoldData {
+  prices: number[]
+  median: number
+  low: number
+  high: number
+  count: number
+  url: string
+}
+
+type PriceSuggestion =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'done'; data: EbaySoldData }
+  | { status: 'none' }
 
 interface HistoryEntry {
   id: number
@@ -333,6 +348,7 @@ export default function EbayListing() {
   const [contextHint, setContextHint] = useState<string>('')
   const [rawAiResponse, setRawAiResponse] = useState<string>('')
   const [uploadMode, setUploadMode] = useState<'photo' | 'search'>('photo')
+  const [priceSuggestion, setPriceSuggestion] = useState<PriceSuggestion>({ status: 'idle' })
   const [catalogQuery, setCatalogQuery] = useState('')
   const [catalogResults, setCatalogResults] = useState<RebrickableSet[]>([])
   const [catalogSearching, setCatalogSearching] = useState(false)
@@ -433,9 +449,20 @@ export default function EbayListing() {
 
   // ── Generate ──────────────────────────────────────────────────────────────
 
+  const fetchPriceSuggestion = async (setNum: string, name: string, condition: 'new' | 'used') => {
+    setPriceSuggestion({ status: 'loading' })
+    try {
+      const result = await window.ipc.invoke(IPC.LISTING_PRICE_SUGGEST, setNum, name, condition) as EbaySoldData | null
+      setPriceSuggestion(result ? { status: 'done', data: result } : { status: 'none' })
+    } catch {
+      setPriceSuggestion({ status: 'none' })
+    }
+  }
+
   const generate = async () => {
     if (!confirmedSet) return
     setGenerating(true)
+    setPriceSuggestion({ status: 'idle' })
     setStep('result')
     try {
       const setData = {
@@ -453,6 +480,10 @@ export default function EbayListing() {
         completeness: prefs.completeness,
         seller_notes: prefs.sellerNotes.trim() || null,
       }
+      // Fire price fetch in parallel — matches listing condition
+      const ebayCondition: 'new' | 'used' = 'used'
+      fetchPriceSuggestion(confirmedSet.set_num, confirmedSet.name, ebayCondition)
+
       const result = await window.ipc.invoke(IPC.LISTING_GENERATE, setData, prefsPayload) as GeneratedListing
       if (result.error) { toast.error(result.error); setStep('configure'); return }
       setListing(result)
@@ -475,6 +506,7 @@ export default function EbayListing() {
     setListing(null)
     setCatalogQuery('')
     setCatalogResults([])
+    setPriceSuggestion({ status: 'idle' })
   }
 
   const onCatalogQueryChange = (q: string) => {
@@ -921,6 +953,56 @@ export default function EbayListing() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Price Suggestion */}
+                  {priceSuggestion.status !== 'idle' && (
+                    <Card>
+                      <CardHeader stud><h2 className="text-sm font-bold font-display text-black flex items-center gap-2">
+                        <DollarSign className="h-3.5 w-3.5" />Suggested Price — Recent eBay Sold
+                      </h2></CardHeader>
+                      <CardContent className="py-4">
+                        {priceSuggestion.status === 'loading' && (
+                          <div className="flex items-center gap-2 text-sm text-[var(--color-surface-muted)]">
+                            <RefreshCw className="h-4 w-4 animate-spin" />Checking recent sold listings…
+                          </div>
+                        )}
+                        {priceSuggestion.status === 'none' && (
+                          <p className="text-sm text-[var(--color-surface-muted)]">No recent sold data found for this set on eBay.</p>
+                        )}
+                        {priceSuggestion.status === 'done' && (() => {
+                          const d = priceSuggestion.data
+                          return (
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-end gap-4">
+                                <div>
+                                  <p className="text-xs text-[var(--color-surface-muted)] mb-0.5 uppercase tracking-wide font-semibold">Median</p>
+                                  <p className="text-2xl font-bold font-display">${d.median.toFixed(2)}</p>
+                                </div>
+                                <div className="pb-1">
+                                  <p className="text-xs text-[var(--color-surface-muted)]">
+                                    Range: <span className="font-semibold text-[var(--color-surface-fg)]">${d.low.toFixed(2)} – ${d.high.toFixed(2)}</span>
+                                  </p>
+                                  <p className="text-xs text-[var(--color-surface-muted)]">
+                                    Based on <span className="font-semibold text-[var(--color-surface-fg)]">{d.count}</span> recent sold listings
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 text-green-400 shrink-0" />
+                                <a
+                                  href="#"
+                                  onClick={(e) => { e.preventDefault(); window.ipc.invoke('bf:app:openExternal', d.url) }}
+                                  className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1"
+                                >
+                                  View on eBay <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </div>
+                            </div>
+                          )
+                        })()}
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Description */}
                   <Card>
