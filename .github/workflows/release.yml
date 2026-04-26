@@ -24,14 +24,30 @@ jobs:
 
       - name: Build & package
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
-        run: npm run build && npx electron-builder --win --publish always --config electron-builder.config.js
+        run: npm run build && npx electron-builder --win --publish never --config electron-builder.config.js
 
-      - name: Upload app.asar to release
+      - name: Create GitHub release
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref_name }} release/win-unpacked/resources/app.asar --clobber
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view ${{ github.ref_name }} \
+            || gh release create ${{ github.ref_name }} \
+               --title "BrickForge ${{ github.ref_name }}" \
+               --notes "BrickForge ${{ github.ref_name }}" \
+               --prerelease
+
+      - name: Upload release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} release/latest.yml --clobber
+          gh release upload ${{ github.ref_name }} release/win-unpacked/resources/app.asar --clobber
+          for f in release/*.exe; do
+            gh release upload ${{ github.ref_name }} "$f" --clobber
+          done
 
   release-mac:
     runs-on: macos-latest
