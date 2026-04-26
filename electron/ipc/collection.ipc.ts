@@ -8,9 +8,10 @@ import {
 import {
   searchRebrickableSets, importRebrickableSet, lookupRebrickableSet, getSetMinifigCount,
   browseRebrickableSets, browseRebrickableMinifigs, getThemes,
-  inspectRebrickableSet,
+  inspectRebrickableSet, getMinifigExternalIds, searchRebrickableMinifigs,
   type BrowseOpts,
 } from '../api/rebrickable'
+import { searchBricklinkMinifigs } from '../api/bricklink'
 
 export function registerCollectionHandlers(): void {
   ipcMain.handle(IPC.SETS_LIST, (_e, filter?: SetFilter) => listSets(filter))
@@ -32,6 +33,17 @@ export function registerCollectionHandlers(): void {
   ipcMain.handle(IPC.FIGS_SET_BRICKLINK_ID, (_e, figNumber: string, bricklinkId: string) =>
     setMinifigBricklinkId(figNumber, bricklinkId)
   )
+  ipcMain.handle(IPC.FIGS_LOOKUP_BL_ID, (_e, figNumber: string) =>
+    getMinifigExternalIds(figNumber)
+  )
+  ipcMain.handle(IPC.FIGS_SEARCH_BL, async (_e, query: string) => {
+    // Run both searches in parallel; BrickLink catalog search may return empty if endpoint unavailable
+    const [blResults, rbResults] = await Promise.all([
+      searchBricklinkMinifigs(query),
+      searchRebrickableMinifigs(query),
+    ])
+    return { bricklink: blResults, rebrickable: rbResults }
+  })
 
   // ── Catalog Browser ────────────────────────────────────────────────────────
   ipcMain.handle(IPC.CATALOG_BROWSE_SETS,    (_e, opts: BrowseOpts) => browseRebrickableSets(opts))

@@ -203,6 +203,14 @@ function SetDetailDialog({ set, marketPrice, open, onClose, onDeleted }: {
 
 // ── Fig Detail Dialog ──────────────────────────────────────────────────────────
 
+interface BLSearchResult {
+  no: string
+  name: string
+  thumbnail_url?: string
+  year_released?: number | null
+  source: 'bricklink' | 'rebrickable'
+}
+
 function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
   fig: MinifigDetail | null
   marketPrices?: { new?: number; used?: number }
@@ -213,14 +221,73 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [blId, setBlId] = useState(fig?.bricklink_id ?? '')
+  const [searching, setSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState<BLSearchResult[]>([])
+  const [autoLookedUp, setAutoLookedUp] = useState(false)
 
-  useEffect(() => { setBlId(fig?.bricklink_id ?? '') }, [fig])
+  useEffect(() => {
+    setBlId(fig?.bricklink_id ?? '')
+    setSearchResults([])
+    setAutoLookedUp(false)
+  }, [fig])
 
-  const saveBricklinkId = async () => {
+  // Auto-lookup from Rebrickable when dialog opens and no BrickLink ID is set
+  useEffect(() => {
+    if (!fig || !open || fig.bricklink_id || autoLookedUp) return
+    if (!fig.fig_number.startsWith('fig-')) return // already IS the BrickLink ID
+    setAutoLookedUp(true)
+    window.ipc.invoke(IPC.FIGS_LOOKUP_BL_ID, fig.fig_number)
+      .then((res) => {
+        const r = res as { bricklink: string[] }
+        if (r.bricklink.length === 1) {
+          setBlId(r.bricklink[0])
+          // auto-save single unambiguous result
+          window.ipc.invoke(IPC.FIGS_SET_BRICKLINK_ID, fig.fig_number, r.bricklink[0])
+            .then(() => toast.success(`BrickLink ID found: ${r.bricklink[0]}`))
+        } else if (r.bricklink.length > 1) {
+          // multiple variants — show as results for user to pick
+          setSearchResults(r.bricklink.map(no => ({ no, name: no, source: 'rebrickable' as const })))
+        }
+      })
+      .catch(() => {})
+  }, [fig, open, autoLookedUp])
+
+  const saveBricklinkId = async (id?: string) => {
     if (!fig) return
-    const trimmed = blId.trim()
+    const trimmed = (id ?? blId).trim()
+    setBlId(trimmed)
+    setSearchResults([])
     await window.ipc.invoke(IPC.FIGS_SET_BRICKLINK_ID, fig.fig_number, trimmed)
     toast.success(trimmed ? `BrickLink ID saved: ${trimmed}` : 'BrickLink ID cleared')
+  }
+
+  const searchBrickLink = async () => {
+    if (!fig) return
+    const query = (fig.character || fig.name).trim()
+    setSearching(true)
+    setSearchResults([])
+    try {
+      const res = await window.ipc.invoke(IPC.FIGS_SEARCH_BL, query) as {
+        bricklink: { no: string; name: string; thumbnail_url?: string; year_released?: number | null }[]
+        rebrickable: { set_num: string; name: string; set_img_url?: string }[]
+      }
+      const combined: BLSearchResult[] = [
+        ...res.bricklink.map(r => ({ no: r.no, name: r.name, thumbnail_url: r.thumbnail_url, year_released: r.year_released, source: 'bricklink' as const })),
+        // Rebrickable results where set_num is a real BrickLink ID (not fig-)
+        ...res.rebrickable
+          .filter(r => !r.set_num.startsWith('fig-'))
+          .map(r => ({ no: r.set_num, name: r.name, thumbnail_url: r.set_img_url, source: 'rebrickable' as const })),
+      ]
+      // Deduplicate by ID
+      const seen = new Set<string>()
+      const deduped = combined.filter(r => { if (seen.has(r.no)) return false; seen.add(r.no); return true })
+      setSearchResults(deduped)
+      if (deduped.length === 0) toast('No results found on BrickLink or Rebrickable', { icon: 'ℹ️' })
+    } catch (err) {
+      toast.error('Search failed: ' + String(err))
+    } finally {
+      setSearching(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -299,15 +366,50 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
                     type="text"
                     value={blId}
                     onChange={(e) => setBlId(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && saveBricklinkId()}
                     placeholder="e.g. sw0001"
                     className="flex-1 rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                   />
-                  <Button variant="outline" onClick={saveBricklinkId} className="shrink-0 text-xs">
+                  <Button variant="outline" onClick={() => saveBricklinkId()} className="shrink-0 text-xs">
                     Save
                   </Button>
+                  <Button variant="secondary" onClick={searchBrickLink} disabled={searching} className="shrink-0 text-xs">
+                    {searching ? <Spinner size="sm" /> : <Search className="h-3.5 w-3.5" />}
+                    Search
+                  </Button>
                 </div>
+
+                {/* Search results */}
+                {searchResults.length > 0 && (
+                  <div className="mt-2 rounded-lg border border-[var(--color-surface-border)] overflow-hidden max-h-48 overflow-y-auto">
+                    {searchResults.map((r) => (
+                      <button
+                        key={r.no}
+                        onClick={() => saveBricklinkId(r.no)}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[var(--color-accent)]/10 transition-colors border-b border-[var(--color-surface-border)] last:border-0"
+                      >
+                        {r.thumbnail_url && (
+                          <img
+                            src={r.thumbnail_url.startsWith('//') ? `https:${r.thumbnail_url}` : r.thumbnail_url}
+                            alt=""
+                            className="w-8 h-8 object-contain rounded shrink-0 bg-[var(--color-surface-overlay)]"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-mono text-[var(--color-accent)]">{r.no}</p>
+                          <p className="text-xs truncate">{r.name}</p>
+                        </div>
+                        {r.year_released && (
+                          <span className="text-xs text-[var(--color-surface-muted)] shrink-0">{r.year_released}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <p className="text-xs text-[var(--color-surface-muted)] mt-1">
-                  Used for price lookups. Find it at bricklink.com.
+                  Used for price lookups.{fig.fig_number.startsWith('fig-') ? ' Auto-lookup runs on open.' : ''}
                 </p>
               </div>
             </div>

@@ -95,6 +95,33 @@ function blGet<T>(path: string): Promise<T> {
   })
 }
 
+export interface BLCatalogItem {
+  no: string
+  name: string
+  type: string
+  thumbnail_url: string
+  year_released: number | null
+}
+
+/**
+ * Search BrickLink's catalog for minifigs by name.
+ * Uses the catalog/items endpoint with type=MINIFIG.
+ */
+export async function searchBricklinkMinifigs(query: string): Promise<BLCatalogItem[]> {
+  try {
+    const encoded = encodeURIComponent(query)
+    const res = await blGet<{
+      meta: { code: number; message: string }
+      data: BLCatalogItem[]
+    }>(`/catalog/items?q=${encoded}&type=MINIFIG`)
+    if (res.meta?.code !== 200) return []
+    return Array.isArray(res.data) ? res.data.slice(0, 20) : []
+  } catch (err) {
+    log.warn('[BrickLink] catalog search failed (endpoint may not be available):', err)
+    return []
+  }
+}
+
 /** Map app condition strings to BrickLink N/U values. */
 function toBLCondition(condition: string): 'N' | 'U' {
   return (condition === 'new' || condition === 'sealed') ? 'N' : 'U'

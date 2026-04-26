@@ -183,20 +183,6 @@ export async function inspectRebrickableSet(setNum: string): Promise<SetDetailRe
   }
 }
 
-/**
- * Look up the BrickLink ID for a Rebrickable minifig (e.g. "fig-000123" → "sw0001").
- * Returns null if the fig has no BrickLink mapping or if the request fails.
- */
-export async function fetchMinifigBricklinkId(figNum: string): Promise<string | null> {
-  try {
-    const data = await get<{ external_ids?: { BrickLink?: string[] } }>(`/minifigs/${figNum}/`)
-    return data.external_ids?.BrickLink?.[0] ?? null
-  } catch (err) {
-    log.warn('[Rebrickable] fetchMinifigBricklinkId failed for', figNum, err)
-    return null
-  }
-}
-
 export async function importRebrickableSet(setNum: string): Promise<LegoSet | null> {
   try {
     const s = await get<RebrickableSet>(`/sets/${setNum}/`)
@@ -220,5 +206,38 @@ export async function importRebrickableSet(setNum: string): Promise<LegoSet | nu
   } catch (err) {
     log.error('[Rebrickable] import failed:', err)
     return null
+  }
+}
+
+/**
+ * Fetch external IDs for a minifig from Rebrickable.
+ * Returns the BrickLink ID(s) if available, e.g. ["sw0093"].
+ */
+export async function getMinifigExternalIds(figNum: string): Promise<{ bricklink: string[] }> {
+  try {
+    const data = await get<{
+      external_ids?: { BrickLink?: string[] }
+    }>(`/minifigs/${encodeURIComponent(figNum)}/`)
+    return { bricklink: data.external_ids?.BrickLink ?? [] }
+  } catch (err) {
+    log.warn('[Rebrickable] getMinifigExternalIds failed:', err)
+    return { bricklink: [] }
+  }
+}
+
+/**
+ * Search Rebrickable minifig catalog by name/character.
+ * Returns results where set_num IS the BrickLink ID for non-fig- entries.
+ */
+export async function searchRebrickableMinifigs(query: string): Promise<RebrickableMinifigCatalog[]> {
+  try {
+    const res = await get<RebrickableListResponse<RebrickableMinifigCatalog>>('/minifigs/', {
+      search: query,
+      page_size: '20',
+    })
+    return res.results
+  } catch (err) {
+    log.error('[Rebrickable] searchRebrickableMinifigs failed:', err)
+    return []
   }
 }
