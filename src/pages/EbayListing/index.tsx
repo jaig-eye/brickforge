@@ -332,6 +332,12 @@ export default function EbayListing() {
   const [themeHint, setThemeHint] = useState<string>('')
   const [contextHint, setContextHint] = useState<string>('')
   const [rawAiResponse, setRawAiResponse] = useState<string>('')
+  const [uploadMode, setUploadMode] = useState<'photo' | 'search'>('photo')
+  const [catalogQuery, setCatalogQuery] = useState('')
+  const [catalogResults, setCatalogResults] = useState<RebrickableSet[]>([])
+  const [catalogSearching, setCatalogSearching] = useState(false)
+  const [catalogSelectingId, setCatalogSelectingId] = useState<string | null>(null)
+  const catalogDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [prefs, setPrefs] = useState<ListingPrefs>({
     smokeFreehome: false,
     cleanSet: false,
@@ -467,6 +473,36 @@ export default function EbayListing() {
     setManualEntry(false)
     setManualSetNum('')
     setListing(null)
+    setCatalogQuery('')
+    setCatalogResults([])
+  }
+
+  const onCatalogQueryChange = (q: string) => {
+    setCatalogQuery(q)
+    if (catalogDebounceRef.current) clearTimeout(catalogDebounceRef.current)
+    if (!q.trim()) { setCatalogResults([]); return }
+    catalogDebounceRef.current = setTimeout(async () => {
+      setCatalogSearching(true)
+      try {
+        const results = await window.ipc.invoke(IPC.SETS_SEARCH_REBRICK, q.trim()) as RebrickableSet[]
+        setCatalogResults(Array.isArray(results) ? results.slice(0, 12) : [])
+      } catch { setCatalogResults([]) }
+      finally { setCatalogSearching(false) }
+    }, 300)
+  }
+
+  const selectCatalogSet = async (set: RebrickableSet) => {
+    setCatalogSelectingId(set.set_num)
+    try {
+      const figs = await window.ipc.invoke(IPC.SETS_MINIFIG_COUNT_REBRICK, set.set_num) as number
+      setConfirmedSet(set)
+      setMinifigCount(figs ?? 0)
+      setStep('configure')
+    } catch {
+      toast.error('Could not load set details')
+    } finally {
+      setCatalogSelectingId(null)
+    }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -500,60 +536,148 @@ export default function EbayListing() {
           {/* ── Step 1: Upload ── */}
           {step === 'upload' && (
             <motion.div key="upload" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
-              <div
-                {...getRootProps()}
-                className={cn(
-                  'border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors',
-                  imageFile
-                    ? 'border-[var(--color-accent)]/60 bg-[var(--color-accent)]/5'
-                    : isDragActive
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
-                      : 'border-[var(--color-surface-border)] hover:border-[var(--color-accent)]/60',
-                )}
-              >
-                <input {...getInputProps()} />
-                <Upload className="h-8 w-8 mx-auto mb-3 text-[var(--color-surface-muted)]" />
-                <p className="text-base font-semibold font-display">
-                  {imageFile ? 'Photo selected — click to replace' : isDragActive ? 'Drop it here…' : 'Drop a photo of your LEGO set'}
-                </p>
-                {!imageFile && <p className="text-sm text-[var(--color-surface-muted)] mt-1">or click to browse — JPG, PNG, WebP</p>}
+
+              {/* Mode toggle */}
+              <div className="flex gap-1 p-1 rounded-xl bg-[var(--color-surface-overlay)] border border-[var(--color-surface-border)]">
+                {(['photo', 'search'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setUploadMode(mode)}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold font-display transition-all',
+                      uploadMode === mode
+                        ? 'bg-[var(--color-accent)] text-[var(--color-accent-text)]'
+                        : 'text-[var(--color-surface-muted)] hover:text-[var(--color-surface-fg)]',
+                    )}
+                  >
+                    {mode === 'photo' ? <><Upload className="h-4 w-4" />From Photo</> : <><Search className="h-4 w-4" />Search Catalog</>}
+                  </button>
+                ))}
               </div>
 
-              {imageFile && imagePreview && (
-                <Card>
-                  <CardContent className="py-4 space-y-4">
-                    <div className="flex gap-4 items-start">
-                      <img
-                        src={imagePreview}
-                        alt="preview"
-                        className="w-40 h-40 object-contain rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] shrink-0"
-                      />
-                      <div className="flex-1 space-y-2">
-                        <p className="text-sm font-semibold font-display">{imageFile.name}</p>
-                        <p className="text-xs text-[var(--color-surface-muted)]">
-                          {(imageFile.size / 1024).toFixed(0)} KB · {imageFile.type}
-                        </p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-[var(--color-surface-muted)] uppercase tracking-wide">Theme</label>
-                            <ThemeCombobox value={themeHint} onChange={setThemeHint} />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold mb-1 text-[var(--color-surface-muted)] uppercase tracking-wide">Extra context</label>
-                            <input
-                              className="w-full rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-2.5 py-1.5 text-sm outline-none placeholder:text-[var(--color-surface-muted)] focus:border-[var(--color-accent)] transition-colors"
-                              placeholder="e.g. sith ship, castle, fire truck…"
-                              value={contextHint}
-                              onChange={(e) => setContextHint(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && analyzeImage()}
-                            />
+              {/* Photo mode */}
+              {uploadMode === 'photo' && (<>
+                <div
+                  {...getRootProps()}
+                  className={cn(
+                    'border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors',
+                    imageFile
+                      ? 'border-[var(--color-accent)]/60 bg-[var(--color-accent)]/5'
+                      : isDragActive
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
+                        : 'border-[var(--color-surface-border)] hover:border-[var(--color-accent)]/60',
+                  )}
+                >
+                  <input {...getInputProps()} />
+                  <Upload className="h-8 w-8 mx-auto mb-3 text-[var(--color-surface-muted)]" />
+                  <p className="text-base font-semibold font-display">
+                    {imageFile ? 'Photo selected — click to replace' : isDragActive ? 'Drop it here…' : 'Drop a photo of your LEGO set'}
+                  </p>
+                  {!imageFile && <p className="text-sm text-[var(--color-surface-muted)] mt-1">or click to browse — JPG, PNG, WebP</p>}
+                </div>
+
+                {imageFile && imagePreview && (
+                  <Card>
+                    <CardContent className="py-4 space-y-4">
+                      <div className="flex gap-4 items-start">
+                        <img
+                          src={imagePreview}
+                          alt="preview"
+                          className="w-40 h-40 object-contain rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] shrink-0"
+                        />
+                        <div className="flex-1 space-y-2">
+                          <p className="text-sm font-semibold font-display">{imageFile.name}</p>
+                          <p className="text-xs text-[var(--color-surface-muted)]">
+                            {(imageFile.size / 1024).toFixed(0)} KB · {imageFile.type}
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs font-semibold mb-1 text-[var(--color-surface-muted)] uppercase tracking-wide">Theme</label>
+                              <ThemeCombobox value={themeHint} onChange={setThemeHint} />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold mb-1 text-[var(--color-surface-muted)] uppercase tracking-wide">Extra context</label>
+                              <input
+                                className="w-full rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] px-2.5 py-1.5 text-sm outline-none placeholder:text-[var(--color-surface-muted)] focus:border-[var(--color-accent)] transition-colors"
+                                placeholder="e.g. sith ship, castle, fire truck…"
+                                value={contextHint}
+                                onChange={(e) => setContextHint(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && analyzeImage()}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <Button onClick={analyzeImage} className="w-full">
+                        <Tag className="h-4 w-4" />Identify Set with {aiLabel}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>)}
+
+              {/* Catalog search mode */}
+              {uploadMode === 'search' && (
+                <Card>
+                  <CardContent className="py-4 space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-surface-muted)]" />
+                      <input
+                        autoFocus
+                        className="w-full rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] pl-9 pr-3 py-2 text-sm outline-none placeholder:text-[var(--color-surface-muted)] focus:border-[var(--color-accent)] transition-colors"
+                        placeholder="Search Rebrickable — set name, number, or theme…"
+                        value={catalogQuery}
+                        onChange={(e) => onCatalogQueryChange(e.target.value)}
+                      />
                     </div>
-                    <Button onClick={analyzeImage} className="w-full">
-                      <Tag className="h-4 w-4" />Identify Set with {aiLabel}
-                    </Button>
+
+                    {catalogSearching && (
+                      <div className="flex items-center gap-2 text-sm text-[var(--color-surface-muted)] py-2">
+                        <RefreshCw className="h-4 w-4 animate-spin" />Searching Rebrickable…
+                      </div>
+                    )}
+
+                    {!catalogSearching && catalogResults.length > 0 && (
+                      <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                        {catalogResults.map((set) => (
+                          <button
+                            key={set.set_num}
+                            onClick={() => selectCatalogSet(set)}
+                            disabled={catalogSelectingId === set.set_num}
+                            className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-[var(--color-surface-border)] bg-[var(--color-surface-overlay)] hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-accent)]/5 transition-all text-left disabled:opacity-60"
+                          >
+                            <img
+                              src={set.set_img_url}
+                              alt={set.name}
+                              className="w-14 h-14 object-contain rounded-lg bg-[var(--color-surface-raised)] shrink-0"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold font-display leading-tight truncate">{set.name}</p>
+                              <div className="flex gap-2 mt-0.5 text-xs text-[var(--color-surface-muted)]">
+                                <span className="font-mono text-[var(--color-accent)]">{set.set_num}</span>
+                                <span>·</span><span>{set.year}</span>
+                                <span>·</span><span>{set.num_parts} pcs</span>
+                              </div>
+                            </div>
+                            {catalogSelectingId === set.set_num
+                              ? <RefreshCw className="h-4 w-4 animate-spin text-[var(--color-accent)] shrink-0" />
+                              : <ChevronRight className="h-4 w-4 text-[var(--color-surface-muted)] shrink-0" />
+                            }
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {!catalogSearching && catalogQuery && catalogResults.length === 0 && (
+                      <p className="text-sm text-[var(--color-surface-muted)] py-2">No sets found for "{catalogQuery}"</p>
+                    )}
+
+                    {!catalogQuery && (
+                      <p className="text-xs text-[var(--color-surface-muted)]">
+                        Type a set name or number to search Rebrickable's database — no photo needed.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               )}

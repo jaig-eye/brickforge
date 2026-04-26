@@ -35,10 +35,9 @@ export function MinifigCard({ fig, marketPrice, onClick, className }: MinifigCar
   const paid     = fig.acquired_price ?? null
   const [copied, setCopied] = useState(false)
 
-  const copyName = (e: React.MouseEvent) => {
+  const copyFigId = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const text = fig.character || fig.name
-    navigator.clipboard.writeText(text)
+    navigator.clipboard.writeText(fig.fig_number)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
@@ -59,8 +58,8 @@ export function MinifigCard({ fig, marketPrice, onClick, className }: MinifigCar
         </div>
         {/* Copy button — visible on hover */}
         <button
-          onClick={copyName}
-          title="Copy name"
+          onClick={copyFigId}
+          title="Copy fig number"
           className={cn(
             'absolute bottom-2 left-2 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono transition-all',
             'bg-black/70 text-white opacity-0 group-hover:opacity-100',

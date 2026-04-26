@@ -307,7 +307,7 @@ function FigDetailDialog({ fig, marketPrices, open, onClose, onDeleted }: {
   const COND_LABEL: Record<string, string> = { new: 'New', used: 'Used', cracked: 'Cracked' }
 
   return (
-    <Dialog open={open} onClose={onClose} title={fig.name}>
+    <Dialog open={open} onClose={onClose} title={fig.name} wide>
       <div className="space-y-5">
         <div className="flex gap-5">
           <div className="w-56 h-56 shrink-0 rounded-xl bg-[var(--color-surface-overlay)] flex items-center justify-center overflow-hidden">
@@ -912,7 +912,7 @@ export default function Collection() {
               />
               <StatCard
                 label="Fig Value"
-                value={stats.fig_used_value > 0 ? formatCurrency(stats.fig_used_value) : '—'}
+                value={totalFigMarket > 0 ? formatCurrency(totalFigMarket) : '—'}
                 sub={stats.fig_new_value > 0 ? `New: ${formatCurrency(stats.fig_new_value)}` : 'Used avg (BrickLink)'}
               />
               <StatCard

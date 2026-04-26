@@ -10,6 +10,7 @@ import { app } from 'electron'
 import { IPC } from '../../src/lib/ipc-types'
 import log from '../main/logger'
 import { getListingHistory, saveListingHistory, deleteListingHistory } from '../db/queries/listing.queries'
+import { searchRebrickableSets } from '../api/rebrickable'
 
 // ── Settings helper ────────────────────────────────────────────────────────────
 
@@ -99,7 +100,11 @@ function extractText(result: unknown, provider: string): string {
 
 // ── Prompts ────────────────────────────────────────────────────────────────────
 
-function buildIdentifyPrompt(themeHint = '', contextHint = ''): string {
+function buildIdentifyPrompt(
+  themeHint = '',
+  contextHint = '',
+  candidates: { set_num: string; name: string; year: number; num_parts: number }[] = [],
+): string {
   const contextBlock = contextHint
     ? `⚠️  SELLER-PROVIDED CONTEXT — THIS IS AUTHORITATIVE:
 "${contextHint}"
@@ -107,38 +112,54 @@ Your identification MUST be consistent with every word above. If the seller name
 
 `
     : ''
+
+  const candidateBlock = candidates.length > 0
+    ? `REBRICKABLE CANDIDATE SETS — real sets from the database that match the seller's context.
+If the correct set is in this list, you MUST return that exact set_number.
+Use year and piece count to distinguish similarly-named sets (e.g. UCS vs midscale vs collection pack).
+Only deviate if a set number is clearly visible in the image and it contradicts this list.
+${candidates.map(c => `  • ${c.set_num} — ${c.name} (${c.year}, ${c.num_parts} pcs)`).join('\n')}
+
+`
+    : ''
+
   const themeBlock = themeHint
     ? `Theme filter: '${themeHint}' — restrict your search to sets within this theme.\n\n`
     : ''
 
   return `You are a world-class LEGO expert and set identifier. Carefully examine the image.
 
-${contextBlock}${themeBlock}Analyse clues in this priority order:
+${contextBlock}${candidateBlock}${themeBlock}Analyse clues in this priority order:
 
-1. SELLER CONTEXT (if provided above — authoritative, must match)
+1. REBRICKABLE CANDIDATES (if listed above — highest priority)
+   - Pick from the candidate list; use year and piece count to choose between similar names
+   - A 220-piece set is NOT the same as a 7,500-piece UCS version of the same ship
+   - A "Starship Collection" or "Vehicle Collection" is a small multi-pack, not a large single-vehicle set
+
+2. SELLER CONTEXT (if provided above — must match, never ignore)
    - Every named scene, location, character, or vehicle must appear in the set's official name or description
    - Example: "pod race" → only Podrace sets qualify; "Mos Espa" → only Mos Espa sets qualify
    - A visually similar set that contradicts the seller context is WRONG — lower confidence instead
 
-2. SET NUMBER
+3. SET NUMBER
    - Printed on the box, instruction booklet cover, or visible stickers — highest certainty if readable
 
-3. MINIFIGURES (strong signal for named sets)
+4. MINIFIGURES (strong signal for named sets)
    - Name every minifigure — outfit, helmet, face print, accessories
    - Exclusive or rare minifigures narrow it to one or very few sets → confidence 0.85+
 
-4. SET FORMAT — distinguish carefully between these types:
-   - DIORAMA: flat scene display base, captures one specific moment/location (e.g. "Mos Espa Podrace Diorama" ≠ "Death Star Trench Run Diorama" — they depict different scenes)
-   - UCS / ULTIMATE COLLECTOR SERIES: large adult-display model, single vehicle, $200–$800+
-   - MIDSCALE: medium-size vehicle, NOT the flagship UCS version of the same ship
-   - VEHICLE COLLECTION / PACK: multiple small vehicles in one box
+5. SET FORMAT — distinguish carefully between these types:
+   - DIORAMA: flat scene display base, captures one specific moment/location
+   - UCS / ULTIMATE COLLECTOR SERIES: large adult-display model, single vehicle, $200–$800+, 2000+ pieces
+   - MIDSCALE: medium-size vehicle (200–800 pieces), NOT the flagship UCS version of the same ship
+   - VEHICLE COLLECTION / STARSHIP COLLECTION / PACK: multiple small vehicles in one box, typically under 300 pieces total
    - PLAYSET: functional environment with characters and play features
    - Never conflate two different dioramas, or a midscale with a UCS, or a collection pack with a large single set
 
-5. DISTINCTIVE BUILD FEATURES
+6. DISTINCTIVE BUILD FEATURES
    - Unique shapes, colour schemes, structural elements specific to one set
 
-6. TEXT / BRANDING
+7. TEXT / BRANDING
    - Any visible text, logos, ship names, location names
 
 IMPORTANT: Always provide your best guess. Do NOT return empty fields unless the image contains no LEGO content whatsoever.
@@ -149,7 +170,7 @@ Return ONLY a valid JSON object — no markdown, no extra text:
 set_number: official LEGO set number, digits only, no -1 suffix.
 set_name: full official name.
 confidence: 0.0–1.0.
-notes: list every specific clue used — minifigures spotted, text seen, format identified, and whether seller context was matched or not.`
+notes: list every specific clue used — minifigures spotted, text seen, format identified, and whether seller context and candidates were matched.`
 }
 
 function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<string, unknown>): string {
@@ -173,26 +194,28 @@ function buildListingPrompt(setData: Record<string, unknown>, prefs: Record<stri
   const name      = setData.name ?? ''
   const setNo     = setData.set_number ?? ''
 
-  // Minifig handling: 3 distinct cases
+  // Minifig handling — 3 distinct cases
   const setHasFigs = minifigs > 0
-  const figAttr = !setHasFigs ? null : hasFigs ? `All ${minifigs} minifigure${minifigs !== 1 ? 's' : ''} included` : `Minifigures NOT included (sold separately)`
-  const figNote = !setHasFigs ? '' : hasFigs ? '' : '\nIMPORTANT: This set normally includes minifigures but the seller is NOT including them. Make this clearly visible in the description.'
 
+  // Only add attrs that are explicitly checked — never add negative/omission messages
   const attrs: string[] = []
-  if (smokeFree) attrs.push('From a smoke-free home')
-  if (cleanSet)  attrs.push('Clean, well-maintained set')
-  attrs.push(hasManual ? 'Includes original instruction manual' : 'No instruction manual included')
-  if (figAttr) attrs.push(figAttr)
-  if (sellerNotes) attrs.push(`Seller notes: "${sellerNotes}"`)
+  if (smokeFree)             attrs.push('From a smoke-free home')
+  if (cleanSet)              attrs.push('Clean, well-maintained set')
+  if (hasManual)             attrs.push('Includes original instruction manual')
+  if (setHasFigs && hasFigs) attrs.push(`All ${minifigs} minifigure${minifigs !== 1 ? 's' : ''} included`)
+  if (sellerNotes)           attrs.push(`Seller notes: "${sellerNotes}"`)
 
-  const manualToken = hasManual ? 'w/ Manual' : 'No Manual'
-  const figsToken   = !setHasFigs ? '' : hasFigs ? `w/ ${minifigs} Minifig${minifigs !== 1 ? 's' : ''}` : 'No Figs'
+  // Title tokens — empty when unchecked (not included in title at all)
+  const manualToken = hasManual ? 'w/ Manual' : ''
+  const figsToken   = (setHasFigs && hasFigs) ? `w/ ${minifigs} Minifig${minifigs !== 1 ? 's' : ''}` : ''
   const extraTokens = [cleanSet ? 'Clean' : '', smokeFree ? 'Smoke-Free' : ''].filter(Boolean).join(' ')
 
-  // Build minifigs table row only when set actually has figs
-  const figTableRow = setHasFigs
-    ? `\n      - Minifigures row: "${hasFigs ? `${minifigs} included` : 'NOT included — sold separately'}"`
-    : `\n      - Minifigures: OMIT THIS ROW ENTIRELY — this set has no minifigures`
+  // Minifigs table row — omit entirely when seller is not including figs
+  const figTableRow = !setHasFigs
+    ? `\n      - Minifigures: OMIT THIS ROW ENTIRELY — this set has no minifigures`
+    : hasFigs
+      ? `\n      - Minifigures row: "${minifigs} included"`
+      : `\n      - Minifigures: OMIT THIS ROW ENTIRELY — seller is not including minifigures in this listing`
 
   const sellerNotesSection = sellerNotes
     ? `\n  SELLER NOTES SECTION (only if seller_notes present): dark background (#111), amber/yellow label "Seller Notes". Display the seller's notes verbatim in white text, font-size 13px. This section communicates the exact condition details, quirks, or special info the seller provided.`
@@ -211,16 +234,16 @@ Minifigs   : ${minifigs > 0 ? minifigs : 'None — this set does not include min
 SELLER ATTRIBUTES
 ${attrs.map(a => `• ${a}`).join('\n')}
 Condition  : ${conditionDesc}
-${figNote}
+
 OUTPUT FORMAT — return ONLY a JSON object with exactly TWO keys: "title" and "description".
 
 "title" — eBay title rules:
   • HARD LIMIT: 80 characters. NEVER exceed this.
-  • Start with a single relevant emoji (🚀 🏰 🌿 🤖 ⚔️ 🛸 🏎️ 🦁 🌟 🎯 — match the theme/subject).
-  • Pack keywords in this priority order after the emoji:
-      1. LEGO  2. Theme: ${theme}  3. Set#: ${setNo}  4. Name: ${name}
-      5. ${condToken}  6. ${manualToken}${figsToken ? `  7. ${figsToken}` : ''}${extraTokens ? `  8. ${extraTokens}` : ''}
-  • Abbreviations: "w/", "&", drop articles. Do NOT include piece count — it wastes space.
+  • NO emoji — plain text only.
+  • Pack keywords in this priority order:
+      1. LEGO  2. Set#: ${setNo}  3. Name: ${name}  4. ${pieces} pcs
+      5. ${condToken}${manualToken ? `  6. ${manualToken}` : ''}${figsToken ? `  7. ${figsToken}` : ''}${extraTokens ? `  8. ${extraTokens}` : ''}
+  • Abbreviations: "w/", "&", drop articles.
 
 "description" — Clean, modern eBay HTML listing with full inline CSS. Dark theme. Structure:
 
@@ -237,7 +260,7 @@ OUTPUT FORMAT — return ONLY a JSON object with exactly TWO keys: "title" and "
       - Theme${figTableRow}
       - Condition: "${conditionDesc}"
 ${sellerNotes ? `      - Seller Notes: "${sellerNotes}"` : ''}
-  WHAT'S INCLUDED: background #111, padding 20px 24px. Label same style. Unstyled list — each item: ✓ (color #4ade80) for included, ✗ (color #f87171) for not included. Use HTML entities &#10003; and &#10007;. Each li: list-style none, padding 8px 0, border-bottom 1px solid #1e1e1e, display flex, gap 12px, align-items center, color #ccc, font-size 13px.
+  WHAT'S INCLUDED: background #111, padding 20px 24px. Label same style. Unstyled list — only show items that ARE included (✓ green, HTML entity &#10003;). Do NOT add ✗ rows for items not checked by the seller. Each li: list-style none, padding 8px 0, border-bottom 1px solid #1e1e1e, display flex, gap 12px, align-items center, color #ccc, font-size 13px. Always include the set itself as the first ✓ item.
 ${sellerNotesSection}
   FOOTER: background #0d0d0d, padding 14px 24px, centered small text in #444, font-size:11px: "Authentic LEGO® product · Not a third-party or counterfeit item · All items personally inspected"
 
@@ -353,7 +376,15 @@ export function registerAiHandlers(): void {
     if (!apiKey) return { error: `${provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key not configured — add it in Settings` }
 
     try {
-      const prompt = buildIdentifyPrompt(themeHint, contextHint)
+      // Ground the AI with real Rebrickable results when context/theme is provided
+      let candidates: { set_num: string; name: string; year: number; num_parts: number }[] = []
+      if (contextHint || themeHint) {
+        try {
+          const res = await searchRebrickableSets(contextHint || themeHint)
+          candidates = res.slice(0, 8).map(s => ({ set_num: s.set_num, name: s.name, year: s.year, num_parts: s.num_parts }))
+        } catch { /* non-fatal — proceed without candidates */ }
+      }
+      const prompt = buildIdentifyPrompt(themeHint, contextHint, candidates)
       let result: unknown
       if (provider === 'anthropic') {
         result = await callAnthropic(apiKey, {
