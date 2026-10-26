@@ -1,6 +1,6 @@
 {
   "name": "brickforge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A LEGO® collection manager for your desktop: track sets and minifigures, see what they are worth on BrickLink, identify them from photos, and write eBay listings.",
   "main": "dist-electron/electron/main/index.js",
   "author": {
@@ -61,7 +61,7 @@
     "clsx": "2.1.1",
     "concurrently": "9.2.1",
     "cross-env": "7.0.3",
-    "electron": "44.9.0",
+    "electron": "44.9.3",
     "electron-builder": "26.17.0",
     "eslint": "9.39.4",
     "framer-motion": "11.18.2",

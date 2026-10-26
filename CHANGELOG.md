@@ -2,6 +2,11 @@
 
 All notable changes to BrickForge are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-10-26
+
+### Security
+- Electron 44.9.3, which mitigates the compromised eMudhra intermediate certificates ([GHSA-jr5w-w6x2-84p9](https://github.com/electron/electron/security/advisories/GHSA-jr5w-w6x2-84p9)) and brings backported fixes from Chromium, V8, Skia, ANGLE, and PDFium.
+
 ## [1.0.0] - 2026-10-26
 
 The first public release. BrickForge was rebuilt from the ground up: a new interface, a new data layer, and a test suite that covers every feature.
@@ -38,4 +43,5 @@ The first public release. BrickForge was rebuilt from the ground up: a new inter
 - Anthropic (Claude Opus 5.5 by default), OpenAI, or a local Claude Code sign-in as the AI provider.
 - Automatic updates from GitHub releases, verified by checksum.
 
+[1.0.1]: https://github.com/jaig-eye/brickforge/releases/tag/v1.0.1
 [1.0.0]: https://github.com/jaig-eye/brickforge/releases/tag/v1.0.0
