@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- BrickForge app icon: the logo brick (yellow 2×2 on a red plate) on a Night Studio tile -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2032"/>
+      <stop offset="1" stop-color="#0a0c12"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#ffc929" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#ffc929" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.02"/>
+    </linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="28" stdDeviation="30" flood-color="#000" flood-opacity="0.55"/></filter></defs>
+  <rect x="64" y="64" width="896" height="896" rx="208" fill="url(#tile)"/>
+  <rect x="64" y="64" width="896" height="896" rx="208" fill="url(#glow)"/>
+  <rect x="66" y="66" width="892" height="892" rx="206" fill="none" stroke="url(#rim)" stroke-width="4"/>
+  <g filter="url(#shadow)" transform="translate(0,-36)"><polygon points="252.2,670.0 512.0,820.0 512.0,760.0 252.2,610.0" fill="#ce3236"/><polygon points="771.8,670.0 512.0,820.0 512.0,760.0 771.8,610.0" fill="#a0272a"/><polygon points="512.0,460.0 771.8,610.0 512.0,760.0 252.2,610.0" fill="#e84f53"/><polygon points="252.2,610.0 512.0,760.0 512.0,580.0 252.2,430.0" fill="#e6b525"/><polygon points="771.8,610.0 512.0,760.0 512.0,580.0 771.8,430.0" fill="#b38d1d"/><polygon points="512.0,280.0 771.8,430.0 512.0,580.0 252.2,430.0" fill="#ffcf43"/><path d="M456.9,328.0 L456.9,355.0 A55.1,31.8 0 0 0 567.1,355.0 L567.1,328.0 Z" fill="#e6b525"/><ellipse cx="512.0" cy="328.0" rx="55.1" ry="31.8" fill="#ffd761"/><path d="M327.0,403.0 L327.0,430.0 A55.1,31.8 0 0 0 437.2,430.0 L437.2,403.0 Z" fill="#e6b525"/><ellipse cx="382.1" cy="403.0" rx="55.1" ry="31.8" fill="#ffd761"/><path d="M586.8,403.0 L586.8,430.0 A55.1,31.8 0 0 0 697.0,430.0 L697.0,403.0 Z" fill="#e6b525"/><ellipse cx="641.9" cy="403.0" rx="55.1" ry="31.8" fill="#ffd761"/><path d="M456.9,478.0 L456.9,505.0 A55.1,31.8 0 0 0 567.1,505.0 L567.1,478.0 Z" fill="#e6b525"/><ellipse cx="512.0" cy="478.0" rx="55.1" ry="31.8" fill="#ffd761"/></g>
+</svg>

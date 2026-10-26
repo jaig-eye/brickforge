@@ -1,0 +1,58 @@
+{
+  "SET/75192-1": {
+    "no": "75192-1",
+    "name": "Millennium Falcon - UCS {2nd edition}",
+    "type": "SET",
+    "category_id": 65,
+    "image_url": "//img.bricklink.com/SL/75192-1.jpg",
+    "thumbnail_url": "//img.bricklink.com/S/75192-1.jpg",
+    "weight": "13150.00",
+    "dim_x": "54.00",
+    "dim_y": "45.00",
+    "dim_z": "39.00",
+    "year_released": 2017,
+    "is_obsolete": false
+  },
+  "MINIFIG/sw1034": {
+    "no": "sw1034",
+    "name": "BB-8 &#40;Large Photoreceptor and Large Black Circle&#41;",
+    "type": "MINIFIG",
+    "category_id": 65,
+    "image_url": "//img.bricklink.com/ML/sw1034.jpg",
+    "thumbnail_url": "//img.bricklink.com/M/sw1034.jpg",
+    "weight": "1.90",
+    "dim_x": "0.00",
+    "dim_y": "0.00",
+    "dim_z": "0.00",
+    "year_released": 2019,
+    "is_obsolete": false
+  },
+  "MINIFIG/sw0700": {
+    "no": "sw0700",
+    "name": "C-3PO - Colorful Wires, Printed Legs",
+    "type": "MINIFIG",
+    "category_id": 65,
+    "image_url": "//img.bricklink.com/ML/sw0700.jpg",
+    "thumbnail_url": "//img.bricklink.com/M/sw0700.jpg",
+    "weight": "3.00",
+    "dim_x": "0.00",
+    "dim_y": "0.00",
+    "dim_z": "0.00",
+    "year_released": 2016,
+    "is_obsolete": false
+  },
+  "MINIFIG/sh0725": {
+    "no": "sh0725",
+    "name": "Amber Grant",
+    "type": "MINIFIG",
+    "category_id": 768,
+    "image_url": "//img.bricklink.com/ML/sh0725.jpg",
+    "thumbnail_url": "//img.bricklink.com/M/sh0725.jpg",
+    "weight": "3.84",
+    "dim_x": "0.00",
+    "dim_y": "0.00",
+    "dim_z": "0.00",
+    "year_released": 2021,
+    "is_obsolete": false
+  }
+}

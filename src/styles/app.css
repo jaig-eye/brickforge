@@ -1,0 +1,257 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/*
+ * Night Studio — BrickForge's design tokens.
+ * A dark studio where the bricks are the light source: ink-blue grounds,
+ * matte "ABS" panels, one confident accent at a time, LEGO primaries kept for
+ * illustration. Every color is a token; [data-theme] and [data-accent] on
+ * <html> switch the whole palette at runtime.
+ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0c12;
+  --bg-deep: #07090d;
+  --panel: #10131b;
+  --panel-2: #151925;
+  --panel-3: #1b2030;
+  --hover: rgb(255 255 255 / 0.045);
+  --press: rgb(255 255 255 / 0.08);
+  --line: #20263a;
+  --line-strong: #2d3549;
+  --fg: #e9ecf4;
+  --fg-2: #b6bccc;
+  --fg-3: #8c93a8;
+  --fg-4: #5d6479;
+  --up: #3dd68c;
+  --up-soft: rgb(61 214 140 / 0.12);
+  --down: #ff6b6b;
+  --down-soft: rgb(255 107 107 / 0.12);
+  --warn: #ffb547;
+  --warn-soft: rgb(255 181 71 / 0.12);
+  --info: #6aa8ff;
+  --info-soft: rgb(106 168 255 / 0.12);
+  --plate: #f3f4f7;          /* the white "photo plate" behind product images */
+  --plate-edge: rgb(255 255 255 / 0.06);
+  --shadow-1: 0 1px 0 rgb(255 255 255 / 0.035) inset, 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-2: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 12px 32px -12px rgb(0 0 0 / 0.65);
+  --shadow-3: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 30px 80px -24px rgb(0 0 0 / 0.75);
+  --aurora-1: rgb(255 201 41 / 0.16);
+  --aurora-2: rgb(47 127 234 / 0.16);
+  --aurora-3: rgb(229 55 60 / 0.10);
+  --stud: rgb(255 255 255 / 0.11);
+  --scrim: rgb(4 6 10 / 0.62);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef1f6;
+  --bg-deep: #e6eaf1;
+  --panel: #ffffff;
+  --panel-2: #f6f8fb;
+  --panel-3: #edf0f6;
+  --hover: rgb(16 22 40 / 0.045);
+  --press: rgb(16 22 40 / 0.08);
+  --line: #dde2ec;
+  --line-strong: #c9d0de;
+  --fg: #121521;
+  --fg-2: #353b4f;
+  --fg-3: #5a6278;
+  --fg-4: #8d94a8;
+  --up: #0e8f55;
+  --up-soft: rgb(14 143 85 / 0.1);
+  --down: #d23b3b;
+  --down-soft: rgb(210 59 59 / 0.09);
+  --warn: #b26b00;
+  --warn-soft: rgb(178 107 0 / 0.1);
+  --info: #2563c9;
+  --info-soft: rgb(37 99 201 / 0.09);
+  --plate: #ffffff;
+  --plate-edge: rgb(16 22 40 / 0.06);
+  --shadow-1: 0 1px 2px rgb(20 30 60 / 0.06);
+  --shadow-2: 0 10px 28px -14px rgb(20 30 60 / 0.25);
+  --shadow-3: 0 30px 70px -28px rgb(20 30 60 / 0.35);
+  --aurora-1: rgb(255 201 41 / 0.22);
+  --aurora-2: rgb(47 127 234 / 0.12);
+  --aurora-3: rgb(229 55 60 / 0.07);
+  --stud: rgb(16 22 40 / 0.09);
+  --scrim: rgb(20 26 40 / 0.35);
+}
+
+/* Brick accents. --accent fills buttons; --accent-text is the accent as text on the page ground. */
+:root, [data-accent="yellow"] {
+  --accent: #ffc929; --accent-ink: #1a1400; --accent-text: #ffcf3d; --accent-soft: rgb(255 201 41 / 0.13); --accent-glow: rgb(255 201 41 / 0.55);
+}
+[data-accent="red"] {
+  --accent: #e5373c; --accent-ink: #ffffff; --accent-text: #ff6e72; --accent-soft: rgb(229 55 60 / 0.14); --accent-glow: rgb(229 55 60 / 0.5);
+}
+[data-accent="blue"] {
+  --accent: #2f7fea; --accent-ink: #ffffff; --accent-text: #6aa8ff; --accent-soft: rgb(47 127 234 / 0.15); --accent-glow: rgb(47 127 234 / 0.5);
+}
+[data-accent="green"] {
+  --accent: #22b36b; --accent-ink: #04150c; --accent-text: #3dd68c; --accent-soft: rgb(34 179 107 / 0.14); --accent-glow: rgb(34 179 107 / 0.5);
+}
+[data-theme="light"][data-accent="yellow"], [data-theme="light"]:not([data-accent]) { --accent-text: #8a6200; }
+[data-theme="light"][data-accent="red"] { --accent-text: #c4262b; }
+[data-theme="light"][data-accent="blue"] { --accent-text: #1f63c4; }
+[data-theme="light"][data-accent="green"] { --accent-text: #0e7f48; }
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-deep: var(--bg-deep);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-hover: var(--hover);
+  --color-press: var(--press);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-fg-4: var(--fg-4);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-up: var(--up);
+  --color-up-soft: var(--up-soft);
+  --color-down: var(--down);
+  --color-down-soft: var(--down-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-plate: var(--plate);
+
+  /* LEGO primaries, for illustration only */
+  --color-brick-red: #e5373c;
+  --color-brick-blue: #2f7fea;
+  --color-brick-green: #22b36b;
+  --color-brick-yellow: #ffc929;
+  --color-brick-orange: #ff8a3d;
+
+  --font-display: "Bricolage Grotesque Variable", "Segoe UI Variable Display", system-ui, sans-serif;
+  --font-sans: "Geist Variable", "Segoe UI Variable Text", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", "Cascadia Mono", Consolas, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+  user-select: none;
+}
+input, textarea, [contenteditable], .selectable { user-select: text; }
+h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+img { -webkit-user-drag: none; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+:focus:not(:focus-visible) { outline: none; }
+
+/* Scrollbars that stay out of the way */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--fg-4); }
+
+/* Electron window chrome */
+.drag { -webkit-app-region: drag; }
+.no-drag { -webkit-app-region: no-drag; }
+
+/* Numbers that line up */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Small uppercase labels */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* Matte "ABS plastic" panel */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+}
+
+/* White plate behind product photos (they ship on white backgrounds) */
+.plate {
+  background: radial-gradient(120% 90% at 50% 10%, #ffffff 0%, var(--plate) 70%);
+  box-shadow: inset 0 0 0 1px var(--plate-edge), inset 0 -10px 24px -18px rgb(10 14 30 / 0.25);
+}
+[data-theme="light"] .plate { box-shadow: inset 0 0 0 1px var(--line); }
+
+/* Off-screen cards skip layout and paint until scrolled near */
+.cv-auto { content-visibility: auto; contain-intrinsic-size: auto 280px; }
+
+/* Shimmer for loading placeholders */
+.skeleton {
+  background: linear-gradient(100deg, var(--panel-2) 30%, var(--panel-3) 50%, var(--panel-2) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: var(--radius-md);
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+
+/* Ambient color drift behind the app (Night Studio's "living light") */
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(6%, 8%, 0) scale(1.14); }
+}
+
+/* Stud pop, used by brick illustrations */
+@keyframes stud-pop {
+  from { transform: scale(0.2); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.stud-pop { transform-box: fill-box; transform-origin: center bottom; animation: stud-pop 0.45s var(--ease-snap) both; }
+
+@keyframes brick-drop {
+  from { transform: translateY(-34px); opacity: 0; }
+  60% { opacity: 1; }
+  to { transform: none; opacity: 1; }
+}
+.brick-drop { animation: brick-drop 0.85s var(--ease-snap) both; }
+
+/* Reduced motion: honored by CSS here and by framer-motion via MotionConfig */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}

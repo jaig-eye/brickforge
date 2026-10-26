@@ -1,0 +1,48 @@
+name: Release
+
+# Push a tag like v1.0.0 to build the Windows installer and publish it.
+# The release stays a draft until every file is attached, so the in-app
+# updater never sees a release without its latest.yml.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Build the installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run build && npx electron-builder --win --publish never --config electron-builder.config.js
+
+      - name: Publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          # This version's section of CHANGELOG.md becomes the release notes
+          awk -v h="## [$VERSION]" 'index($0, h) == 1 {on=1; next} /^## /{on=0} on' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "No '## [$VERSION]' section in CHANGELOG.md"; exit 1; }
+          gh release view "$TAG" >/dev/null 2>&1 \
+            || gh release create "$TAG" --draft --title "BrickForge $TAG" --notes-file notes.md
+          gh release upload "$TAG" --clobber \
+            "release/BrickForge-Setup-$VERSION.exe" \
+            "release/BrickForge-Setup-$VERSION.exe.blockmap" \
+            release/latest.yml
+          gh release edit "$TAG" --draft=false --latest --notes-file notes.md

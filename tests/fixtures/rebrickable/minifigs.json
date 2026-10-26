@@ -1,0 +1,576 @@
+{
+  "fig-002544": {
+    "set_num": "fig-002544",
+    "name": "BB-8",
+    "num_parts": 2,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002544/138512.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-002544/bb-8/",
+    "last_modified_dt": "2020-04-13T01:42:07.487412Z",
+    "sets": [
+      {
+        "set_num": "75102-1",
+        "name": "Poe's X-Wing Fighter",
+        "num_parts": 716,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75102-1/14092.jpg",
+        "set_url": "https://rebrickable.com/sets/75102-1/poes-x-wing-fighter/",
+        "last_modified_dt": "2018-09-13T14:31:05.677932Z"
+      },
+      {
+        "set_num": "75105-1",
+        "name": "Millennium Falcon",
+        "num_parts": 1330,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75105-1/38284.jpg",
+        "set_url": "https://rebrickable.com/sets/75105-1/millennium-falcon/",
+        "last_modified_dt": "2018-09-13T14:34:45.788810Z"
+      },
+      {
+        "set_num": "75148-1",
+        "name": "Encounter on Jakku",
+        "num_parts": 530,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75148-1/32702.jpg",
+        "set_url": "https://rebrickable.com/sets/75148-1/encounter-on-jakku/",
+        "last_modified_dt": "2020-09-06T12:28:57.908847Z"
+      },
+      {
+        "set_num": "75149-1",
+        "name": "Resistance X-Wing Fighter",
+        "num_parts": 742,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75149-1/15312.jpg",
+        "set_url": "https://rebrickable.com/sets/75149-1/resistance-x-wing-fighter/",
+        "last_modified_dt": "2019-11-05T11:27:05.708090Z"
+      },
+      {
+        "set_num": "75176-1",
+        "name": "Resistance Transport Pod",
+        "num_parts": 294,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75176-1/4534.jpg",
+        "set_url": "https://rebrickable.com/sets/75176-1/resistance-transport-pod/",
+        "last_modified_dt": "2019-11-05T11:31:15.824393Z"
+      },
+      {
+        "set_num": "75178-1",
+        "name": "Jakku Quadjumper",
+        "num_parts": 457,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75178-1/1411.jpg",
+        "set_url": "https://rebrickable.com/sets/75178-1/jakku-quadjumper/",
+        "last_modified_dt": "2020-04-22T01:06:05.819422Z"
+      },
+      {
+        "set_num": "75187-1",
+        "name": "BB-8",
+        "num_parts": 1106,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75187-1/5992.jpg",
+        "set_url": "https://rebrickable.com/sets/75187-1/bb-8/",
+        "last_modified_dt": "2019-11-05T11:28:06.350268Z"
+      },
+      {
+        "set_num": "75192-1",
+        "name": "Millennium Falcon",
+        "num_parts": 7541,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75192-1/30881.jpg",
+        "set_url": "https://rebrickable.com/sets/75192-1/millennium-falcon/",
+        "last_modified_dt": "2021-11-27T08:23:26.191796Z"
+      },
+      {
+        "set_num": "75201-1",
+        "name": "First Order AT-ST",
+        "num_parts": 370,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75201-1/505.jpg",
+        "set_url": "https://rebrickable.com/sets/75201-1/first-order-at-st/",
+        "last_modified_dt": "2018-03-28T10:50:31.290932Z"
+      },
+      {
+        "set_num": "75250-1",
+        "name": "Pasaana Speeder Chase",
+        "num_parts": 373,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75250-1/19234.jpg",
+        "set_url": "https://rebrickable.com/sets/75250-1/pasaana-speeder-chase/",
+        "last_modified_dt": "2019-09-27T10:57:22.730202Z"
+      }
+    ]
+  },
+  "fig-002514": {
+    "set_num": "fig-002514",
+    "name": "C-3PO, Pearl Gold, Colorful Wires, Printed Legs",
+    "num_parts": 3,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002514/111826.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-002514/c-3po-pearl-gold-colorful-wires-printed-legs/",
+    "last_modified_dt": "2020-06-20T02:47:16.636331Z",
+    "sets": [
+      {
+        "set_num": "75136-1",
+        "name": "Droid Escape Pod",
+        "num_parts": 197,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75136-1/33748.jpg",
+        "set_url": "https://rebrickable.com/sets/75136-1/droid-escape-pod/",
+        "last_modified_dt": "2019-11-05T16:21:37.304438Z"
+      },
+      {
+        "set_num": "75159-1",
+        "name": "Death Star",
+        "num_parts": 4024,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75159-1/34107.jpg",
+        "set_url": "https://rebrickable.com/sets/75159-1/death-star/",
+        "last_modified_dt": "2019-12-01T14:00:34.418832Z"
+      },
+      {
+        "set_num": "75173-1",
+        "name": "Luke's Landspeeder",
+        "num_parts": 149,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75173-1/28477.jpg",
+        "set_url": "https://rebrickable.com/sets/75173-1/lukes-landspeeder/",
+        "last_modified_dt": "2019-11-05T16:29:22.527354Z"
+      },
+      {
+        "set_num": "75192-1",
+        "name": "Millennium Falcon",
+        "num_parts": 7541,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75192-1/30881.jpg",
+        "set_url": "https://rebrickable.com/sets/75192-1/millennium-falcon/",
+        "last_modified_dt": "2021-11-27T08:23:26.191796Z"
+      },
+      {
+        "set_num": "75222-1",
+        "name": "Betrayal at Cloud City",
+        "num_parts": 2812,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75222-1/13868.jpg",
+        "set_url": "https://rebrickable.com/sets/75222-1/betrayal-at-cloud-city/",
+        "last_modified_dt": "2019-12-01T13:58:58.644265Z"
+      },
+      {
+        "set_num": "75228-1",
+        "name": "Escape Pod vs. Dewback Microfighters",
+        "num_parts": 177,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75228-1/17527.jpg",
+        "set_url": "https://rebrickable.com/sets/75228-1/escape-pod-vs-dewback-microfighters/",
+        "last_modified_dt": "2024-01-13T21:33:00.324647Z"
+      },
+      {
+        "set_num": "75244-1",
+        "name": "Tantive IV",
+        "num_parts": 1768,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75244-1/22409.jpg",
+        "set_url": "https://rebrickable.com/sets/75244-1/tantive-iv/",
+        "last_modified_dt": "2019-05-30T20:03:21.452040Z"
+      },
+      {
+        "set_num": "75247-1",
+        "name": "Rebel A-Wing Starfighter",
+        "num_parts": 62,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75247-1/10967.jpg",
+        "set_url": "https://rebrickable.com/sets/75247-1/rebel-a-wing-starfighter/",
+        "last_modified_dt": "2024-01-13T21:33:09.969668Z"
+      },
+      {
+        "set_num": "75257-1",
+        "name": "Millennium Falcon",
+        "num_parts": 1328,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75257-1/20033.jpg",
+        "set_url": "https://rebrickable.com/sets/75257-1/millennium-falcon/",
+        "last_modified_dt": "2022-04-27T06:33:58.370177Z"
+      },
+      {
+        "set_num": "75271-1",
+        "name": "Luke Skywalker's Landspeeder",
+        "num_parts": 236,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75271-1/17649.jpg",
+        "set_url": "https://rebrickable.com/sets/75271-1/luke-skywalkers-landspeeder/",
+        "last_modified_dt": "2022-04-27T06:34:23.606363Z"
+      },
+      {
+        "set_num": "75290-1",
+        "name": "Mos Eisley Cantina",
+        "num_parts": 3187,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75290-1/72160.jpg",
+        "set_url": "https://rebrickable.com/sets/75290-1/mos-eisley-cantina/",
+        "last_modified_dt": "2025-07-30T19:06:24.606169Z"
+      },
+      {
+        "set_num": "9781761210112-1",
+        "name": "Star Wars: Galactic Face-Offs",
+        "num_parts": 1,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/9781761210112-1/128072.jpg",
+        "set_url": "https://rebrickable.com/sets/9781761210112-1/star-wars-galactic-face-offs/",
+        "last_modified_dt": "2024-01-22T19:04:22.138793Z"
+      },
+      {
+        "set_num": "9781789050509-1",
+        "name": "Star Wars: Official Annual 2019",
+        "num_parts": 4,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/9781789050509-1/127133.jpg",
+        "set_url": "https://rebrickable.com/sets/9781789050509-1/star-wars-official-annual-2019/",
+        "last_modified_dt": "2024-01-22T18:50:33.898231Z"
+      }
+    ]
+  },
+  "fig-011305": {
+    "set_num": "fig-011305",
+    "name": "Amber Grant",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011305/103862.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-011305/amber-grant/",
+    "last_modified_dt": "2021-06-01T05:53:32.722417Z",
+    "sets": [
+      {
+        "set_num": "76178-1",
+        "name": "Daily Bugle",
+        "num_parts": 3803,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/76178-1/88191.jpg",
+        "set_url": "https://rebrickable.com/sets/76178-1/daily-bugle/",
+        "last_modified_dt": "2021-07-03T00:25:35.229517Z"
+      }
+    ]
+  },
+  "fig-011300": {
+    "set_num": "fig-011300",
+    "name": "Aunt May, Light Bluish Gray Sweater",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011300/103864.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-011300/aunt-may-light-bluish-gray-sweater/",
+    "last_modified_dt": "2021-06-01T05:48:15.979535Z",
+    "sets": [
+      {
+        "set_num": "76178-1",
+        "name": "Daily Bugle",
+        "num_parts": 3803,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/76178-1/88191.jpg",
+        "set_url": "https://rebrickable.com/sets/76178-1/daily-bugle/",
+        "last_modified_dt": "2021-07-03T00:25:35.229517Z"
+      }
+    ]
+  },
+  "fig-012978": {
+    "set_num": "fig-012978",
+    "name": "Castle Man, Reddish Brown Apron, Dark Brown Hair",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012978/107751.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-012978/castle-man-reddish-brown-apron-dark-brown-hair/",
+    "last_modified_dt": "2022-08-03T17:15:52.916506Z",
+    "sets": [
+      {
+        "set_num": "10305-1",
+        "name": "Lion Knights' Castle",
+        "num_parts": 4515,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/10305-1/152495.jpg",
+        "set_url": "https://rebrickable.com/sets/10305-1/lion-knights-castle/",
+        "last_modified_dt": "2023-02-13T08:33:46.507285Z"
+      }
+    ]
+  },
+  "fig-012980": {
+    "set_num": "fig-012980",
+    "name": "Castle Woman, Dark Green Dress, White Headdress",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012980/151972.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-012980/castle-woman-dark-green-dress-white-headdress/",
+    "last_modified_dt": "2022-08-03T17:19:01.700655Z",
+    "sets": [
+      {
+        "set_num": "10305-1",
+        "name": "Lion Knights' Castle",
+        "num_parts": 4515,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/10305-1/152495.jpg",
+        "set_url": "https://rebrickable.com/sets/10305-1/lion-knights-castle/",
+        "last_modified_dt": "2023-02-13T08:33:46.507285Z"
+      }
+    ]
+  },
+  "fig-011862": {
+    "set_num": "fig-011862",
+    "name": "Harry Lime",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011862/94021.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-011862/harry-lime/",
+    "last_modified_dt": "2021-10-21T12:53:33.240498Z",
+    "sets": [
+      {
+        "set_num": "21330-1",
+        "name": "Home Alone",
+        "num_parts": 3955,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/21330-1/94025.jpg",
+        "set_url": "https://rebrickable.com/sets/21330-1/home-alone/",
+        "last_modified_dt": "2021-10-21T18:42:46.341063Z"
+      }
+    ]
+  },
+  "fig-011864": {
+    "set_num": "fig-011864",
+    "name": "Kate McCallister",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011864/94016.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-011864/kate-mccallister/",
+    "last_modified_dt": "2021-10-21T12:53:38.605711Z",
+    "sets": [
+      {
+        "set_num": "21330-1",
+        "name": "Home Alone",
+        "num_parts": 3955,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/21330-1/94025.jpg",
+        "set_url": "https://rebrickable.com/sets/21330-1/home-alone/",
+        "last_modified_dt": "2021-10-21T18:42:46.341063Z"
+      }
+    ]
+  },
+  "fig-010525": {
+    "set_num": "fig-010525",
+    "name": "Grogu / The Child (Baby Yoda), 25128 Body",
+    "num_parts": 2,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010525/75011.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-010525/grogu-the-child-baby-yoda-25128-body/",
+    "last_modified_dt": "2026-04-26T05:32:07.163572Z",
+    "sets": [
+      {
+        "set_num": "75292-1",
+        "name": "The Razor Crest",
+        "num_parts": 1023,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75292-1/61549.jpg",
+        "set_url": "https://rebrickable.com/sets/75292-1/the-razor-crest/",
+        "last_modified_dt": "2022-03-30T05:00:38.592773Z"
+      },
+      {
+        "set_num": "75299-1",
+        "name": "Trouble on Tatooine",
+        "num_parts": 276,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75299-1/76130.jpg",
+        "set_url": "https://rebrickable.com/sets/75299-1/trouble-on-tatooine/",
+        "last_modified_dt": "2020-11-19T20:39:58.283529Z"
+      },
+      {
+        "set_num": "75315-1",
+        "name": "Imperial Light Cruiser",
+        "num_parts": 1336,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75315-1/89525.jpg",
+        "set_url": "https://rebrickable.com/sets/75315-1/imperial-light-cruiser/",
+        "last_modified_dt": "2021-06-26T21:18:14.918327Z"
+      },
+      {
+        "set_num": "75318-1",
+        "name": "The Child",
+        "num_parts": 1073,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75318-1/72781.jpg",
+        "set_url": "https://rebrickable.com/sets/75318-1/the-child/",
+        "last_modified_dt": "2020-09-21T13:36:07.937949Z"
+      },
+      {
+        "set_num": "75325-1",
+        "name": "The Mandalorian's N-1 Starfighter",
+        "num_parts": 412,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75325-1/98778.jpg",
+        "set_url": "https://rebrickable.com/sets/75325-1/the-mandalorians-n-1-starfighter/",
+        "last_modified_dt": "2022-02-16T08:05:35.198530Z"
+      },
+      {
+        "set_num": "75331-1",
+        "name": "The Razor Crest",
+        "num_parts": 6187,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75331-1/110279.jpg",
+        "set_url": "https://rebrickable.com/sets/75331-1/the-razor-crest/",
+        "last_modified_dt": "2022-09-26T18:05:47.937235Z"
+      },
+      {
+        "set_num": "75361-1",
+        "name": "Spider Tank",
+        "num_parts": 526,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75361-1/118826.jpg",
+        "set_url": "https://rebrickable.com/sets/75361-1/spider-tank/",
+        "last_modified_dt": "2023-03-14T12:52:00.658113Z"
+      },
+      {
+        "set_num": "75363-1",
+        "name": "The Mandalorian N-1 Starfighter Microfighter",
+        "num_parts": 88,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75363-1/121321.jpg",
+        "set_url": "https://rebrickable.com/sets/75363-1/the-mandalorian-n-1-starfighter-microfighter/",
+        "last_modified_dt": "2023-03-07T13:52:43.672882Z"
+      },
+      {
+        "set_num": "75378-1",
+        "name": "BARC Speeder Escape",
+        "num_parts": 221,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75378-1/139017.jpg",
+        "set_url": "https://rebrickable.com/sets/75378-1/barc-speeder-escape/",
+        "last_modified_dt": "2024-03-25T05:29:29.612511Z"
+      },
+      {
+        "set_num": "75403-1",
+        "name": "Grogu with Hover Pram",
+        "num_parts": 1048,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75403-1/148930.jpg",
+        "set_url": "https://rebrickable.com/sets/75403-1/grogu-with-hover-pram/",
+        "last_modified_dt": "2024-12-02T11:22:37.339935Z"
+      },
+      {
+        "set_num": "75410-1",
+        "name": "Mando and Grogu's N-1 Starfighter",
+        "num_parts": 92,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75410-1/148913.jpg",
+        "set_url": "https://rebrickable.com/sets/75410-1/mando-and-grogus-n-1-starfighter/",
+        "last_modified_dt": "2025-10-25T06:20:48.236719Z"
+      },
+      {
+        "set_num": "75436-1",
+        "name": "The Mandalorian & Grogu's Speeder Bike",
+        "num_parts": 58,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75436-1/164313.jpg",
+        "set_url": "https://rebrickable.com/sets/75436-1/the-mandalorian-grogus-speeder-bike/",
+        "last_modified_dt": "2025-12-02T14:12:05.425252Z"
+      },
+      {
+        "set_num": "9781837251773-1",
+        "name": "Star Wars: Grogu's Adventures",
+        "num_parts": 11,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/9781837251773-1/163477.jpg",
+        "set_url": "https://rebrickable.com/sets/9781837251773-1/star-wars-grogus-adventures/",
+        "last_modified_dt": "2026-03-13T06:06:30.682587Z"
+      }
+    ]
+  },
+  "fig-013153": {
+    "set_num": "fig-013153",
+    "name": "Kuill",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-013153/119014.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-013153/kuill/",
+    "last_modified_dt": "2022-10-04T04:39:18.600275Z",
+    "sets": [
+      {
+        "set_num": "75331-1",
+        "name": "The Razor Crest",
+        "num_parts": 6187,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75331-1/110279.jpg",
+        "set_url": "https://rebrickable.com/sets/75331-1/the-razor-crest/",
+        "last_modified_dt": "2022-09-26T18:05:47.937235Z"
+      }
+    ]
+  },
+  "fig-014271": {
+    "set_num": "fig-014271",
+    "name": "Hogwarts Architect",
+    "num_parts": 5,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-014271/129175.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-014271/hogwarts-architect/",
+    "last_modified_dt": "2023-09-03T17:41:10.211148Z",
+    "sets": [
+      {
+        "set_num": "76419-1",
+        "name": "Hogwarts Castle and Grounds",
+        "num_parts": 2660,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/76419-1/123597.jpg",
+        "set_url": "https://rebrickable.com/sets/76419-1/hogwarts-castle-and-grounds/",
+        "last_modified_dt": "2023-06-01T18:57:32.293160Z"
+      }
+    ]
+  },
+  "fig-012910": {
+    "set_num": "fig-012910",
+    "name": "Classic Spaceman, Red with Airtanks (New Moulds)",
+    "num_parts": 5,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012910/107541.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-012910/classic-spaceman-red-with-airtanks-new-moulds/",
+    "last_modified_dt": "2022-08-01T15:47:51.176718Z",
+    "sets": [
+      {
+        "set_num": "10497-1",
+        "name": "Galaxy Explorer",
+        "num_parts": 1254,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/10497-1/104009.jpg",
+        "set_url": "https://rebrickable.com/sets/10497-1/galaxy-explorer/",
+        "last_modified_dt": "2022-06-24T05:01:48.132428Z"
+      },
+      {
+        "set_num": "DS2023-1",
+        "name": "Cosmic Daydreams",
+        "num_parts": 148,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/ds2023-1/129086.jpg",
+        "set_url": "https://rebrickable.com/sets/DS2023-1/cosmic-daydreams/",
+        "last_modified_dt": "2023-11-01T17:34:53.909581Z"
+      }
+    ]
+  },
+  "fig-007016": {
+    "set_num": "fig-007016",
+    "name": "Classic Space, White with Airtanks (Jenny)",
+    "num_parts": 5,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-007016/104705.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-007016/classic-space-white-with-airtanks-jenny/",
+    "last_modified_dt": "2023-11-01T17:29:20.795547Z",
+    "sets": [
+      {
+        "set_num": "10497-1",
+        "name": "Galaxy Explorer",
+        "num_parts": 1254,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/10497-1/104009.jpg",
+        "set_url": "https://rebrickable.com/sets/10497-1/galaxy-explorer/",
+        "last_modified_dt": "2022-06-24T05:01:48.132428Z"
+      },
+      {
+        "set_num": "70841-1",
+        "name": "Benny's Space Squad",
+        "num_parts": 68,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/70841-1/10796.jpg",
+        "set_url": "https://rebrickable.com/sets/70841-1/bennys-space-squad/",
+        "last_modified_dt": "2024-01-13T21:37:03.253198Z"
+      },
+      {
+        "set_num": "DS2023-1",
+        "name": "Cosmic Daydreams",
+        "num_parts": 148,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/ds2023-1/129086.jpg",
+        "set_url": "https://rebrickable.com/sets/DS2023-1/cosmic-daydreams/",
+        "last_modified_dt": "2023-11-01T17:34:53.909581Z"
+      }
+    ]
+  },
+  "fig-010388": {
+    "set_num": "fig-010388",
+    "name": "AT-AT Driver, Sand Blue Uniform, 3626cpr0937 Head",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010388/128496.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-010388/at-at-driver-sand-blue-uniform-3626cpr0937-head/",
+    "last_modified_dt": "2026-08-01T22:36:33.805969Z",
+    "sets": [
+      {
+        "set_num": "75288-1",
+        "name": "AT-AT",
+        "num_parts": 1267,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75288-1/70066.jpg",
+        "set_url": "https://rebrickable.com/sets/75288-1/at-at/",
+        "last_modified_dt": "2020-05-01T08:01:05.104236Z"
+      },
+      {
+        "set_num": "75298-1",
+        "name": "AT-AT vs. Tauntaun Microfighters",
+        "num_parts": 205,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75298-1/81629.jpg",
+        "set_url": "https://rebrickable.com/sets/75298-1/at-at-vs-tauntaun-microfighters/",
+        "last_modified_dt": "2021-01-26T08:41:41.293840Z"
+      },
+      {
+        "set_num": "75313-1",
+        "name": "AT-AT",
+        "num_parts": 6785,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75313-1/94568.jpg",
+        "set_url": "https://rebrickable.com/sets/75313-1/at-at/",
+        "last_modified_dt": "2021-11-11T03:14:33.366360Z"
+      }
+    ]
+  },
+  "fig-011942": {
+    "set_num": "fig-011942",
+    "name": "AT-AT Driver, Sand Blue Uniform, 3626cpr3531 Head",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011942/112711.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-011942/at-at-driver-sand-blue-uniform-3626cpr3531-head/",
+    "last_modified_dt": "2026-08-01T22:36:51.450092Z",
+    "sets": [
+      {
+        "set_num": "75313-1",
+        "name": "AT-AT",
+        "num_parts": 6785,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75313-1/94568.jpg",
+        "set_url": "https://rebrickable.com/sets/75313-1/at-at/",
+        "last_modified_dt": "2021-11-11T03:14:33.366360Z"
+      }
+    ]
+  }
+}

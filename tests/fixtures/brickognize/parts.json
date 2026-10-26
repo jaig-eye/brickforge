@@ -1,0 +1,42 @@
+{
+  "listing_id": "fixture",
+  "bounding_box": {
+    "left": 9.095609664916992,
+    "upper": 39.917484283447266,
+    "right": 182.94451332092285,
+    "lower": 151.37357711791992,
+    "image_width": 192,
+    "image_height": 192,
+    "score": 0.9790565371513367
+  },
+  "items": [
+    {
+      "id": "3001",
+      "name": "Brick 2 x 4",
+      "img_url": "https://storage.googleapis.com/brickognize-static/thumbnails/v4.0/part/3001/0.webp",
+      "external_sites": [
+        {
+          "name": "bricklink",
+          "url": "https://www.bricklink.com/v2/catalog/catalogitem.page?P=3001"
+        }
+      ],
+      "category": "Brick",
+      "type": "part",
+      "score": 0.6523064970970154
+    },
+    {
+      "id": "3001special",
+      "name": "Brick 2 x 4 special (special bricks, test bricks and/or prototypes)",
+      "img_url": "https://storage.googleapis.com/brickognize-static/thumbnails/v4.0/part/3001special/0.webp",
+      "external_sites": [
+        {
+          "name": "bricklink",
+          "url": "https://www.bricklink.com/v2/catalog/catalogitem.page?P=3001special"
+        }
+      ],
+      "category": "Brick",
+      "type": "part",
+      "score": 0.5441589951515198
+    }
+  ]
+}

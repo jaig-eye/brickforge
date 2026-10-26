@@ -1,0 +1,28 @@
+{
+  "listing_id": "fixture",
+  "bounding_box": {
+    "left": 0,
+    "upper": 0,
+    "right": 1024,
+    "lower": 865,
+    "image_width": 1024,
+    "image_height": 865,
+    "score": 1
+  },
+  "items": [
+    {
+      "id": "10497-1",
+      "name": "Galaxy Explorer",
+      "img_url": "https://storage.googleapis.com/brickognize-static/thumbnails/v4.0/set/10497-1/0.webp",
+      "external_sites": [
+        {
+          "name": "bricklink",
+          "url": "https://www.bricklink.com/v2/catalog/catalogitem.page?S=10497-1"
+        }
+      ],
+      "category": "Space / Classic Space",
+      "type": "set",
+      "score": 0.8271023035049438
+    }
+  ]
+}

@@ -1,0 +1,557 @@
+{
+  "75192-1": [
+    {
+      "id": 33464,
+      "set_num": "fig-002544",
+      "set_name": "BB-8",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002544/138512.jpg"
+    },
+    {
+      "id": 33465,
+      "set_num": "fig-002514",
+      "set_name": "C-3PO, Pearl Gold, Colorful Wires, Printed Legs",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002514/111826.jpg"
+    },
+    {
+      "id": 33466,
+      "set_num": "fig-001714",
+      "set_name": "Chewbacca, Dark Brown - Long Lines on Legs on Inside",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-001714/161722.jpg"
+    },
+    {
+      "id": 33468,
+      "set_num": "fig-001810",
+      "set_name": "Finn, Black Undershirt",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-001810/58259.jpg"
+    },
+    {
+      "id": 33470,
+      "set_num": "fig-002550",
+      "set_name": "Han Solo, Dark Blue Jacket, Dark Brown Legs, Printed Breathing Mask",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002550/58258.jpg"
+    },
+    {
+      "id": 33471,
+      "set_num": "fig-002551",
+      "set_name": "Han Solo, Old, Angry",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002551/58117.jpg"
+    },
+    {
+      "id": 33472,
+      "set_num": "fig-014404",
+      "set_name": "Porg - Black Wings",
+      "quantity": 2,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-014404/137658.jpg"
+    },
+    {
+      "id": 33469,
+      "set_num": "fig-002549",
+      "set_name": "Princess Leia, Hoth Outfit, White Jacket, Printed Breathing Mask",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002549/108001.jpg"
+    },
+    {
+      "id": 33467,
+      "set_num": "fig-002057",
+      "set_name": "Rey, Dark Tan Robe",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-002057/104893.jpg"
+    }
+  ],
+  "76178-1": [
+    {
+      "id": 29572,
+      "set_num": "fig-011305",
+      "set_name": "Amber Grant",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011305/103862.jpg"
+    },
+    {
+      "id": 29567,
+      "set_num": "fig-011300",
+      "set_name": "Aunt May, Light Bluish Gray Sweater",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011300/103864.jpg"
+    },
+    {
+      "id": 29568,
+      "set_num": "fig-011301",
+      "set_name": "Ben Urich",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011301/103866.jpg"
+    },
+    {
+      "id": 29570,
+      "set_num": "fig-011303",
+      "set_name": "Betty Brant",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011303/103868.jpg"
+    },
+    {
+      "id": 29579,
+      "set_num": "fig-011311",
+      "set_name": "Black Cat",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011311/103911.jpg"
+    },
+    {
+      "id": 29569,
+      "set_num": "fig-011302",
+      "set_name": "Blade",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011302/89108.jpg"
+    },
+    {
+      "id": 29580,
+      "set_num": "fig-011312",
+      "set_name": "Carnage, Two Long and Two Short Tentacles",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011312/95249.jpg"
+    },
+    {
+      "id": 29562,
+      "set_num": "fig-011294",
+      "set_name": "Daredevil",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011294/103914.jpg"
+    },
+    {
+      "id": 29576,
+      "set_num": "fig-010826",
+      "set_name": "Dr. Octopus / Doc Ock, Dark Green Outfit, Neck Bracket",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010826/103840.jpg"
+    },
+    {
+      "id": 29563,
+      "set_num": "fig-011295",
+      "set_name": "Firestar",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011295/103915.jpg"
+    },
+    {
+      "id": 29557,
+      "set_num": "fig-010828",
+      "set_name": "Ghost-Spider / Spider-Gwen, Open Front Hood, White Hands",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010828/181276.jpg"
+    },
+    {
+      "id": 29561,
+      "set_num": "fig-011101",
+      "set_name": "Green Goblin",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011101/103876.jpg"
+    },
+    {
+      "id": 29577,
+      "set_num": "fig-011309",
+      "set_name": "Gwen Stacy",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011309/103883.jpg"
+    },
+    {
+      "id": 29571,
+      "set_num": "fig-011304",
+      "set_name": "J. Jonah Jameson, Black Suit, Dark Bluish Gray Hair",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011304/103886.jpg"
+    },
+    {
+      "id": 29564,
+      "set_num": "fig-011297",
+      "set_name": "Mysterio, Green Outfit, Opal Trans-Light Blue Helmet",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011297/103887.jpg"
+    },
+    {
+      "id": 29565,
+      "set_num": "fig-011298",
+      "set_name": "Peter Parker, Red Jacket",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011298/103889.jpg"
+    },
+    {
+      "id": 29566,
+      "set_num": "fig-011299",
+      "set_name": "Robbie Robertson",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011299/103892.jpg"
+    },
+    {
+      "id": 29573,
+      "set_num": "fig-011306",
+      "set_name": "Ron Barney",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011306/103893.jpg"
+    },
+    {
+      "id": 29560,
+      "set_num": "fig-010830",
+      "set_name": "Sandman, Swirling Dirt Lower Body with Green Sweater",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010830/103906.jpg"
+    },
+    {
+      "id": 29558,
+      "set_num": "fig-008921",
+      "set_name": "Spider-Ham",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-008921/103904.jpg"
+    },
+    {
+      "id": 29559,
+      "set_num": "fig-010825",
+      "set_name": "Spider-Man (Miles Morales), Dark Red Hoodie, Dual Molded Legs",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010825/103903.jpg"
+    },
+    {
+      "id": 29556,
+      "set_num": "fig-011242",
+      "set_name": "Spider-Man, Printed Arms, Red Boots",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011242/103899.jpg"
+    },
+    {
+      "id": 29574,
+      "set_num": "fig-011307",
+      "set_name": "Taxi Driver Bernie",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011307/103898.jpg"
+    },
+    {
+      "id": 29578,
+      "set_num": "fig-011310",
+      "set_name": "The Punisher",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011310/103895.jpg"
+    },
+    {
+      "id": 29575,
+      "set_num": "fig-011308",
+      "set_name": "Venom, Two Long and Two Short Tentacles",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011308/103836.jpg"
+    }
+  ],
+  "10305-1": [
+    {
+      "id": 26897,
+      "set_num": "fig-012978",
+      "set_name": "Castle Man, Reddish Brown Apron, Dark Brown Hair",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012978/107751.jpg"
+    },
+    {
+      "id": 26898,
+      "set_num": "fig-012980",
+      "set_name": "Castle Woman, Dark Green Dress, White Headdress",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012980/151972.jpg"
+    },
+    {
+      "id": 26899,
+      "set_num": "fig-012977",
+      "set_name": "Farmer",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012977/107283.jpg"
+    },
+    {
+      "id": 26900,
+      "set_num": "fig-012983",
+      "set_name": "Forestgirl, Short Green Legs",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012983/151973.jpg"
+    },
+    {
+      "id": 26901,
+      "set_num": "fig-012979",
+      "set_name": "Forestman, Quiver, Thin Moustache",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012979/151974.jpg"
+    },
+    {
+      "id": 26902,
+      "set_num": "fig-012989",
+      "set_name": "Forestwoman, Quiver",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012989/108449.jpg"
+    },
+    {
+      "id": 26903,
+      "set_num": "fig-012986",
+      "set_name": "Knight, Archer, Woman, Quiver",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012986/151975.jpg"
+    },
+    {
+      "id": 26904,
+      "set_num": "fig-013000",
+      "set_name": "Knight, Black Falcon",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-013000/108458.jpg"
+    },
+    {
+      "id": 26905,
+      "set_num": "fig-012999",
+      "set_name": "Knight, Black Falcon, Neck Bracket",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012999/108456.jpg"
+    },
+    {
+      "id": 26914,
+      "set_num": "fig-012998",
+      "set_name": "Knight, Black Falcon, Woman",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012998/108454.jpg"
+    },
+    {
+      "id": 26913,
+      "set_num": "fig-012992",
+      "set_name": "Knight, Chestplate, Black Hair",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012992/151977.jpg"
+    },
+    {
+      "id": 26912,
+      "set_num": "fig-012985",
+      "set_name": "Knight, Dark Tan Hair",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012985/151979.jpg"
+    },
+    {
+      "id": 26911,
+      "set_num": "fig-012997",
+      "set_name": "Knight, Trumpeter",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012997/151981.jpg"
+    },
+    {
+      "id": 26910,
+      "set_num": "fig-012993",
+      "set_name": "Knight, Wide Brim Helmet",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012993/151983.jpg"
+    },
+    {
+      "id": 26909,
+      "set_num": "fig-012994",
+      "set_name": "Knight, Woman, Chestplate, Helmet with Grille and Red Plume",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012994/108465.jpg"
+    },
+    {
+      "id": 26908,
+      "set_num": "fig-012981",
+      "set_name": "Knight, Woman, Helmet with Fixed Grille",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012981/151986.jpg"
+    },
+    {
+      "id": 26907,
+      "set_num": "fig-012996",
+      "set_name": "Knight, Woman, Quiver",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012996/108468.jpg"
+    },
+    {
+      "id": 26906,
+      "set_num": "fig-012982",
+      "set_name": "Knight, Woman, Wide Brim Helmet, Eyes Closed",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012982/151987.jpg"
+    },
+    {
+      "id": 26915,
+      "set_num": "fig-012995",
+      "set_name": "Queen, Chestplate, Cape, Helmet with Gold Grille and White Plume",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012995/151989.jpg"
+    },
+    {
+      "id": 26918,
+      "set_num": "fig-012991",
+      "set_name": "Skeleton, Standard Face, Bent Arms (78132 Torso)",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012991/145631.jpg"
+    },
+    {
+      "id": 26916,
+      "set_num": "fig-012984",
+      "set_name": "Troubadour Boy, Dark Blue Short Legs",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012984/151990.jpg"
+    },
+    {
+      "id": 26917,
+      "set_num": "fig-012988",
+      "set_name": "Wizard, Majisto, Blue Robes",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012988/108470.jpg"
+    }
+  ],
+  "21330-1": [
+    {
+      "id": 34556,
+      "set_num": "fig-011862",
+      "set_name": "Harry Lime",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011862/94021.jpg"
+    },
+    {
+      "id": 34558,
+      "set_num": "fig-011864",
+      "set_name": "Kate McCallister",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011864/94016.jpg"
+    },
+    {
+      "id": 34554,
+      "set_num": "fig-011860",
+      "set_name": "Kevin McCallister",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011860/94019.jpg"
+    },
+    {
+      "id": 34557,
+      "set_num": "fig-011863",
+      "set_name": "Marley",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011863/94018.jpg"
+    },
+    {
+      "id": 34555,
+      "set_num": "fig-011861",
+      "set_name": "Marv Murchins",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011861/94022.jpg"
+    }
+  ],
+  "75331-1": [
+    {
+      "id": 27289,
+      "set_num": "fig-010525",
+      "set_name": "Grogu / The Child (Baby Yoda), 25128 Body",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010525/75011.jpg"
+    },
+    {
+      "id": 27286,
+      "set_num": "fig-013153",
+      "set_name": "Kuill",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-013153/119014.jpg"
+    },
+    {
+      "id": 27288,
+      "set_num": "fig-013155",
+      "set_name": "Mythrol",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-013155/122149.jpg"
+    },
+    {
+      "id": 27287,
+      "set_num": "fig-013154",
+      "set_name": "The Mandalorian / Din Djarin - Head Print, Arm Print",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-013154/119021.jpg"
+    }
+  ],
+  "76419-1": [
+    {
+      "id": 30046,
+      "set_num": "fig-014271",
+      "set_name": "Hogwarts Architect",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-014271/129175.jpg"
+    }
+  ],
+  "10497-1": [
+    {
+      "id": 26810,
+      "set_num": "fig-012910",
+      "set_name": "Classic Spaceman, Red with Airtanks (New Moulds)",
+      "quantity": 2,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-012910/107541.jpg"
+    },
+    {
+      "id": 30352,
+      "set_num": "fig-007016",
+      "set_name": "Classic Space, White with Airtanks (Jenny)",
+      "quantity": 2,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-007016/104705.jpg"
+    }
+  ],
+  "75313-1": [
+    {
+      "id": 24335,
+      "set_num": "fig-010388",
+      "set_name": "AT-AT Driver, Sand Blue Uniform, 3626cpr0937 Head",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010388/128496.jpg"
+    },
+    {
+      "id": 24334,
+      "set_num": "fig-011942",
+      "set_name": "AT-AT Driver, Sand Blue Uniform, 3626cpr3531 Head",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011942/112711.jpg"
+    },
+    {
+      "id": 24333,
+      "set_num": "fig-011941",
+      "set_name": "General Maximillian Veers, Sand Blue Helmet with Visor, Black Boots",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011941/146544.jpg"
+    },
+    {
+      "id": 24331,
+      "set_num": "fig-010861",
+      "set_name": "Luke Skywalker, Orange Rebel Pilot Outfit, Light Bluish Gray Hips, Black Hands, Printed Visor, Detailed Chest Panel",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-010861/170172.jpg"
+    },
+    {
+      "id": 24337,
+      "set_num": "fig-011945",
+      "set_name": "Snowtrooper, White Hips, Light Nougat Head, Female",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011945/180426.jpg"
+    },
+    {
+      "id": 24454,
+      "set_num": "fig-011957",
+      "set_name": "Snowtrooper, White Hips, Light Nougat Head, Grin",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011957/180428.jpg"
+    },
+    {
+      "id": 24338,
+      "set_num": "fig-011946",
+      "set_name": "Snowtrooper, White Hips, Light Nougat Head, Officer",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011946/176507.jpg"
+    },
+    {
+      "id": 24332,
+      "set_num": "fig-011940",
+      "set_name": "Snowtrooper, White Hips, Reddish Brown Head",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011940/180430.jpg"
+    },
+    {
+      "id": 24336,
+      "set_num": "fig-011944",
+      "set_name": "Snowtrooper, White Hips, Reddish Brown Head, Female",
+      "quantity": 1,
+      "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-011944/111093.jpg"
+    }
+  ]
+}

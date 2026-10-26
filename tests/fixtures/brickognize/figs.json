@@ -1,0 +1,28 @@
+{
+  "listing_id": "fixture",
+  "bounding_box": {
+    "left": 0,
+    "upper": 0,
+    "right": 800,
+    "lower": 800,
+    "image_width": 800,
+    "image_height": 800,
+    "score": 1
+  },
+  "items": [
+    {
+      "id": "sw1034",
+      "name": "BB-8 (Large Photoreceptor and Large Black Circle)",
+      "img_url": "https://storage.googleapis.com/brickognize-static/thumbnails/v4.0/fig/sw1034/0.webp",
+      "external_sites": [
+        {
+          "name": "bricklink",
+          "url": "https://www.bricklink.com/v2/catalog/catalogitem.page?M=sw1034"
+        }
+      ],
+      "category": "Star Wars",
+      "type": "fig",
+      "score": 0.7292337417602539
+    }
+  ]
+}

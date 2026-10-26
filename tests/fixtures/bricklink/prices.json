@@ -1,0 +1,977 @@
+{
+  "SET/75192-1/N/sold": {
+    "item": {
+      "no": "75192-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "483.0000",
+    "max_price": "1999.0000",
+    "avg_price": "701.9377",
+    "qty_avg_price": "701.9377",
+    "unit_quantity": 22,
+    "total_quantity": 22,
+    "price_detail": []
+  },
+  "SET/75192-1/U/sold": {
+    "item": {
+      "no": "75192-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "408.1980",
+    "max_price": "650.0000",
+    "avg_price": "559.2436",
+    "qty_avg_price": "559.2436",
+    "unit_quantity": 18,
+    "total_quantity": 18,
+    "price_detail": []
+  },
+  "SET/10497-1/N/sold": {
+    "item": {
+      "no": "10497-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "82.0000",
+    "max_price": "150.0000",
+    "avg_price": "106.9617",
+    "qty_avg_price": "106.6011",
+    "unit_quantity": 55,
+    "total_quantity": 58,
+    "price_detail": []
+  },
+  "SET/10497-1/U/sold": {
+    "item": {
+      "no": "10497-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "65.0000",
+    "max_price": "95.9900",
+    "avg_price": "84.2707",
+    "qty_avg_price": "84.2707",
+    "unit_quantity": 14,
+    "total_quantity": 14,
+    "price_detail": []
+  },
+  "SET/21330-1/N/sold": {
+    "item": {
+      "no": "21330-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "209.9930",
+    "max_price": "300.0000",
+    "avg_price": "266.8849",
+    "qty_avg_price": "264.0708",
+    "unit_quantity": 10,
+    "total_quantity": 12,
+    "price_detail": []
+  },
+  "SET/21330-1/U/sold": {
+    "item": {
+      "no": "21330-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "144.2752",
+    "max_price": "270.0000",
+    "avg_price": "192.8060",
+    "qty_avg_price": "192.8060",
+    "unit_quantity": 11,
+    "total_quantity": 11,
+    "price_detail": []
+  },
+  "SET/10316-1/N/sold": {
+    "item": {
+      "no": "10316-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "378.0000",
+    "max_price": "519.0362",
+    "avg_price": "431.2591",
+    "qty_avg_price": "431.2591",
+    "unit_quantity": 4,
+    "total_quantity": 4,
+    "price_detail": []
+  },
+  "SET/10316-1/U/sold": {
+    "item": {
+      "no": "10316-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "399.5000",
+    "max_price": "493.9900",
+    "avg_price": "430.8725",
+    "qty_avg_price": "430.8725",
+    "unit_quantity": 4,
+    "total_quantity": 4,
+    "price_detail": []
+  },
+  "SET/76419-1/N/sold": {
+    "item": {
+      "no": "76419-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "120.0000",
+    "max_price": "153.7572",
+    "avg_price": "136.5824",
+    "qty_avg_price": "136.5824",
+    "unit_quantity": 3,
+    "total_quantity": 3,
+    "price_detail": []
+  },
+  "SET/76419-1/U/sold": {
+    "item": {
+      "no": "76419-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "59.9940",
+    "max_price": "85.0000",
+    "avg_price": "72.5812",
+    "qty_avg_price": "72.5812",
+    "unit_quantity": 4,
+    "total_quantity": 4,
+    "price_detail": []
+  },
+  "SET/42115-1/N/sold": {
+    "item": {
+      "no": "42115-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "310.5000",
+    "max_price": "438.9900",
+    "avg_price": "388.5136",
+    "qty_avg_price": "388.5136",
+    "unit_quantity": 18,
+    "total_quantity": 18,
+    "price_detail": []
+  },
+  "SET/42115-1/U/sold": {
+    "item": {
+      "no": "42115-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "160.5938",
+    "max_price": "249.9900",
+    "avg_price": "203.5105",
+    "qty_avg_price": "203.5105",
+    "unit_quantity": 7,
+    "total_quantity": 7,
+    "price_detail": []
+  },
+  "SET/21318-1/N/sold": {
+    "item": {
+      "no": "21318-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "160.0000",
+    "max_price": "281.3344",
+    "avg_price": "189.3562",
+    "qty_avg_price": "189.6869",
+    "unit_quantity": 32,
+    "total_quantity": 39,
+    "price_detail": []
+  },
+  "SET/21318-1/U/sold": {
+    "item": {
+      "no": "21318-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "115.0000",
+    "max_price": "170.0000",
+    "avg_price": "137.3624",
+    "qty_avg_price": "137.3624",
+    "unit_quantity": 5,
+    "total_quantity": 5,
+    "price_detail": []
+  },
+  "SET/10294-1/N/sold": {
+    "item": {
+      "no": "10294-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "420.0000",
+    "max_price": "775.0000",
+    "avg_price": "583.5109",
+    "qty_avg_price": "583.5109",
+    "unit_quantity": 14,
+    "total_quantity": 14,
+    "price_detail": []
+  },
+  "SET/10294-1/U/sold": {
+    "item": {
+      "no": "10294-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "349.5546",
+    "max_price": "499.9900",
+    "avg_price": "436.4069",
+    "qty_avg_price": "436.4069",
+    "unit_quantity": 5,
+    "total_quantity": 5,
+    "price_detail": []
+  },
+  "SET/75313-1/N/sold": {
+    "item": {
+      "no": "75313-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "492.0000",
+    "max_price": "1675.0000",
+    "avg_price": "1162.3876",
+    "qty_avg_price": "1162.3876",
+    "unit_quantity": 41,
+    "total_quantity": 41,
+    "price_detail": []
+  },
+  "SET/75313-1/U/sold": {
+    "item": {
+      "no": "75313-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "558.0000",
+    "max_price": "1199.9900",
+    "avg_price": "920.1317",
+    "qty_avg_price": "920.1317",
+    "unit_quantity": 16,
+    "total_quantity": 16,
+    "price_detail": []
+  },
+  "SET/10281-1/N/sold": {
+    "item": {
+      "no": "10281-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "20.0000",
+    "max_price": "35.0000",
+    "avg_price": "30.3757",
+    "qty_avg_price": "30.8371",
+    "unit_quantity": 9,
+    "total_quantity": 10,
+    "price_detail": []
+  },
+  "SET/10281-1/U/sold": {
+    "item": {
+      "no": "10281-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "16.3709",
+    "max_price": "31.6701",
+    "avg_price": "21.8059",
+    "qty_avg_price": "22.4790",
+    "unit_quantity": 7,
+    "total_quantity": 9,
+    "price_detail": []
+  },
+  "SET/71741-1/N/sold": {
+    "item": {
+      "no": "71741-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "254.7672",
+    "max_price": "398.9940",
+    "avg_price": "352.5456",
+    "qty_avg_price": "352.5456",
+    "unit_quantity": 28,
+    "total_quantity": 28,
+    "price_detail": []
+  },
+  "SET/71741-1/U/sold": {
+    "item": {
+      "no": "71741-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "212.3407",
+    "max_price": "310.0000",
+    "avg_price": "276.2129",
+    "qty_avg_price": "276.2129",
+    "unit_quantity": 10,
+    "total_quantity": 10,
+    "price_detail": []
+  },
+  "SET/60380-1/N/sold": {
+    "item": {
+      "no": "60380-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "187.5000",
+    "max_price": "299.9900",
+    "avg_price": "243.7450",
+    "qty_avg_price": "243.7450",
+    "unit_quantity": 2,
+    "total_quantity": 2,
+    "price_detail": []
+  },
+  "SET/60380-1/U/sold": {
+    "item": {
+      "no": "60380-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "0.0000",
+    "max_price": "0.0000",
+    "avg_price": "0.0000",
+    "qty_avg_price": "0.0000",
+    "unit_quantity": 0,
+    "total_quantity": 0,
+    "price_detail": []
+  },
+  "SET/60380-1/U/stock": {
+    "item": {
+      "no": "60380-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "0.0000",
+    "max_price": "0.0000",
+    "avg_price": "0.0000",
+    "qty_avg_price": "0.0000",
+    "unit_quantity": 0,
+    "total_quantity": 0,
+    "price_detail": []
+  },
+  "SET/21325-1/N/sold": {
+    "item": {
+      "no": "21325-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "137.8430",
+    "max_price": "279.0000",
+    "avg_price": "188.7418",
+    "qty_avg_price": "188.6024",
+    "unit_quantity": 76,
+    "total_quantity": 77,
+    "price_detail": []
+  },
+  "SET/21325-1/U/sold": {
+    "item": {
+      "no": "21325-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "132.1013",
+    "max_price": "180.0000",
+    "avg_price": "157.8492",
+    "qty_avg_price": "157.8492",
+    "unit_quantity": 26,
+    "total_quantity": 26,
+    "price_detail": []
+  },
+  "SET/10300-1/N/sold": {
+    "item": {
+      "no": "10300-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "90.0000",
+    "max_price": "145.0000",
+    "avg_price": "120.5440",
+    "qty_avg_price": "120.1862",
+    "unit_quantity": 11,
+    "total_quantity": 12,
+    "price_detail": []
+  },
+  "SET/10300-1/U/sold": {
+    "item": {
+      "no": "10300-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "77.0000",
+    "max_price": "99.9900",
+    "avg_price": "89.5550",
+    "qty_avg_price": "89.5550",
+    "unit_quantity": 8,
+    "total_quantity": 8,
+    "price_detail": []
+  },
+  "SET/76178-1/N/sold": {
+    "item": {
+      "no": "76178-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "294.4900",
+    "max_price": "599.9900",
+    "avg_price": "443.2028",
+    "qty_avg_price": "443.2028",
+    "unit_quantity": 179,
+    "total_quantity": 179,
+    "price_detail": []
+  },
+  "SET/76178-1/U/sold": {
+    "item": {
+      "no": "76178-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "280.2500",
+    "max_price": "427.2196",
+    "avg_price": "365.2162",
+    "qty_avg_price": "365.2162",
+    "unit_quantity": 29,
+    "total_quantity": 29,
+    "price_detail": []
+  },
+  "SET/75331-1/N/sold": {
+    "item": {
+      "no": "75331-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "486.2501",
+    "max_price": "825.0000",
+    "avg_price": "668.8104",
+    "qty_avg_price": "668.8104",
+    "unit_quantity": 48,
+    "total_quantity": 48,
+    "price_detail": []
+  },
+  "SET/75331-1/U/sold": {
+    "item": {
+      "no": "75331-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "427.0219",
+    "max_price": "700.0000",
+    "avg_price": "528.7043",
+    "qty_avg_price": "528.7043",
+    "unit_quantity": 13,
+    "total_quantity": 13,
+    "price_detail": []
+  },
+  "SET/10305-1/N/sold": {
+    "item": {
+      "no": "10305-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "285.9669",
+    "max_price": "631.3359",
+    "avg_price": "454.5228",
+    "qty_avg_price": "415.2120",
+    "unit_quantity": 53,
+    "total_quantity": 82,
+    "price_detail": []
+  },
+  "SET/10305-1/U/sold": {
+    "item": {
+      "no": "10305-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "318.2500",
+    "max_price": "500.0000",
+    "avg_price": "434.6070",
+    "qty_avg_price": "434.6070",
+    "unit_quantity": 13,
+    "total_quantity": 13,
+    "price_detail": []
+  },
+  "SET/21338-1/N/sold": {
+    "item": {
+      "no": "21338-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "168.0000",
+    "max_price": "263.3501",
+    "avg_price": "196.6799",
+    "qty_avg_price": "196.6799",
+    "unit_quantity": 35,
+    "total_quantity": 35,
+    "price_detail": []
+  },
+  "SET/21338-1/U/sold": {
+    "item": {
+      "no": "21338-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "120.0000",
+    "max_price": "180.0000",
+    "avg_price": "158.4185",
+    "qty_avg_price": "158.4185",
+    "unit_quantity": 11,
+    "total_quantity": 11,
+    "price_detail": []
+  },
+  "SET/10333-1/N/sold": {
+    "item": {
+      "no": "10333-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "349.9900",
+    "max_price": "449.9900",
+    "avg_price": "398.6767",
+    "qty_avg_price": "398.6767",
+    "unit_quantity": 3,
+    "total_quantity": 3,
+    "price_detail": []
+  },
+  "SET/10333-1/U/sold": {
+    "item": {
+      "no": "10333-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "352.7500",
+    "max_price": "352.7500",
+    "avg_price": "352.7500",
+    "qty_avg_price": "352.7500",
+    "unit_quantity": 1,
+    "total_quantity": 1,
+    "price_detail": []
+  },
+  "SET/75355-1/N/sold": {
+    "item": {
+      "no": "75355-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "195.9930",
+    "max_price": "290.6064",
+    "avg_price": "239.4564",
+    "qty_avg_price": "239.4564",
+    "unit_quantity": 22,
+    "total_quantity": 22,
+    "price_detail": []
+  },
+  "SET/75355-1/U/sold": {
+    "item": {
+      "no": "75355-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "145.0000",
+    "max_price": "206.9900",
+    "avg_price": "183.3500",
+    "qty_avg_price": "183.3500",
+    "unit_quantity": 10,
+    "total_quantity": 10,
+    "price_detail": []
+  },
+  "SET/10320-1/N/sold": {
+    "item": {
+      "no": "10320-1",
+      "type": "SET"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "224.9900",
+    "max_price": "270.5752",
+    "avg_price": "244.3746",
+    "qty_avg_price": "244.3746",
+    "unit_quantity": 30,
+    "total_quantity": 30,
+    "price_detail": []
+  },
+  "SET/10320-1/U/sold": {
+    "item": {
+      "no": "10320-1",
+      "type": "SET"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "172.1627",
+    "max_price": "239.9900",
+    "avg_price": "203.7880",
+    "qty_avg_price": "203.7880",
+    "unit_quantity": 8,
+    "total_quantity": 8,
+    "price_detail": []
+  },
+  "MINIFIG/sw1034/U/sold": {
+    "item": {
+      "no": "sw1034",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "0.5000",
+    "max_price": "5.1000",
+    "avg_price": "3.2404",
+    "qty_avg_price": "3.2258",
+    "unit_quantity": 90,
+    "total_quantity": 107,
+    "price_detail": []
+  },
+  "MINIFIG/sw1034/N/sold": {
+    "item": {
+      "no": "sw1034",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "1.0000",
+    "max_price": "12.6200",
+    "avg_price": "3.8334",
+    "qty_avg_price": "3.9038",
+    "unit_quantity": 51,
+    "total_quantity": 98,
+    "price_detail": []
+  },
+  "MINIFIG/sw0700/U/sold": {
+    "item": {
+      "no": "sw0700",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "0.0100",
+    "max_price": "10.0000",
+    "avg_price": "3.6439",
+    "qty_avg_price": "3.6795",
+    "unit_quantity": 305,
+    "total_quantity": 378,
+    "price_detail": []
+  },
+  "MINIFIG/sw0700/N/sold": {
+    "item": {
+      "no": "sw0700",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "1.4480",
+    "max_price": "14.0000",
+    "avg_price": "5.6349",
+    "qty_avg_price": "5.6983",
+    "unit_quantity": 82,
+    "total_quantity": 250,
+    "price_detail": []
+  },
+  "MINIFIG/sh0725/U/sold": {
+    "item": {
+      "no": "sh0725",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "1.4274",
+    "max_price": "3.5300",
+    "avg_price": "2.4513",
+    "qty_avg_price": "2.4513",
+    "unit_quantity": 20,
+    "total_quantity": 20,
+    "price_detail": []
+  },
+  "MINIFIG/sh0725/N/sold": {
+    "item": {
+      "no": "sh0725",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "1.4950",
+    "max_price": "5.1000",
+    "avg_price": "2.7042",
+    "qty_avg_price": "2.6290",
+    "unit_quantity": 22,
+    "total_quantity": 24,
+    "price_detail": []
+  },
+  "MINIFIG/sh0721/U/sold": {
+    "item": {
+      "no": "sh0721",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "1.9400",
+    "max_price": "3.0000",
+    "avg_price": "2.4463",
+    "qty_avg_price": "2.4463",
+    "unit_quantity": 19,
+    "total_quantity": 19,
+    "price_detail": []
+  },
+  "MINIFIG/sh0721/N/sold": {
+    "item": {
+      "no": "sh0721",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "2.0000",
+    "max_price": "9.8900",
+    "avg_price": "3.5571",
+    "qty_avg_price": "3.4828",
+    "unit_quantity": 36,
+    "total_quantity": 38,
+    "price_detail": []
+  },
+  "MINIFIG/cas578/U/sold": {
+    "item": {
+      "no": "cas578",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "3.2500",
+    "max_price": "5.0000",
+    "avg_price": "3.8454",
+    "qty_avg_price": "3.8454",
+    "unit_quantity": 4,
+    "total_quantity": 4,
+    "price_detail": []
+  },
+  "MINIFIG/cas578/N/sold": {
+    "item": {
+      "no": "cas578",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "3.6044",
+    "max_price": "9.6000",
+    "avg_price": "5.5031",
+    "qty_avg_price": "5.4819",
+    "unit_quantity": 24,
+    "total_quantity": 26,
+    "price_detail": []
+  },
+  "MINIFIG/idea101/U/sold": {
+    "item": {
+      "no": "idea101",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "7.5000",
+    "max_price": "16.0000",
+    "avg_price": "13.2400",
+    "qty_avg_price": "13.2400",
+    "unit_quantity": 5,
+    "total_quantity": 5,
+    "price_detail": []
+  },
+  "MINIFIG/idea101/N/sold": {
+    "item": {
+      "no": "idea101",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "10.6600",
+    "max_price": "28.3300",
+    "avg_price": "17.5669",
+    "qty_avg_price": "17.5669",
+    "unit_quantity": 11,
+    "total_quantity": 11,
+    "price_detail": []
+  },
+  "MINIFIG/idea100/U/sold": {
+    "item": {
+      "no": "idea100",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "4.9900",
+    "max_price": "14.9900",
+    "avg_price": "8.5926",
+    "qty_avg_price": "8.5926",
+    "unit_quantity": 12,
+    "total_quantity": 12,
+    "price_detail": []
+  },
+  "MINIFIG/idea100/N/sold": {
+    "item": {
+      "no": "idea100",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "6.0300",
+    "max_price": "13.9900",
+    "avg_price": "9.1766",
+    "qty_avg_price": "8.7045",
+    "unit_quantity": 17,
+    "total_quantity": 23,
+    "price_detail": []
+  },
+  "MINIFIG/sw1113/U/sold": {
+    "item": {
+      "no": "sw1113",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "0.2500",
+    "max_price": "7.0000",
+    "avg_price": "2.4815",
+    "qty_avg_price": "2.4862",
+    "unit_quantity": 280,
+    "total_quantity": 384,
+    "price_detail": []
+  },
+  "MINIFIG/sw1113/N/sold": {
+    "item": {
+      "no": "sw1113",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "0.0080",
+    "max_price": "9.3200",
+    "avg_price": "3.2093",
+    "qty_avg_price": "2.9645",
+    "unit_quantity": 306,
+    "total_quantity": 1450,
+    "price_detail": []
+  },
+  "MINIFIG/sw1244/U/sold": {
+    "item": {
+      "no": "sw1244",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "38.0000",
+    "max_price": "38.0000",
+    "avg_price": "38.0000",
+    "qty_avg_price": "38.0000",
+    "unit_quantity": 1,
+    "total_quantity": 1,
+    "price_detail": []
+  },
+  "MINIFIG/sw1244/N/sold": {
+    "item": {
+      "no": "sw1244",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "25.0000",
+    "max_price": "78.3030",
+    "avg_price": "39.0950",
+    "qty_avg_price": "38.9148",
+    "unit_quantity": 46,
+    "total_quantity": 51,
+    "price_detail": []
+  },
+  "MINIFIG/hp464/U/sold": {
+    "item": {
+      "no": "hp464",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "7.0000",
+    "max_price": "14.9900",
+    "avg_price": "10.2410",
+    "qty_avg_price": "10.2410",
+    "unit_quantity": 12,
+    "total_quantity": 12,
+    "price_detail": []
+  },
+  "MINIFIG/hp464/N/sold": {
+    "item": {
+      "no": "hp464",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "7.3840",
+    "max_price": "23.2407",
+    "avg_price": "11.7025",
+    "qty_avg_price": "11.7025",
+    "unit_quantity": 25,
+    "total_quantity": 25,
+    "price_detail": []
+  },
+  "MINIFIG/tlm110/U/sold": {
+    "item": {
+      "no": "tlm110",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "U",
+    "currency_code": "USD",
+    "min_price": "2.2500",
+    "max_price": "6.2500",
+    "avg_price": "3.9457",
+    "qty_avg_price": "3.9712",
+    "unit_quantity": 44,
+    "total_quantity": 48,
+    "price_detail": []
+  },
+  "MINIFIG/tlm110/N/sold": {
+    "item": {
+      "no": "tlm110",
+      "type": "MINIFIG"
+    },
+    "new_or_used": "N",
+    "currency_code": "USD",
+    "min_price": "3.2700",
+    "max_price": "9.3346",
+    "avg_price": "4.8736",
+    "qty_avg_price": "4.4883",
+    "unit_quantity": 74,
+    "total_quantity": 154,
+    "price_detail": []
+  }
+}
