@@ -1,6 +1,6 @@
 {
   "name": "brickforge",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A LEGO® collection manager for your desktop: track sets and minifigures, see what they are worth on BrickLink, identify them from photos, and write eBay listings.",
   "main": "dist-electron/electron/main/index.js",
   "author": {
@@ -28,7 +28,8 @@
     "test:watch": "vitest",
     "test:e2e": "npm run build && playwright test",
     "screenshots": "npm run build && playwright test --config playwright.screenshots.config.ts",
-    "package:win": "npm run build && node scripts/prep-codesign-cache.js && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --config electron-builder.config.js"
+    "package:win": "npm run build && node scripts/prep-codesign-cache.js && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --config electron-builder.config.js",
+    "package:mac": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --config electron-builder.config.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.135.0",

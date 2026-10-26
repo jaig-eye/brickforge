@@ -4,11 +4,12 @@
 
 # BrickForge
 
-**A LEGO® collection manager for Windows.** Track your sets and minifigures, see what they're worth on BrickLink, identify them from a photo, and write eBay listings in one click.
+**A LEGO® collection manager for Windows and macOS.** Track your sets and minifigures, see what they're worth on BrickLink, identify them from a photo, and write eBay listings in one click.
 
 [![Release](https://img.shields.io/github/v/release/jaig-eye/brickforge?color=FFC929&label=download)](https://github.com/jaig-eye/brickforge/releases/latest)
 [![CI](https://github.com/jaig-eye/brickforge/actions/workflows/ci.yml/badge.svg)](https://github.com/jaig-eye/brickforge/actions/workflows/ci.yml)
 ![Windows 10 and 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)
+![macOS 13 and later](https://img.shields.io/badge/macOS-13%2B-555555)
 [![MIT license](https://img.shields.io/badge/license-MIT-3dd68c)](LICENSE)
 
 <img src="docs/screenshots/home.png" alt="BrickForge home screen: collection value, portfolio chart, top movers, and recently added sets" />
@@ -17,7 +18,7 @@
 
 ## What it does
 
-BrickForge keeps your whole LEGO collection in one place on your PC: every set and minifigure you own, the ones on your wishlist, what each is worth today, and how that has changed. It's free, it works offline, and your data stays in a single file you control.
+BrickForge keeps your whole LEGO collection in one place on your computer: every set and minifigure you own, the ones on your wishlist, what each is worth today, and how that has changed. It's free, it works offline, and your data stays in a single file you control.
 
 | | |
 |---|---|
@@ -27,7 +28,7 @@ BrickForge keeps your whole LEGO collection in one place on your PC: every set a
 | **Value** | Market prices from BrickLink sales, portfolio history, gain over what you paid, top movers, value by theme, and price alerts. |
 | **Sell** | An eBay-ready title and HTML description for any set, plus BrickLink's recent sold prices to price it. |
 | **Import and export** | CSV from Brickset, Rebrickable, or BrickForge, BrickLink wanted-list XML, or a photo of a list. Every import is reviewed before anything is added. |
-| **Sync** | Optional two-way sync with a PostgreSQL database you own (Supabase, Neon, or your own server) to keep two PCs in step. |
+| **Sync** | Optional two-way sync with a PostgreSQL database you own (Supabase, Neon, or your own server) to keep two computers in step. |
 
 ## Screenshots
 
@@ -52,11 +53,22 @@ BrickForge keeps your whole LEGO collection in one place on your PC: every set a
 
 ## Install
 
-1. Download **`BrickForge-Setup-<version>.exe`** from the [latest release](https://github.com/jaig-eye/brickforge/releases/latest).
-2. Run it. BrickForge installs for your Windows user and opens when it's done.
-3. The installer isn't code-signed yet, so Windows SmartScreen may say *Windows protected your PC*. Click **More info**, then **Run anyway**.
+Download from the [latest release](https://github.com/jaig-eye/brickforge/releases/latest).
+
+### Windows 10 and 11
+
+1. Download **`BrickForge-Setup-<version>.exe`** and run it. BrickForge installs for your Windows user and opens when it's done.
+2. The installer isn't code-signed yet, so Windows SmartScreen may say *Windows protected your PC*. Click **More info**, then **Run anyway**.
 
 BrickForge checks GitHub for new versions and offers to install them. Each download's SHA-512 checksum is verified before it runs.
+
+### macOS 13 and later
+
+1. Download the disk image for your Mac: **`BrickForge-<version>-mac-arm64.dmg`** for Apple Silicon (M1 and later), or **`BrickForge-<version>-mac-x64.dmg`** for an Intel Mac. Not sure? Apple menu → **About This Mac** shows *Chip* (Apple Silicon) or *Processor* (Intel).
+2. Open it and drag **BrickForge** into **Applications**.
+3. BrickForge isn't signed with an Apple Developer ID yet, so the first time you open it macOS says it can't verify the developer. Click **Done**, open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to BrickForge. You only do this once.
+
+macOS doesn't let an unsigned app replace itself, so on a Mac BrickForge tells you when a new version is out and opens its download page.
 
 **Just want to look around?** Open **Settings → About → Open the demo** to browse a sample collection of 21 sets and 15 minifigures with real prices. The demo keeps its own data and never touches yours.
 
@@ -94,25 +106,25 @@ Scan works without AI: Brickognize handles clear photos on its own. Pick one pro
 
 - **Anthropic**: an API key from [platform.claude.com](https://platform.claude.com/). Uses Claude Opus 5.5 by default.
 - **OpenAI**: an API key from [platform.openai.com](https://platform.openai.com/api-keys).
-- **Claude Code**: uses the [Claude Code](https://code.claude.com/docs) app already installed and signed in on your PC, so no key is needed. Each call is a little slower.
+- **Claude Code**: uses the [Claude Code](https://code.claude.com/docs) app already installed and signed in on your computer, so no key is needed. Each call is a little slower.
 
 ## Using BrickForge
 
-- **Add things.** Press <kbd>Ctrl</kbd>+<kbd>K</kbd> anywhere and type a set number or a name, or use **Add** on any screen. Adding a set offers to add its minifigures too.
+- **Add things.** Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘</kbd><kbd>K</kbd> on a Mac) anywhere and type a set number or a name, or use **Add** on any screen. Adding a set offers to add its minifigures too.
 - **Scan.** Drag photos onto **Scan**, or click to pick them. Choose **Sets** or **Minifigures** first. With an AI provider set up, turn on **Split group photos** to scan a lineup of figures in one go. Pick the right match and click **Add**, or the heart to wishlist it.
-- **Edit and organize.** Click any item for its details sheet. In **Collection**, <kbd>Ctrl</kbd>-click or <kbd>Shift</kbd>-click to select several, <kbd>Ctrl</kbd>+<kbd>A</kbd> to select everything shown, then tag, move, or edit them together. <kbd>Esc</kbd> clears the selection.
-- **Watch prices.** In an item's details, set an alert for when its price drops below or rises above a target. Alerts are checked after every price update and show a Windows notification.
+- **Edit and organize.** Click any item for its details sheet. In **Collection**, <kbd>Ctrl</kbd>-click (<kbd>⌘</kbd>-click on a Mac) or <kbd>Shift</kbd>-click to select several, <kbd>Ctrl</kbd>+<kbd>A</kbd> (<kbd>⌘</kbd><kbd>A</kbd>) to select everything shown, then tag, move, or edit them together. <kbd>Esc</kbd> clears the selection.
+- **Watch prices.** In an item's details, set an alert for when its price drops below or rises above a target. Alerts are checked after every price update and show a desktop notification.
 - **Sell.** Pick a set on **Sell**, describe your copy (how complete it is, and whether the instructions, minifigures, and box are included), and click **Write the listing**. Copy the title and the HTML straight into eBay.
 - **Back up.** BrickForge backs up your collection weekly on its own. **Settings → Your data** backs up now, restores a backup, imports, and exports CSV.
 
 ## Your data
 
-Everything lives on your PC in `%APPDATA%\brickforge`:
+Everything lives on your computer, in `%APPDATA%\brickforge` on Windows and `~/Library/Application Support/brickforge` on a Mac:
 
 | | |
 |---|---|
 | `brickforge.db` | Your collection, prices, alerts, and listings (SQLite) |
-| `settings.json` | Preferences. API keys in it are encrypted with Windows' own data protection and can only be read by your Windows account on this PC |
+| `settings.json` | Preferences. API keys in it are encrypted with the system's own protection (Windows data protection, or the macOS Keychain) and can only be read by your account on this computer |
 | `backups\` | Automatic weekly backups and any you make yourself |
 | `scans\` | Photos you've scanned, until you clear them |
 
@@ -120,17 +132,17 @@ BrickForge sends nothing anywhere except to the service each feature needs: cata
 
 ### Sync to your own database
 
-Sync keeps two PCs in step, or keeps an off-site copy. BrickForge still works from its local file and sends and receives changes in the background, so it keeps working offline. When two PCs change the same item, the newest change wins.
+Sync keeps two computers in step, or keeps an off-site copy. BrickForge still works from its local file and sends and receives changes in the background, so it keeps working offline. When two computers change the same item, the newest change wins.
 
 1. Create a free PostgreSQL database, for example on [Supabase](https://supabase.com/) or [Neon](https://neon.com/), or use your own server.
 2. Copy its connection string (`postgresql://user:password@host:5432/dbname`). Supabase and Neon may need `?sslmode=require` on the end.
 3. In **Settings → Your data → Sync**, paste it, click **Test**, then **Connect**.
 
-BrickForge creates one table, `brickforge_sync`, and touches nothing else in that database. Restoring a backup while sync is on makes this PC rejoin as a new device and converge with the database.
+BrickForge creates one table, `brickforge_sync`, and touches nothing else in that database. Restoring a backup while sync is on makes this computer rejoin as a new device and converge with the database.
 
 ## Build from source
 
-You need **Windows 10 or 11**, [Node.js 24](https://nodejs.org/), and [Git](https://git-scm.com/).
+You need **Windows 10 or 11** or **macOS 13 or later**, [Node.js 24](https://nodejs.org/), and [Git](https://git-scm.com/).
 
 ```bash
 git clone https://github.com/jaig-eye/brickforge.git
@@ -148,7 +160,7 @@ npm install
 npm run dev
 ```
 
-`npm run dev` builds the main process, starts the Vite dev server, and opens the app with hot reload. Your real collection in `%APPDATA%\brickforge` is used; run `npm run demo` instead to work against the sample collection.
+`npm run dev` builds the main process, starts the Vite dev server, and opens the app with hot reload. Your real collection (in the data folder above) is used; run `npm run demo` instead to work against the sample collection.
 
 | Command | What it does |
 |---|---|
@@ -160,6 +172,7 @@ npm run dev
 | `npm run test:e2e` | Build, then drive the real app end to end (Playwright) |
 | `npm run screenshots` | Regenerate the screenshots in this README |
 | `npm run package:win` | Build the Windows installer into `release\` |
+| `npm run package:mac` | Build the macOS disk images into `release/` (on a Mac) |
 
 The tests never touch the internet or your data. Every web service (Rebrickable, BrickLink, Brickognize, Anthropic, OpenAI) is replaced by a local stand-in that replays recorded real responses, sync runs against an in-process PostgreSQL ([PGlite](https://pglite.dev/)), and each test gets a fresh data folder. `.env.example` lists the environment variables for pointing the app at other folders and services.
 
@@ -196,4 +209,4 @@ Ideas for what comes next are in [ROADMAP.md](ROADMAP.md), and every release is 
 
 LEGO® is a trademark of the LEGO Group, which does not sponsor, authorize, or endorse this project. BrickLink® is a trademark of the LEGO Group. Set and minifigure data and images come from [Rebrickable](https://rebrickable.com/); prices come from the [BrickLink API](https://www.bricklink.com/v3/api.page). BrickForge isn't affiliated with Rebrickable, BrickLink, Brickset, or Brickognize.
 
-<sub>Keywords: LEGO collection tracker, LEGO inventory app, LEGO set value, LEGO price tracker, minifigure collection, BrickLink price guide, Rebrickable, Brickset import, LEGO identifier, LEGO scanner, AFOL, LEGO investing, eBay LEGO listing, Windows desktop app.</sub>
+<sub>Keywords: LEGO collection tracker, LEGO inventory app, LEGO set value, LEGO price tracker, minifigure collection, BrickLink price guide, Rebrickable, Brickset import, LEGO identifier, LEGO scanner, AFOL, LEGO investing, eBay LEGO listing, Windows desktop app, macOS app.</sub>

@@ -21,6 +21,7 @@ import { CommandBar } from './CommandBar'
 import { Onboarding } from './Onboarding'
 import { AddDialog } from '../collection/AddDialog'
 import { ItemSheet } from '../collection/ItemSheet'
+import { isMac } from '@/lib/platform'
 
 /** Keeps <html> in step with the theme, accent, and motion preferences. */
 function useThemeSync() {
@@ -70,12 +71,13 @@ function useGlobalEvents() {
 /**
  * Windows' "Animation effects" switch reaches apps as reduced motion, and
  * many people turn it off for speed, not comfort. Say so once, and offer to
- * turn motion on for BrickForge alone.
+ * turn motion on for BrickForge alone. macOS's Reduce motion is an
+ * accessibility setting, so there it's simply followed.
  */
 function useMotionHint(enabled: boolean) {
   const qc = useQueryClient()
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled || isMac) return
     let seen = false
     try { seen = localStorage.getItem('bf-motion-hint') === '1' } catch { /* storage unavailable */ }
     if (seen || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) return

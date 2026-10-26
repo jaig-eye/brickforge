@@ -244,7 +244,7 @@ function ListView({ items, kind, selected, onToggle, onOpen, sort, dir, onSort }
             const sel = selected.includes(i.id)
             const gain = i.market_price != null && i.acquired_price != null ? (i.market_price - i.acquired_price) * i.quantity : null
             return (
-              <tr key={i.id} onClick={(e) => (e.ctrlKey || e.shiftKey || selected.length ? onToggle(i.id, e.shiftKey) : onOpen(i))}
+              <tr key={i.id} onClick={(e) => (e.ctrlKey || e.metaKey || e.shiftKey || selected.length ? onToggle(i.id, e.shiftKey) : onOpen(i))}
                 className={cn('cursor-pointer border-b border-line last:border-0 hover:bg-hover', sel && 'bg-accent-soft hover:bg-accent-soft')}>
                 <td className="px-3" onClick={(e) => { e.stopPropagation(); onToggle(i.id, e.shiftKey) }}>
                   <span className={cn('grid size-5 place-items-center rounded-[6px] border-2', sel ? 'border-accent bg-accent text-accent-ink' : 'border-line-strong')}>{sel && <Check className="size-3" strokeWidth={3} />}</span>

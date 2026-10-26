@@ -19,6 +19,7 @@ import { RebrickableCard, BricklinkCard, AiCard, BrickognizeCard } from '@/compo
 import { SyncCard } from '@/components/settings/SyncCard'
 import { ImportDialog } from '@/components/collection/ImportDialog'
 import { BrickLogo } from '@/components/brick/BrickLogo'
+import { isMac, osName } from '@/lib/platform'
 
 const SECTIONS = [
   { id: 'you', label: 'You' },
@@ -83,7 +84,7 @@ export default function Settings() {
   if (!s) return null
 
   return (
-    <Page title="Settings" sub="Everything is stored on this PC. Keys are encrypted and never leave it, except to the service they belong to.">
+    <Page title="Settings" sub="Everything is stored on this computer. Keys are encrypted and never leave it, except to the service they belong to.">
       <div className="grid grid-cols-[180px_1fr] items-start gap-10">
         <nav className="sticky top-2 flex flex-col gap-0.5" aria-label="Settings sections">
           {SECTIONS.map((x) => (
@@ -108,7 +109,7 @@ export default function Settings() {
                     options={[
                       { value: 'dark', label: <span className="inline-flex items-center gap-1.5"><Moon className="size-3.5" />Dark</span> },
                       { value: 'light', label: <span className="inline-flex items-center gap-1.5"><Sun className="size-3.5" />Light</span> },
-                      { value: 'system', label: <span className="inline-flex items-center gap-1.5"><Monitor className="size-3.5" />Match Windows</span> },
+                      { value: 'system', label: <span className="inline-flex items-center gap-1.5"><Monitor className="size-3.5" />Match {osName}</span> },
                     ]} />
                 </Row>
                 <Row label="Brick color" hint="The accent used for buttons, highlights, and the chart line.">
@@ -124,9 +125,9 @@ export default function Settings() {
                     ))}
                   </div>
                 </Row>
-                <Row label="Motion" hint="Animations like the vault count-up and scan sweep. “Match Windows” follows Windows' animation setting.">
+                <Row label="Motion" hint={`Animations like the vault count-up and scan sweep. “Match ${osName}” follows ${osName}'s ${isMac ? 'Reduce motion' : 'animation'} setting.`}>
                   <Segmented label="Motion" value={s.reduceMotion} onChange={(reduceMotion) => void setPrefs({ reduceMotion })}
-                    options={[{ value: 'off', label: 'Full' }, { value: 'system', label: 'Match Windows' }, { value: 'on', label: 'Reduced' }]} />
+                    options={[{ value: 'off', label: 'Full' }, { value: 'system', label: `Match ${osName}` }, { value: 'on', label: 'Reduced' }]} />
                 </Row>
               </div>
             </Section>
@@ -202,7 +203,7 @@ function DataSection() {
   }
 
   return (
-    <Section id="data" title="Your data" sub="Your collection lives in one file on this PC. Back it up, move it, or sync it.">
+    <Section id="data" title="Your data" sub="Your collection lives in one file on this computer. Back it up, move it, or sync it.">
       <div className="panel px-5">
         <Row label="Where it's stored" hint={<span className="selectable font-mono text-[11.5px]">{info?.dataDir}</span>}>
           <Button size="sm" icon={<FolderOpen className="size-3.5" />} onClick={() => void api.app.showDataFolder()}>Open folder</Button>
@@ -272,7 +273,7 @@ function About() {
           </p>
         </div>
         {info?.packaged && (update?.status === 'available'
-          ? <Button size="sm" variant="primary" icon={<Download className="size-3.5" />} onClick={() => void api.updates.download()}>Download</Button>
+          ? <Button size="sm" variant="primary" icon={<Download className="size-3.5" />} onClick={() => void api.updates.download()}>{update.url ? 'Get it on GitHub' : 'Download'}</Button>
           : update?.status === 'ready'
             ? <Button size="sm" variant="primary" onClick={() => void api.updates.install()}>Restart and install</Button>
             : <Button size="sm" icon={<RefreshCw className="size-3.5" />} onClick={() => void api.updates.check()}>Check for updates</Button>)}

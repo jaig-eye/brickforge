@@ -79,7 +79,7 @@ export function Onboarding() {
                 <>
                   <h1 className="font-display text-[44px] font-extrabold leading-[1.02] tracking-[-0.04em]">Every brick you own,<br /><span className="text-accent-text">and what it's worth.</span></h1>
                   <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-fg-3">
-                    BrickForge keeps your LEGO® sets and minifigures in one place, tracks their market value, identifies them from photos, and writes your eBay listings. Everything stays on this PC.
+                    BrickForge keeps your LEGO® sets and minifigures in one place, tracks their market value, identifies them from photos, and writes your eBay listings. Everything stays on this computer.
                   </p>
                   <div className="mt-8 max-w-[360px]">
                     <label htmlFor="ob-name" className="text-[12.5px] font-medium text-fg-2">What should we call you? <span className="text-fg-4">(optional)</span></label>

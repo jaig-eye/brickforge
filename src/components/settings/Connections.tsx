@@ -194,7 +194,7 @@ export function AiCard() {
           </div>
         ) : (
           <p className="rounded-[12px] border border-line bg-panel-2/60 px-3 py-2.5 text-[12.5px] leading-relaxed text-fg-3">
-            Uses the Claude Code app installed on this PC and its sign-in. Each call takes a little longer than an API key would. <Link href="https://code.claude.com/docs">Install Claude Code</Link>
+            Uses the Claude Code app installed on this computer and its sign-in. Each call takes a little longer than an API key would. <Link href="https://code.claude.com/docs">Install Claude Code</Link>
           </p>
         )}
         <div className="flex items-center gap-3">

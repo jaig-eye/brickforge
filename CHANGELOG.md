@@ -2,7 +2,11 @@
 
 All notable changes to BrickForge are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
-## [1.0.1] - 2026-10-26
+## [1.1.0] - 2026-10-26
+
+### Added
+- macOS: disk images for Apple Silicon and Intel Macs, with the system's own window controls, a macOS menu bar, and ⌘ shortcuts. macOS can't update an app that isn't signed with an Apple Developer ID, so BrickForge checks GitHub for new versions and opens the download page.
+- The Claude Code AI provider finds the `claude` command on a Mac even when BrickForge is opened from the Dock.
 
 ### Security
 - Electron 44.9.3, which mitigates the compromised eMudhra intermediate certificates ([GHSA-jr5w-w6x2-84p9](https://github.com/electron/electron/security/advisories/GHSA-jr5w-w6x2-84p9)) and brings backported fixes from Chromium, V8, Skia, ANGLE, and PDFium.
@@ -43,5 +47,5 @@ The first public release. BrickForge was rebuilt from the ground up: a new inter
 - Anthropic (Claude Opus 5.5 by default), OpenAI, or a local Claude Code sign-in as the AI provider.
 - Automatic updates from GitHub releases, verified by checksum.
 
-[1.0.1]: https://github.com/jaig-eye/brickforge/releases/tag/v1.0.1
+[1.1.0]: https://github.com/jaig-eye/brickforge/releases/tag/v1.1.0
 [1.0.0]: https://github.com/jaig-eye/brickforge/releases/tag/v1.0.0

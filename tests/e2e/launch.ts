@@ -42,7 +42,12 @@ export async function launch(opts: { demo?: boolean; settings?: Record<string, u
   env.BRICKFORGE_USER_DATA = dir
   for (const [service, url] of Object.entries(apis.urls)) env[`BRICKFORGE_${service.toUpperCase()}_URL`] = url
 
-  const app = await electron.launch({ args: ['.', ...(opts.demo ? ['--demo'] : [])], cwd: ROOT, env })
+  // BRICKFORGE_E2E_APP points at a packaged build's executable to test what ships
+  const packaged = process.env.BRICKFORGE_E2E_APP
+  const demo = opts.demo ? ['--demo'] : []
+  const app = packaged
+    ? await electron.launch({ executablePath: packaged, args: demo, env })
+    : await electron.launch({ args: ['.', ...demo], cwd: ROOT, env })
   const page = await app.firstWindow()
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))

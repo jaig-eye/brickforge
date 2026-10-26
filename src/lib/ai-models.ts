@@ -14,7 +14,7 @@ export interface AiModelOption {
 export const AI_PROVIDERS: { id: AiProviderId; label: string; blurb: string }[] = [
   { id: 'anthropic', label: 'Anthropic', blurb: 'Claude models through your Anthropic API key.' },
   { id: 'openai', label: 'OpenAI', blurb: 'GPT models through your OpenAI API key.' },
-  { id: 'claude-code', label: 'Claude Code', blurb: 'Your Claude subscription through the Claude Code app on this PC. No API key.' },
+  { id: 'claude-code', label: 'Claude Code', blurb: 'Your Claude subscription through the Claude Code app on this computer. No API key.' },
 ]
 
 export const ANTHROPIC_MODELS: AiModelOption[] = [

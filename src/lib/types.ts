@@ -485,7 +485,8 @@ export type UpdateState =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'up-to-date'; checkedAt: string }
-  | { status: 'available'; version: string; notes: string | null }
+  /** url: where to download it by hand (macOS, where the app can't update itself unsigned) */
+  | { status: 'available'; version: string; notes: string | null; url?: string }
   | { status: 'downloading'; version: string; percent: number }
   | { status: 'ready'; version: string }
   | { status: 'error'; message: string }

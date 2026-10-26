@@ -48,7 +48,7 @@ async function testService(service: TestableService, candidate: unknown): Promis
     }
     case 'claude-code': {
       if (!(await isClaudeCodeAvailable())) {
-        throw new AppError({ code: 'missing_key', service: 'claude-code', message: "Claude Code isn't installed on this PC, or isn't on the PATH." })
+        throw new AppError({ code: 'missing_key', service: 'claude-code', message: "Claude Code isn't installed on this computer, or isn't on the PATH." })
       }
       return { ok: true, detail: 'Claude Code is installed.' }
     }

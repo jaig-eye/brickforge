@@ -1,5 +1,5 @@
 import { isDemo } from './paths' // must run first: it decides where userData lives
-import { app, BrowserWindow, session, screen } from 'electron'
+import { app, BrowserWindow, Menu, session, screen, type MenuItemConstructorOptions } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import log from './logger'
@@ -16,6 +16,7 @@ import { setupUpdater } from '../services/updater'
 import { startSync, stopSync } from '../services/sync'
 
 const isDev = !app.isPackaged && process.env.NODE_ENV === 'development'
+const isMac = process.platform === 'darwin'
 const DEV_URL = 'http://localhost:5173'
 const PRELOAD = path.join(__dirname, '../preload/index.js')
 
@@ -54,7 +55,9 @@ function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     x: b.x, y: b.y, width: b.width, height: b.height,
     minWidth: 980, minHeight: 640,
-    frame: false,
+    // Windows: the interface draws its own controls. macOS: the system's
+    // traffic lights, inset into the interface's title bar.
+    ...(isMac ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 18, y: 15 } } : { frame: false }),
     backgroundColor: '#0A0C12',
     show: false,
     title: isDemo ? 'BrickForge (demo)' : 'BrickForge',
@@ -90,13 +93,53 @@ function createWindow(): BrowserWindow {
   return win
 }
 
+/**
+ * macOS keeps its menu bar: the app menu, and Edit so copy, paste, and undo
+ * work in text fields. Windows has no menu bar in this frameless window.
+ */
+function setMacMenu(): void {
+  const name = 'BrickForge'
+  const template: MenuItemConstructorOptions[] = [
+    {
+      label: name,
+      submenu: [
+        { role: 'about', label: `About ${name}` },
+        { type: 'separator' },
+        { role: 'hide', label: `Hide ${name}` },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit', label: `Quit ${name}` },
+      ],
+    },
+    { role: 'editMenu' },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+        ...(isDev ? [{ type: 'separator' as const }, { role: 'reload' as const }, { role: 'toggleDevTools' as const }] : []),
+      ],
+    },
+    { role: 'windowMenu' },
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (!mainWindow) return
+    // On macOS the app outlives its window; opening it again brings one back
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      if (app.isReady()) mainWindow = createWindow()
+      return
+    }
     if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.focus()
   })
@@ -130,6 +173,7 @@ if (!app.requestSingleInstanceLock()) {
     }
 
     registerAllHandlers()
+    if (isMac) setMacMenu()
     mainWindow = createWindow()
 
     resumeQueue()

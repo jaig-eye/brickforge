@@ -7,7 +7,11 @@ on:
 
 jobs:
   check:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -25,10 +29,36 @@ jobs:
       - name: End-to-end
         run: npm run test:e2e
 
+      # Package it the way a release does, then open the packaged app and
+      # walk every screen of the demo, so what ships is what was tested
+      - name: Package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npx electron-builder --${{ runner.os == 'macOS' && 'mac' || 'win' }} --publish never --config electron-builder.config.js
+
+      - name: Open the packaged app
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            APP="$PWD/release/mac-arm64/BrickForge.app/Contents/MacOS/BrickForge"
+          else
+            APP="$PWD/release/win-unpacked/BrickForge.exe"
+          fi
+          BRICKFORGE_E2E_APP="$APP" npx playwright test -g "demo: every screen"
+
+      - name: Keep a screenshot of each platform
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: screens-${{ runner.os }}
+          path: test-results/screens/
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Keep the e2e traces when something fails
         if: failure()
         uses: actions/upload-artifact@v7.0.2
         with:
-          name: e2e-results
+          name: e2e-results-${{ runner.os }}
           path: test-results/
           retention-days: 7

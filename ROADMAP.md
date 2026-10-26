@@ -1,13 +1,13 @@
 # Roadmap
 
-BrickForge 1.0 covers collecting, valuing, scanning, and selling. These are the ideas being considered next. None of them is promised or scheduled; open an [issue](https://github.com/jaig-eye/brickforge/issues) to argue for one or suggest another.
+BrickForge covers collecting, valuing, scanning, and selling, on Windows and macOS. These are the ideas being considered next. None of them is promised or scheduled; open an [issue](https://github.com/jaig-eye/brickforge/issues) to argue for one or suggest another.
 
 ## Feature Proposals
 
-### Signed installer
-Sign the Windows installer so SmartScreen stops warning on first install.
-- **Why:** the warning is the biggest hurdle for new users.
-- **Needs:** a code-signing certificate and a signing step in the release workflow.
+### Signed builds
+Sign the Windows installer, and sign and notarize the Mac app with an Apple Developer ID.
+- **Why:** SmartScreen and Gatekeeper warnings are the biggest hurdle for new users, and a signed Mac app can update itself like the Windows one.
+- **Needs:** a Windows code-signing certificate, an Apple Developer membership, and signing steps in the release workflow.
 
 ### More price regions and currencies
 Let you choose BrickLink's region (Europe, Asia, and so on) and show values in your currency.
@@ -20,14 +20,29 @@ Export the wishlist as a BrickLink wanted list, so you can buy what's missing in
 - **Needs:** XML export with condition and maximum price per item.
 
 ### Parts inventory
-Track loose pieces and see which sets you could build from what you own.
-- **Why:** a common ask from builders, not just collectors.
-- **Needs:** a parts table, Rebrickable part lists per set, and a way to count pieces that isn't tedious. Cut from 1.0 because adding parts by hand was too much work.
+Track loose pieces and see which sets and minifigures you could build from what you own.
+- **Why:** a common ask from builders, not just collectors, and a way to find figures worth assembling to sell.
+- **Needs:** a parts table, part lists per set and per minifigure, and a way to count pieces that isn't tedious, such as importing a BrickLink store inventory. Cut from 1.0 because adding parts by hand was too much work.
 
-### macOS and Linux builds
-Package BrickForge for macOS and Linux.
-- **Why:** nothing in the app is Windows-specific apart from the installer.
-- **Needs:** signing and notarization on macOS, and test runs on both systems in CI.
+### BrickLink as the source of truth for minifigures
+Key every minifigure by its BrickLink id, and keep Rebrickable only for search and pictures.
+- **Why:** prices already come from BrickLink; one id everywhere removes the bridge between the two catalogs.
+- **Needs:** resolving BrickLink ids from each set's BrickLink inventory, and moving existing figures, prices, tags, and alerts to the new ids, sync included.
+
+### Part-out value
+For each minifigure, compare its price whole with the sum of its parts on BrickLink.
+- **Why:** sellers decide between selling a figure whole and parting it out.
+- **Needs:** each figure's parts list and part prices from BrickLink.
+
+### Linux builds
+Package BrickForge as an AppImage.
+- **Why:** nothing in the app ties it to Windows or macOS.
+- **Needs:** test runs on Linux in CI.
+
+### iPhone and iPad companion
+A phone app for scanning on the go and checking prices in a store.
+- **Why:** the camera is on the phone, and so is the shelf in the store.
+- **Needs:** a separate app (Electron builds desktop apps only), sync to share the collection, and an Apple Developer membership to distribute it.
 
 ### Collection sharing
 Publish a read-only page of your collection or wishlist to share with friends.

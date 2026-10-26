@@ -164,6 +164,9 @@ test('demo: every screen renders without errors', async () => {
     await page.getByRole('link', { name }).click()
     await expect(page.locator('h1').first()).toBeVisible()
   }
+  // macOS has the system's traffic lights; Windows has the app's own controls
+  await expect(page.getByRole('button', { name: 'Minimize' })).toHaveCount(process.platform === 'darwin' ? 0 : 1)
+  await page.screenshot({ path: path.join(ROOT, 'test-results', 'screens', `${process.platform}-home.png`) })
   await page.getByRole('link', { name: 'Collection' }).click()
   await page.getByRole('article').first().click()
   await expect(page.getByText('Market value')).toBeVisible()

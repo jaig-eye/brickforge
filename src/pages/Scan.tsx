@@ -17,6 +17,7 @@ import { Confidence, ItemImage, Spinner } from '@/components/ui/Bits'
 import { Kbd } from '@/components/ui/Field'
 import { ScanCard } from '@/components/scan/ScanCard'
 import { SceneScan } from '@/components/brick/Scenes'
+import { shortcut } from '@/lib/platform'
 
 type Mode = 'minifig' | 'set' | 'piece'
 
@@ -80,7 +81,7 @@ export default function Scan() {
                 <div className="max-w-[420px]">
                   <h2 className="font-display text-[24px] font-extrabold tracking-[-0.03em]">{drop.isDragActive ? 'Let go to scan' : `Drop ${mode === 'set' ? 'set' : 'minifigure'} photos here`}</h2>
                   <p className="mt-2 text-[13.5px] leading-relaxed text-fg-3">
-                    As many as you like. They're identified one by one in the background, even if you close BrickForge. Or paste a photo with <Kbd>Ctrl V</Kbd>.
+                    As many as you like. They're identified one by one in the background, even if you close BrickForge. Or paste a photo with <Kbd>{shortcut('V')}</Kbd>.
                   </p>
                   <div className="mt-4 flex items-center gap-2">
                     <Button variant="primary" icon={<ImagePlus className="size-4" />} onClick={drop.open}>Choose photos</Button>

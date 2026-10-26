@@ -8,11 +8,12 @@
  *
  * Personal-use path: each machine needs its own Claude Code install + login.
  */
-import { spawn } from 'child_process'
+import { execFileSync, spawn } from 'child_process'
 import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
+import os from 'os'
 import log from '../main/logger'
 import { AppError } from '../../src/lib/errors'
 
@@ -20,6 +21,32 @@ import { AppError } from '../../src/lib/errors'
 const CLAUDE_BIN = process.env.BRICKFORGE_CLAUDE_BIN || 'claude'
 
 let availableCache: boolean | null = null
+let cliPath: string | null = null
+
+/**
+ * Apps opened from the Dock or Finder on macOS get a bare PATH
+ * (/usr/bin:/bin:/usr/sbin:/sbin) that misses where `claude` usually lives.
+ * Add the login shell's PATH and the common install folders. Windows apps
+ * inherit the full PATH already.
+ */
+function cliEnv(): NodeJS.ProcessEnv {
+  if (process.platform === 'win32') return process.env
+  if (cliPath == null) {
+    let shellPath = ''
+    try {
+      // Markers, because an interactive shell's startup files may print too
+      const out = execFileSync(process.env.SHELL || '/bin/zsh', ['-ilc', 'printf "__BF__%s__BF__" "$PATH"'], {
+        encoding: 'utf8', timeout: 4000, stdio: ['ignore', 'pipe', 'ignore'],
+      })
+      shellPath = /__BF__(.*)__BF__/s.exec(out)?.[1] ?? ''
+    } catch { /* fall back to the usual folders */ }
+    const home = os.homedir()
+    const usual = ['/opt/homebrew/bin', '/usr/local/bin', path.join(home, '.local/bin'), path.join(home, '.claude/local'),
+      path.join(home, '.npm-global/bin'), path.join(home, '.volta/bin'), path.join(home, '.bun/bin')]
+    cliPath = [...new Set([...shellPath.split(':'), ...(process.env.PATH ?? '').split(':'), ...usual].filter(Boolean))].join(':')
+  }
+  return { ...process.env, PATH: cliPath }
+}
 
 /**
  * Is the `claude` CLI on PATH and responsive? Only SUCCESS is cached — a
@@ -37,7 +64,7 @@ export function isClaudeCodeAvailable(): Promise<boolean> {
       resolve(ok)
     }
     try {
-      const child = spawn(CLAUDE_BIN, ['--version'], { shell: true, windowsHide: true })
+      const child = spawn(CLAUDE_BIN, ['--version'], { shell: true, windowsHide: true, env: cliEnv() })
       let sawOutput = false
       child.stdout?.on('data', () => { sawOutput = true })
       child.on('error', () => done(false))
@@ -61,7 +88,7 @@ export async function callClaudeCode(
   timeoutMs = 240_000,
 ): Promise<string> {
   if (!(await isClaudeCodeAvailable())) {
-    throw new AppError({ code: 'missing_key', service: 'claude-code', message: "Claude Code isn't installed or signed in on this PC. Install it and sign in, or pick another AI provider in Settings." })
+    throw new AppError({ code: 'missing_key', service: 'claude-code', message: "Claude Code isn't installed or signed in on this computer. Install it and sign in, or pick another AI provider in Settings." })
   }
   const dir = path.join(app.getPath('userData'), 'scans', 'cc-tmp', crypto.randomBytes(6).toString('hex'))
   fs.mkdirSync(dir, { recursive: true })
@@ -82,7 +109,7 @@ export async function callClaudeCode(
       let settled = false
       const finish = (fn: () => void) => { if (!settled) { settled = true; fn() } }
       const child = spawn(CLAUDE_BIN, ['-p', '--output-format', 'json', '--allowedTools', 'Read'], {
-        shell: true, windowsHide: true, cwd: dir,
+        shell: true, windowsHide: true, cwd: dir, env: cliEnv(),
       })
       let out = ''
       let errOut = ''

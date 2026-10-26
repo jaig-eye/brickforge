@@ -41,12 +41,12 @@ export function SyncCard() {
     try { qc.setQueryData(keys.sync, await api.sync.now()) } catch (err) { toast.error(err, 'Sync failed') } finally { setBusy(null) }
   }
   const disconnect = async () => {
-    try { qc.setQueryData(keys.sync, await api.sync.disconnect()); qc.setQueryData(keys.settings, await api.settings.get()); toast.success('Sync turned off', { body: 'Your data stays on this PC and in your database.' }) } catch (err) { toast.error(err) }
+    try { qc.setQueryData(keys.sync, await api.sync.disconnect()); qc.setQueryData(keys.settings, await api.settings.get()); toast.success('Sync turned off', { body: 'Your data stays on this computer and in your database.' }) } catch (err) { toast.error(err) }
   }
 
   return (
     <ConnectionCard title="Sync to your own database" status={enabled ? 'set' : 'unset'} optional
-      blurb={<>Keep two PCs in step, or keep an off-site copy. BrickForge keeps working from its local file and syncs changes both ways with a PostgreSQL database you own: Supabase, Neon, or your own server. When two PCs change the same item, the newest change wins.</>}>
+      blurb={<>Keep two computers in step, or keep an off-site copy. BrickForge keeps working from its local file and syncs changes both ways with a PostgreSQL database you own: Supabase, Neon, or your own server. When two computers change the same item, the newest change wins.</>}>
       {enabled ? (
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-[12px] border border-line bg-panel-2/60 px-4 py-3 text-[12.5px]">
@@ -66,7 +66,7 @@ export function SyncCard() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <Field label="Connection string" hint="Find it in your database provider's dashboard. It's stored encrypted on this PC and never shown again.">
+          <Field label="Connection string" hint="Find it in your database provider's dashboard. It's stored encrypted on this computer and never shown again.">
             {(id) => <Input id={id} value={url} onChange={(e) => { setUrl(e.target.value); setResult(null) }} placeholder="postgresql://user:password@host:5432/postgres" className="font-mono" autoComplete="off" spellCheck={false} />}
           </Field>
           <div className="flex items-center gap-2">

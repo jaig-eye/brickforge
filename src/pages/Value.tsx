@@ -257,7 +257,7 @@ function AlertsPanel() {
       {!alerts?.length ? (
         <div className="flex items-center gap-5 py-2">
           <SceneQuiet className="w-[150px] shrink-0" />
-          <p className="max-w-[460px] text-[13px] text-fg-3">No alerts yet. Open something on your wishlist and set a price you'd pay, or set a sell target on something you own. You'll get a Windows notification when it's reached.</p>
+          <p className="max-w-[460px] text-[13px] text-fg-3">No alerts yet. Open something on your wishlist and set a price you'd pay, or set a sell target on something you own. You'll get a desktop notification when it's reached.</p>
         </div>
       ) : (
         <ul className="-mx-2">

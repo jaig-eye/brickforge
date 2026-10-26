@@ -7,6 +7,7 @@ import { Kbd } from '../ui/Field'
 import { Ring } from '../ui/Bits'
 import { Tip } from '../ui/Menu'
 import { Wordmark } from '../brick/BrickLogo'
+import { isMac, shortcut } from '@/lib/platform'
 
 function WindowButton({ label, onClick, children, danger }: { label: string; onClick: () => void; children: React.ReactNode; danger?: boolean }) {
   return (
@@ -26,8 +27,9 @@ export function TitleBar() {
   const { data: update } = useUpdateState()
 
   return (
-    <header className="drag relative z-30 flex h-[44px] shrink-0 items-center border-b border-line bg-[color-mix(in_srgb,var(--bg)_70%,transparent)] pl-4 backdrop-blur-xl">
-      <div className="flex w-[220px] items-center gap-2.5">
+    <header className={`drag relative z-30 flex h-[44px] shrink-0 items-center border-b border-line bg-[color-mix(in_srgb,var(--bg)_70%,transparent)] backdrop-blur-xl ${isMac ? 'pl-[84px] pr-3' : 'pl-4'}`}>
+      {/* On macOS the system's own traffic lights sit in the gap on the left */}
+      <div className={`flex items-center gap-2.5 ${isMac ? 'w-[156px]' : 'w-[220px]'}`}>
         <Wordmark />
         {info?.demo && (
           <Tip label="You're exploring a sample collection. Your own data is untouched.">
@@ -41,7 +43,7 @@ export function TitleBar() {
           className="no-drag flex h-[30px] w-full max-w-[440px] items-center gap-2.5 rounded-[10px] border border-line bg-panel-2/70 px-3 text-[12.5px] text-fg-4 transition-colors hover:border-line-strong hover:text-fg-3">
           <Search className="size-[15px]" />
           <span className="flex-1 text-left">Search your collection, the catalog, or actions</span>
-          <Kbd>Ctrl K</Kbd>
+          <Kbd>{shortcut('K')}</Kbd>
         </button>
       </div>
 
@@ -71,9 +73,13 @@ export function TitleBar() {
             </Tip>
           )}
         </div>
-        <WindowButton label="Minimize" onClick={api.window.minimize}><Minus className="size-4" /></WindowButton>
-        <WindowButton label="Maximize" onClick={api.window.maximize}><Square className="size-3.5" /></WindowButton>
-        <WindowButton label="Close" onClick={api.window.close} danger><X className="size-4" /></WindowButton>
+        {!isMac && (
+          <>
+            <WindowButton label="Minimize" onClick={api.window.minimize}><Minus className="size-4" /></WindowButton>
+            <WindowButton label="Maximize" onClick={api.window.maximize}><Square className="size-3.5" /></WindowButton>
+            <WindowButton label="Close" onClick={api.window.close} danger><X className="size-4" /></WindowButton>
+          </>
+        )}
       </div>
     </header>
   )
