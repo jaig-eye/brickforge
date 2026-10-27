@@ -1,0 +1,177 @@
+name: Verify release
+
+# Checks a PUBLISHED release the way a user gets it: downloads the files from
+# GitHub, installs or mounts them on a real Windows and macOS machine, and opens
+# the installed app and walks every screen of its demo. Run it by hand after
+# publishing: Actions -> Verify release -> Run workflow -> a tag like v1.1.0.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to check, like v1.1.0
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download the installer and its update manifest
+        shell: bash
+        run: |
+          VERSION="${TAG#v}"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dl \
+            --pattern "BrickForge-Setup-$VERSION.exe" --pattern latest.yml
+          ls -l dl
+
+      - name: The update manifest matches the installer
+        shell: bash
+        run: |
+          node - <<'EOF'
+          const fs = require('fs')
+          const crypto = require('crypto')
+          const version = process.env.TAG.replace(/^v/, '')
+          const yml = fs.readFileSync('dl/latest.yml', 'utf8')
+          const exe = fs.readFileSync(`dl/BrickForge-Setup-${version}.exe`)
+          const field = (name) => new RegExp(`^${name}: (.+)$`, 'm').exec(yml)?.[1].trim()
+          const got = { version: version, sha512: crypto.createHash('sha512').update(exe).digest('base64'), size: String(exe.length) }
+          const want = { version: field('version'), sha512: field('sha512'), size: new RegExp('size: (\\d+)').exec(yml)?.[1] }
+          console.log('manifest', want)
+          for (const k of Object.keys(got)) {
+            if (got[k] !== want[k]) { console.error(`latest.yml ${k} is ${want[k]}, the installer is ${got[k]}`); process.exit(1) }
+          }
+          console.log('latest.yml matches the installer')
+          EOF
+
+      - name: Install it silently, as a user would
+        shell: pwsh
+        run: |
+          $version = $env:TAG -replace '^v', ''
+          Start-Process -FilePath "dl\BrickForge-Setup-$version.exe" -ArgumentList '/S' -Wait
+          $app = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter BrickForge.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $app) { throw 'BrickForge.exe was not installed' }
+          "Installed: $($app.FullName)"
+          $info = (Get-Item $app.FullName).VersionInfo
+          "Product version: $($info.ProductVersion)"
+          if (-not $info.ProductVersion.StartsWith($version)) { throw "Installed version is $($info.ProductVersion), expected $version" }
+          $shortcut = Get-ChildItem "$env:USERPROFILE\Desktop", "$env:APPDATA\Microsoft\Windows\Start Menu\Programs" -Recurse -Filter 'BrickForge*.lnk' -ErrorAction SilentlyContinue
+          "Shortcuts: $($shortcut.FullName -join ', ')"
+          if (-not $shortcut) { throw 'No BrickForge shortcut was created' }
+          "BRICKFORGE_E2E_APP=$($app.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "INSTALL_DIR=$($app.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Open the installed app and walk every demo screen
+        run: |
+          npx playwright test -g "demo: every screen"
+
+      - name: Uninstall it
+        if: always()
+        shell: pwsh
+        run: |
+          $un = Get-ChildItem $env:INSTALL_DIR -Filter 'Uninstall*.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $un) { throw 'No uninstaller was installed' }
+          Start-Process -FilePath $un.FullName -ArgumentList '/S' -Wait
+          # The uninstaller hands off to a copy of itself and returns at once
+          for ($i = 0; $i -lt 60 -and (Test-Path "$env:INSTALL_DIR\BrickForge.exe"); $i++) { Start-Sleep -Seconds 2 }
+          if (Test-Path "$env:INSTALL_DIR\BrickForge.exe") { throw 'The app is still installed after uninstalling' }
+          'Uninstalled cleanly'
+
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: verify-windows
+          path: test-results/screens/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    runs-on: macos-latest
+    env:
+      TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download the disk image
+        run: |
+          VERSION="${TAG#v}"
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dmg --pattern "BrickForge-$VERSION-mac-$ARCH.dmg"
+          ls -l dmg
+
+      - name: Mount it and check the app inside
+        run: |
+          VERSION="${TAG#v}"
+          MNT="$RUNNER_TEMP/mnt"
+          mkdir -p "$MNT"
+          hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "dmg/BrickForge-$VERSION-mac-$ARCH.dmg"
+          echo "--- the disk image holds:"
+          ls -la "$MNT"
+          test -d "$MNT/BrickForge.app"
+          test -e "$MNT/Applications"   # the drag-to-install shortcut
+          APP="$RUNNER_TEMP/BrickForge.app"
+          ditto "$MNT/BrickForge.app" "$APP"
+          hdiutil detach "$MNT"
+          echo "APP=$APP" >> "$GITHUB_ENV"
+
+          PLIST="$APP/Contents/Info.plist"
+          plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$PLIST"; }
+          echo "--- Info.plist: $(plist CFBundleName) $(plist CFBundleShortVersionString), needs macOS $(plist LSMinimumSystemVersion)"
+          [ "$(plist CFBundleShortVersionString)" = "$VERSION" ] || { echo "Version is not $VERSION"; exit 1; }
+
+          WANT=$([ "$ARCH" = arm64 ] && echo arm64 || echo x86_64)
+          GOT=$(lipo -archs "$APP/Contents/MacOS/BrickForge")
+          echo "--- executable architecture: $GOT (wanted $WANT)"
+          [ "$GOT" = "$WANT" ] || { echo "Wrong architecture"; exit 1; }
+
+          ICON=$(plist CFBundleIconFile)
+          echo "--- icon file: $ICON"
+          [ "$ICON" != "electron.icns" ] || { echo "Still Electron's default icon"; exit 1; }
+          test -f "$APP/Contents/Resources/$ICON" || test -f "$APP/Contents/Resources/$ICON.icns"
+
+          echo "--- signature:"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 | grep -E "Identifier|Signature|TeamIdentifier|Format" || true
+
+      - name: Make Intel Macs' x86_64 code runnable on this machine
+        if: matrix.arch == 'x64'
+        run: |
+          softwareupdate --install-rosetta --agree-to-license || true
+          arch -x86_64 /usr/bin/true
+
+      - name: Open the app and walk every demo screen
+        run: |
+          BRICKFORGE_E2E_APP="$APP/Contents/MacOS/BrickForge" npx playwright test -g "demo: every screen"
+
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: verify-mac-${{ matrix.arch }}
+          path: test-results/screens/
+          retention-days: 7
+          if-no-files-found: ignore
