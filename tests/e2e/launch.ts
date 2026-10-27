@@ -32,7 +32,10 @@ export const KEYS = {
 
 export async function launch(opts: { demo?: boolean; settings?: Record<string, unknown>; size?: [number, number] } = {}): Promise<Launched> {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bf-e2e-'))
-  if (opts.settings) fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify(opts.settings, null, 2))
+  // BRICKFORGE_E2E_REDUCED_MOTION=1 turns the app's animations down, for machines that
+  // render slowly (an Intel build under Rosetta emulation on a CI runner)
+  const settings = process.env.BRICKFORGE_E2E_REDUCED_MOTION ? { reduceMotion: 'on', ...opts.settings } : opts.settings
+  if (settings) fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify(settings, null, 2))
   const apis = await startFakeApis()
 
   const env: Record<string, string> = {}

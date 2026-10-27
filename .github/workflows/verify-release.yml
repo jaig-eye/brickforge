@@ -165,7 +165,10 @@ jobs:
           arch -x86_64 /usr/bin/true
 
       - name: Open the app and walk every demo screen
-        # Intel code runs under Rosetta here, several times slower than native: a long budget, no retry
+        # Intel code runs under Rosetta here, with no GPU: with animations on it takes minutes, so
+        # that check uses the app's Reduced motion setting (same screens, same data), a long budget, no retry
+        env:
+          BRICKFORGE_E2E_REDUCED_MOTION: ${{ matrix.arch == 'x64' && '1' || '' }}
         run: |
           BRICKFORGE_E2E_APP="$APP/Contents/MacOS/BrickForge" npx playwright test -g "demo: every screen" --timeout=300000 --retries=0
 
