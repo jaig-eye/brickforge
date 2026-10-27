@@ -103,7 +103,8 @@ export const api = {
   sell: {
     identify: (image: string, hint?: string) => call<SetIdentifyResult>(IPC.SELL_IDENTIFY, image, hint),
     generate: (setNumber: string, prefs: ListingPrefs) => call<ListingResult>(IPC.SELL_GENERATE, setNumber, prefs),
-    price: (setNumber: string, condition: PriceCondition) => call<PriceSuggestion | null>(IPC.SELL_PRICE, setNumber, condition),
+    /** What a set (or, by its BrickLink id, a minifigure) sells for on BrickLink */
+    price: (number: string, condition: PriceCondition, kind: EntityKind = 'set') => call<PriceSuggestion | null>(IPC.SELL_PRICE, number, condition, kind),
     history: () => call<ListingHistoryEntry[]>(IPC.SELL_HISTORY),
     remove: (id: number) => call<void>(IPC.SELL_DELETE, id),
   },

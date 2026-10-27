@@ -21,7 +21,7 @@ function prefs(v: unknown): ListingPrefs {
 export function registerSellHandlers(): void {
   handle(IPC.SELL_IDENTIFY, (b64: unknown, hint?: unknown) => identifySetPhoto(photo(b64), { contextHint: optStr(hint, 300)?.trim() || '' }))
   handle(IPC.SELL_GENERATE, async (setNumber: unknown, p: unknown) => generateListing(await listingInputFor(str(setNumber, 30)), prefs(p)))
-  handle(IPC.SELL_PRICE, (setNumber: unknown, c: unknown) => priceSuggestion(str(setNumber, 30), cond(c)))
+  handle(IPC.SELL_PRICE, (number: unknown, c: unknown, kind?: unknown) => priceSuggestion(str(number, 30), cond(c), kind === 'minifig' ? 'MINIFIG' : 'SET'))
   handle(IPC.SELL_HISTORY, () => listListings())
   handle(IPC.SELL_DELETE, (id: unknown) => deleteListing(int(id)))
 }

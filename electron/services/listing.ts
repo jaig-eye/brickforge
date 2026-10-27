@@ -58,11 +58,11 @@ export async function generateListing(input: ListingInput, prefs: ListingPrefs):
 }
 
 /** BrickLink's recent sold average for a set in one condition (US). */
-export async function priceSuggestion(setNumber: string, condition: PriceCondition): Promise<PriceSuggestion | null> {
+export async function priceSuggestion(number: string, condition: PriceCondition, type: 'SET' | 'MINIFIG' = 'SET'): Promise<PriceSuggestion | null> {
   if (!hasBricklinkCredentials()) {
-    throw new AppError({ code: 'missing_key', service: 'bricklink', message: 'Add your BrickLink keys in Settings to see what this set sells for.' })
+    throw new AppError({ code: 'missing_key', service: 'bricklink', message: `Add your BrickLink keys in Settings to see what this ${type === 'SET' ? 'set' : 'minifigure'} sells for.` })
   }
-  const res = await fetchBricklinkPrice(setNumber, condition, 'SET')
+  const res = await fetchBricklinkPrice(number, condition, type)
   if (!res) return null
   return { condition, avg: res.avg_price, min: res.min_price, max: res.max_price, samples: res.sample_count, source: res.source }
 }

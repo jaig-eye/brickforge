@@ -62,11 +62,26 @@ export function namesAgree(rebrickableName: string, bricklinkName: string, score
     || (score >= 0.8 && overlap(full, bl) >= 0.5)
 }
 
-/** How well two names describe each other, 0–1: the share of words that match, both ways. */
-export function nameScore(a: string, b: string): number {
-  const x = tokens(a)
-  const y = tokens(b)
-  return (overlap(x, y) + overlap(y, x)) / 2
+/**
+ * Of a set's figures, the one a Rebrickable name describes, or null when the
+ * name can't tell them apart. The character (before the first comma) must
+ * match first; among the figures that do, each shared word counts more the
+ * fewer of them have it. So "Hammer" decides between two clone troopers, and
+ * "Sand Blue" alone doesn't make General Veers an AT-AT Driver.
+ */
+export function pickByName(name: string, pool: { no: string; name: string }[]): string | null {
+  const has = (words: string[], w: string) => words.some((x) => nearlyEqual(w, x))
+  const words = pool.map((f) => [...new Set(tokens(f.name))])
+  const head = [...new Set(tokens(name.split(',')[0]))]
+  const same = pool.map((_, i) => i).filter((i) => head.filter((w) => has(words[i], w)).length >= head.length / 2)
+  const pick = same.length ? same : pool.map((_, i) => i)
+  const mine = [...new Set(tokens(name))]
+  const sharedBy = (w: string) => pick.filter((i) => has(words[i], w)).length
+  const ranked = pick
+    .map((i) => ({ no: pool[i].no, score: mine.reduce((sum, w) => sum + (has(words[i], w) ? 1 / sharedBy(w) : 0), 0) }))
+    .sort((x, y) => y.score - x.score)
+  const best = ranked[0]?.score ?? 0
+  return best >= 1 && best >= 2 * (ranked[1]?.score ?? 0) ? ranked[0].no : null
 }
 
 /**
@@ -77,13 +92,12 @@ export function nameScore(a: string, b: string): number {
  */
 async function setInventoryPool(figNumber: string): Promise<BricklinkSetFig[]> {
   if (!hasBricklinkCredentials()) return []
-  const sets = (await getMinifigSets(figNumber).catch(() => [])).slice(0, 4)
+  // Errors (throttled, offline, a bad key) are not "no match": they propagate, so
+  // nothing is remembered and the lookup runs again later
+  const sets = (await getMinifigSets(figNumber)).slice(0, 4)
   const lists: BricklinkSetFig[][] = []
   for (const s of sets) {
-    const figs = await getBricklinkSetMinifigs(s.set_num).catch((err) => {
-      if (err instanceof AppError && (err.code === 'auth' || err.code === 'network')) throw err
-      return null
-    })
+    const figs = await getBricklinkSetMinifigs(s.set_num) // null: BrickLink doesn't know the set
     if (figs?.length) lists.push(figs)
   }
   let pool = lists[0] ?? []
@@ -100,7 +114,7 @@ async function setInventoryPool(figNumber: string): Promise<BricklinkSetFig[]> {
  * row then moves to that id (BrickLink ids are the collection's keys).
  * Rebrickable doesn't publish BrickLink ids for minifigs, so:
  *  1. Its sets' BrickLink inventories: one shared figure is the answer, and
- *     among several the name decides when one clearly fits best.
+ *     among several the name decides when one clearly fits (pickByName).
  *  2. Brickognize, shown the fig's official picture: within that pool it only
  *     has to tell the pool's figures apart; without a pool it must be
  *     confident or agree on the name.
@@ -116,11 +130,7 @@ export async function ensureFigBricklinkId(figNumber: string, opts: { visual?: b
   const name = opts.name ?? fig?.name ?? null
   const pool = blId || !name ? [] : await setInventoryPool(figNumber)
   if (!blId && name && pool.length) {
-    if (pool.length === 1) blId = pool[0].no
-    else {
-      const ranked = pool.map((f) => ({ no: f.no, score: nameScore(name, f.name) })).sort((a, b) => b.score - a.score)
-      if (ranked[0].score >= 0.5 && ranked[0].score - ranked[1].score >= 0.15) blId = ranked[0].no
-    }
+    blId = pool.length === 1 ? pool[0].no : pickByName(name, pool)
   }
   if (!blId && visual && fig) {
     const img = await fetchImage(fig.set_img_url)

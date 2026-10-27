@@ -153,29 +153,32 @@
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
+/* In the base layer, so utility classes win: unlayered element rules would
+   override them (a button's text-accent-ink, a paragraph's mt-2). */
 
-html, body, #root { height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  overflow: hidden;
-  user-select: none;
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+    user-select: none;
+  }
+  input, textarea, [contenteditable], .selectable { user-select: text; }
+  h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+  p { margin: 0; }
+  img { -webkit-user-drag: none; }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  :focus:not(:focus-visible) { outline: none; }
 }
-input, textarea, [contenteditable], .selectable { user-select: text; }
-h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
-p { margin: 0; }
-button { font: inherit; color: inherit; }
-img { -webkit-user-drag: none; }
-::selection { background: var(--accent); color: var(--accent-ink); }
-
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
-:focus:not(:focus-visible) { outline: none; }
 
 /* Scrollbars that stay out of the way */
 ::-webkit-scrollbar { width: 10px; height: 10px; }

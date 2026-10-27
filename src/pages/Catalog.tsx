@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Check, Heart, Plus, Users } from 'lucide-react'
+import { Check, ExternalLink, Heart, Plus, Users } from 'lucide-react'
 import { api } from '@/lib/api'
 import { AppError } from '@/lib/errors'
 import { useFigIds, useOwnership, useSettings } from '@/lib/queries'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useAddItem } from '@/hooks/useAddItem'
 import { formatMoney, formatNumber } from '@/lib/formatters'
+import { bricklinkCatalogUrl } from '@/lib/lego-ids'
+import { useUi } from '@/lib/ui-store'
 import type { CatalogFig, CatalogSet, EntityKind } from '@/lib/types'
 import { Page, Rise } from '@/components/shell/Page'
 import { Button, IconButton } from '@/components/ui/Button'
@@ -26,6 +28,9 @@ const ORDER = [
   { value: '-num_parts', label: 'Most pieces' },
 ]
 
+/** A minifigure as the catalog shows it, from search or from a set's inventory. */
+interface FigView { number: string; name: string; image: string | null; bricklinkId: string | null; rebrickableId: string | null }
+
 export default function Catalog() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -36,6 +41,8 @@ export default function Catalog() {
   const [setsOnly, setSetsOnly] = useState(true)
   const [hideOwned, setHideOwned] = useState(false)
   const [detail, setDetail] = useState<CatalogSet | null>(null)
+  const [figView, setFigView] = useState<FigView | null>(null)
+  const openCollectionSheet = useUi((s) => s.openSheet)
   const q = useDebounced(search.trim(), 350)
   const { data: settings } = useSettings()
   const { data: owned } = useOwnership()
@@ -68,6 +75,13 @@ export default function Catalog() {
     const opts = { as: wanted ? 'wanted' as const : 'owned' as const, condition: kind === 'set' ? 'sealed' : 'used' }
     if (kind === 'set') void addSet(item.set_num, opts, { el, image: item.set_img_url })
     else void addFig({ set_num: item.set_num, name: item.name, set_img_url: item.set_img_url, bricklink_id: blIds[item.set_num] ?? null }, opts, { el })
+  }
+
+  /** A minifigure you already have opens in your collection; any other opens here. */
+  const openFig = (item: CatalogFig) => {
+    const bl = blIds[item.set_num] ?? null
+    if (isOwned(item.set_num) || isWanted(item.set_num)) openCollectionSheet('minifig', bl ?? item.set_num)
+    else setFigView({ number: item.set_num, name: item.name, image: item.set_img_url, bricklinkId: bl, rebrickableId: item.set_num.startsWith('fig-') ? item.set_num : null })
   }
 
   return (
@@ -116,7 +130,9 @@ export default function Catalog() {
                     <motion.article key={item.set_num} initial={i < 30 ? { opacity: 0, y: 12 } : false} animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.35, delay: (i % 30) * 0.02, ease: [0.22, 1, 0.36, 1] }}
                       className="cv-auto group flex cursor-pointer flex-col rounded-[18px] border border-line bg-panel p-2.5 transition-[border,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-[var(--shadow-2)]"
-                      onClick={() => kind === 'set' && setDetail(item as CatalogSet)}>
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (kind === 'set') setDetail(item as CatalogSet); else openFig(item as CatalogFig) } }}
+                      onClick={() => (kind === 'set' ? setDetail(item as CatalogSet) : openFig(item as CatalogFig))}>
                       <div className="relative">
                         <ItemImage src={item.set_img_url} alt="" className="aspect-[4/3] w-full rounded-[12px]" />
                         <div className="absolute left-2 top-2 flex gap-1">
@@ -155,13 +171,15 @@ export default function Catalog() {
           )}
         </>
       )}
-      <SetDetail set={detail} onClose={() => setDetail(null)} />
+      <SetDetail set={detail} onClose={() => setDetail(null)} onOpenFig={setFigView} />
+      <FigDetail fig={figView ? { ...figView, bricklinkId: figView.bricklinkId ?? (figView.rebrickableId ? blIds[figView.rebrickableId] ?? null : null) } : null}
+        onClose={() => setFigView(null)} onOpenSet={(s) => { setFigView(null); setDetail(s) }} />
     </Page>
   )
 }
 
 /** A catalog set up close: its minifigures, and what it sells for. */
-function SetDetail({ set, onClose }: { set: CatalogSet | null; onClose: () => void }) {
+function SetDetail({ set, onClose, onOpenFig }: { set: CatalogSet | null; onClose: () => void; onOpenFig: (fig: FigView) => void }) {
   const { data: owned } = useOwnership()
   const { data: settings } = useSettings()
   const { addSet, addFig } = useAddItem()
@@ -204,14 +222,17 @@ function SetDetail({ set, onClose }: { set: CatalogSet | null; onClose: () => vo
                   const ownsFig = owned?.owned.includes(f.set_num)
                   return (
                     <li key={f.set_num} className="flex items-center gap-3 rounded-[12px] px-1 py-1 hover:bg-hover">
-                      <ItemImage src={f.set_img_url} alt="" className="size-11 shrink-0 rounded-[10px]" pad="p-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13px] font-medium">{f.set_name}</div>
-                        <div className="font-mono text-[11px] text-fg-4">{f.set_num}{f.quantity > 1 ? ` · ×${f.quantity}` : ''}</div>
-                      </div>
+                      <button type="button" aria-label={`Details for ${f.set_name}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-[10px] text-left"
+                        onClick={() => onOpenFig({ number: f.set_num, name: f.set_name, image: f.set_img_url, bricklinkId: f.bricklink_id ?? null, rebrickableId: f.set_num.startsWith('fig-') ? f.set_num : null })}>
+                        <ItemImage src={f.set_img_url} alt="" className="size-11 shrink-0 rounded-[10px]" pad="p-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13px] font-medium">{f.set_name}</div>
+                          <div className="font-mono text-[11px] text-fg-4">{f.set_num}{f.quantity > 1 ? ` · ×${f.quantity}` : ''}</div>
+                        </div>
+                      </button>
                       {ownsFig ? <Chip tone="up" icon={<Check />}>Owned</Chip> : (
                         <Button size="sm" variant="ghost" icon={<Plus className="size-3.5" />}
-                          onClick={(e) => void addFig({ set_num: f.set_num, name: f.set_name, set_img_url: f.set_img_url, theme: detail.data?.theme, year: set.year }, { as: 'owned', quantity: f.quantity }, { el: e.currentTarget.closest('li')?.querySelector('.plate') })}>
+                          onClick={(e) => void addFig({ set_num: f.set_num, name: f.set_name, set_img_url: f.set_img_url, bricklink_id: f.bricklink_id ?? null, theme: detail.data?.theme, year: set.year }, { as: 'owned', quantity: f.quantity }, { el: e.currentTarget.closest('li')?.querySelector('.plate') })}>
                           Add
                         </Button>
                       )}
@@ -227,3 +248,75 @@ function SetDetail({ set, onClose }: { set: CatalogSet | null; onClose: () => vo
   )
 }
 
+/** A catalog minifigure up close: its BrickLink id and price, the sets it comes in, and ways to add it. */
+function FigDetail({ fig, onClose, onOpenSet }: { fig: FigView | null; onClose: () => void; onOpenSet: (set: CatalogSet) => void }) {
+  const { data: owned } = useOwnership()
+  const { data: settings } = useSettings()
+  const { addFig } = useAddItem()
+  const openCollectionSheet = useUi((s) => s.openSheet)
+  const bl = fig?.bricklinkId ?? null
+  const hasBl = !!settings?.keys.bricklink.set
+  const priceNew = useQuery({ queryKey: ['catalog', 'figprice', bl, 'new'], queryFn: () => api.sell.price(bl!, 'new', 'minifig'), enabled: !!bl && hasBl, staleTime: 3_600_000, retry: false })
+  const priceUsed = useQuery({ queryKey: ['catalog', 'figprice', bl, 'used'], queryFn: () => api.sell.price(bl!, 'used', 'minifig'), enabled: !!bl && hasBl, staleTime: 3_600_000, retry: false })
+  const sets = useQuery({ queryKey: ['fig-sets', fig?.rebrickableId], queryFn: () => api.collection.figSets(fig!.rebrickableId!), enabled: !!fig?.rebrickableId, staleTime: 3_600_000 })
+  const ids = fig ? [fig.number, bl, fig.rebrickableId].filter((v): v is string => !!v) : []
+  const has = ids.some((n) => owned?.owned.includes(n))
+  const wants = ids.some((n) => owned?.wanted.includes(n))
+  const add = (as: 'owned' | 'wanted', el: Element | null) => fig && void addFig({ set_num: fig.number, name: fig.name, set_img_url: fig.image, bricklink_id: bl }, { as, condition: 'used' }, { el })
+
+  return (
+    <Sheet open={!!fig} onOpenChange={(o) => !o && onClose()} title={fig?.name ?? ''}>
+      {fig && (
+        <div className="flex flex-col gap-6 px-6 pb-8 pt-6">
+          <ItemImage src={fig.image} alt={fig.name} className="h-[230px] w-full rounded-[18px]" pad="p-6" />
+          <div>
+            <div className="flex items-center gap-2 font-mono text-[12px]">
+              {bl ? <span className="text-accent-text">{bl}</span> : <span className="text-fg-4">{fig.number}</span>}
+              {bl && fig.rebrickableId && <span className="text-fg-4">· Rebrickable {fig.rebrickableId}</span>}
+            </div>
+            <h2 className="mt-1 font-display text-[22px] font-bold leading-tight">{fig.name}</h2>
+            {!bl && <p className="mt-1.5 text-[12.5px] text-fg-3">Not matched to BrickLink yet, so there's no price. Adding it tries harder, and you can enter the id in its details afterwards.</p>}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {has || wants
+              ? <Button variant="primary" onClick={() => { onClose(); openCollectionSheet('minifig', bl ?? fig.number) }}>{has ? 'Open my copy' : 'On your wishlist'}</Button>
+              : null}
+            <Button variant={has || wants ? 'secondary' : 'primary'} icon={<Plus className="size-4" />} onClick={(e) => add('owned', e.currentTarget)}>{has ? 'Add another copy' : 'I own this'}</Button>
+            {!has && !wants && <Button icon={<Heart className="size-4" />} onClick={(e) => add('wanted', e.currentTarget)}>Wishlist</Button>}
+            {bl && <Button variant="ghost" icon={<ExternalLink className="size-3.5" />} onClick={() => api.app.openExternal(bricklinkCatalogUrl('M', bl))}>BrickLink</Button>}
+            {fig.rebrickableId && <Button variant="ghost" icon={<ExternalLink className="size-3.5" />} onClick={() => api.app.openExternal(`https://rebrickable.com/minifigs/${fig.rebrickableId}/`)}>Rebrickable</Button>}
+          </div>
+          {hasBl && bl && (
+            <section className="grid grid-cols-2 gap-3">
+              {([{ label: 'New', query: priceNew }, { label: 'Used', query: priceUsed }]).map(({ label, query }) => (
+                <div key={label} className="rounded-[14px] border border-line bg-panel-2/60 p-4">
+                  <div className="eyebrow">{label} · BrickLink</div>
+                  <div className="tnum mt-1 font-display text-[22px] font-extrabold">{query.isLoading ? <Spinner /> : formatMoney(query.data?.avg ?? null)}</div>
+                  <div className="mt-0.5 text-[11.5px] text-fg-3">{query.data ? (query.data.source === 'sold' ? `${query.data.samples} sold, last 6 months` : 'Cheapest listing') : query.error ? 'Unavailable' : 'No sales yet'}</div>
+                </div>
+              ))}
+            </section>
+          )}
+          {fig.rebrickableId && (
+            <section>
+              <h3 className="mb-3 font-display text-[15px] font-bold">Appears in{sets.data ? ` ${sets.data.length} set${sets.data.length === 1 ? '' : 's'}` : ''}</h3>
+              {sets.isLoading ? <Spinner /> : !sets.data?.length ? <p className="text-[12.5px] text-fg-4">No sets listed.</p> : (
+                <ul className="flex flex-col gap-1">
+                  {sets.data.slice(0, 8).map((s) => (
+                    <li key={s.set_num}>
+                      <button type="button" onClick={() => onOpenSet(s)} className="flex w-full items-center gap-3 rounded-[12px] px-1 py-1 text-left hover:bg-hover">
+                        <ItemImage src={s.set_img_url} alt="" className="size-11 shrink-0 rounded-[10px]" pad="p-0.5" />
+                        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{s.name}</span>
+                        <span className="font-mono text-[11.5px] text-fg-4">{s.set_num} · {s.year}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+        </div>
+      )}
+    </Sheet>
+  )
+}

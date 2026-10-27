@@ -64,6 +64,11 @@ describe('with BrickLink keys', () => {
     expect(await bridge.ensureFigBricklinkId('fig-013153')).toBe('sw1244') // "Kuill" is BrickLink's "Kuiil"
   })
 
+  it('figures from a set with look-alikes resolve by their distinctive words (the Clone Commander search)', async () => {
+    expect(await bridge.ensureFigBricklinkId('fig-003867')).toBe('sw0377') // "… (Commander Hammer)" is the Rancor Battalion's Hammer
+    expect(await bridge.ensureFigBricklinkId('fig-004032')).toBe('sw0524') // a BARC trooper, among droids
+  })
+
   it("when names can't tell them apart, Brickognize picks, but only from the set's figures", async () => {
     // "Classic Spaceman, Red with Airtanks (New Moulds)": 10497-1 has a red and a white spaceman
     const img = `${env.apis.urls.rebrickable}/img/fig-012910.png`
@@ -96,6 +101,37 @@ describe('with BrickLink keys', () => {
     expect(first).toEqual({ 'fig-002514': 'sw0700' })
     await vi.waitFor(() => expect(env.pushes(IPC.PUSH_FIG_IDS).slice(before)).toContainEqual({ rebrickable_id: 'fig-011300', bricklink_id: 'sh0721' }))
     expect(await env.call(IPC.CATALOG_FIG_IDS, results)).toEqual({ 'fig-002514': 'sw0700', 'fig-011300': 'sh0721' })
+  })
+
+  it('a remembered "no match" stands for a week, but only under the matching rules that found it', async () => {
+    const { getDb } = await import('../../electron/db/index')
+    const { FIG_MATCH_RULE, rememberedFigIds } = await import('../../electron/db/queries/collection.queries')
+    const miss = (rule: number, ago = '0 days') => getDb().prepare(
+      "INSERT OR REPLACE INTO fig_id_map (rebrickable_id, bricklink_id, checked_at, rule) VALUES ('fig-003867', NULL, datetime('now', ?), ?)",
+    ).run(`-${ago}`, rule)
+    miss(FIG_MATCH_RULE)
+    expect(rememberedFigIds(['fig-003867'])).toEqual({ 'fig-003867': null })
+    miss(FIG_MATCH_RULE, '8 days')
+    expect(rememberedFigIds(['fig-003867'])).toEqual({})
+    miss(FIG_MATCH_RULE - 1)
+    expect(rememberedFigIds(['fig-003867'])).toEqual({})
+    // ...so the lookup tries again and finds it
+    expect(await bridge.ensureFigBricklinkId('fig-003867')).toBe('sw0377')
+  })
+
+  it('a throttled lookup is an error, not a remembered "no match"', async () => {
+    const { rememberedFigIds } = await import('../../electron/db/queries/collection.queries')
+    const undo = env.apis.override((req) => (req.service === 'rebrickable' && req.path === '/minifigs/fig-012980/sets/'
+      ? { status: 429, json: { detail: 'Request was throttled.' } }
+      : undefined))
+    try {
+      await expect(bridge.ensureFigBricklinkId('fig-012980')).rejects.toMatchObject({ code: 'rate_limited' })
+    } finally {
+      undo()
+    }
+    expect(rememberedFigIds(['fig-012980'])).toEqual({})
+    // Once Rebrickable answers again, it finds it (Castle Woman, among a set of 22)
+    expect(await bridge.ensureFigBricklinkId('fig-012980')).toBe('cas570')
   })
 
   it('refreshing the price of an unmatched fig matches it, moves it, and prices it under its BrickLink id', async () => {

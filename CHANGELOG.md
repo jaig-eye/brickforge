@@ -11,6 +11,12 @@ All notable changes to BrickForge are listed here. The format follows [Keep a Ch
 
 ### Added
 - Catalog and search results show minifigures' BrickLink ids, filling them in as they're found.
+- Click a minifigure in the Catalog (or in a set's list of minifigures) to see its details: BrickLink id and prices, the sets it comes in, and buttons to add it. A figure you already own opens in your collection.
+
+### Fixed
+- Text on the yellow buttons was hard to read (white on yellow); it's dark again.
+- Minifigures that share a set with similar ones (like clone troopers) now match the right BrickLink figure, by the words that tell them apart.
+- A temporary Rebrickable or BrickLink error no longer gets remembered as "no match".
 - macOS: disk images for Apple Silicon and Intel Macs, with the system's own window controls, a macOS menu bar, and ⌘ shortcuts. macOS can't update an app that isn't signed with an Apple Developer ID, so BrickForge checks GitHub for new versions and opens the download page.
 - The Claude Code AI provider finds the `claude` command on a Mac even when BrickForge is opened from the Dock.
 

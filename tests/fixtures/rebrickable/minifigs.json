@@ -572,5 +572,41 @@
         "last_modified_dt": "2021-11-11T03:14:33.366360Z"
       }
     ]
+  },
+  "fig-003867": {
+    "set_num": "fig-003867",
+    "name": "Clone ARC Trooper / Elite Clone Trooper with Neck Bracket (Commander Hammer)",
+    "num_parts": 8,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-003867/72329.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-003867/clone-arc-trooper-elite-clone-trooper-with-neck-bracket-commander-hammer/",
+    "last_modified_dt": "2024-09-29T06:26:37.831805Z",
+    "sets": [
+      {
+        "set_num": "9488-1",
+        "name": "Elite Clone Trooper & Commando Droid Battle Pack",
+        "num_parts": 98,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/9488-1/47188.jpg",
+        "set_url": "https://rebrickable.com/sets/9488-1/elite-clone-trooper-commando-droid-battle-pack/",
+        "last_modified_dt": "2019-11-03T17:59:07.230488Z"
+      }
+    ]
+  },
+  "fig-004032": {
+    "set_num": "fig-004032",
+    "name": "Clone BARC Trooper, Dark Red Markings - Clone Commander Neyo",
+    "num_parts": 4,
+    "set_img_url": "https://cdn.rebrickable.com/media/sets/fig-004032/109155.jpg",
+    "set_url": "https://rebrickable.com/minifigs/fig-004032/clone-barc-trooper-dark-red-markings-clone-commander-neyo/",
+    "last_modified_dt": "2024-08-25T06:49:03.494104Z",
+    "sets": [
+      {
+        "set_num": "75037-1",
+        "name": "Battle on Saleucami",
+        "num_parts": 156,
+        "set_img_url": "https://cdn.rebrickable.com/media/sets/75037-1/15773.jpg",
+        "set_url": "https://rebrickable.com/sets/75037-1/battle-on-saleucami/",
+        "last_modified_dt": "2016-05-29T00:32:52.575049Z"
+      }
+    ]
   }
 }

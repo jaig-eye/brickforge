@@ -339,14 +339,21 @@ export function rekeyFig(from: string, blId: string): Minifigure | null {
 
 // ── What the bridge has learned (fig_id_map) ─────────────────────────────────
 
+/**
+ * Which version of the matching rules (catalog.ts) found a "no match". Raise
+ * it whenever the rules improve, so earlier misses get another try instead of
+ * waiting out their week.
+ */
+export const FIG_MATCH_RULE = 3
+
 /** Remember a Rebrickable number's BrickLink id, or that none was found (null). */
 export function rememberFigId(rebrickableId: string, bricklinkId: string | null): void {
   if (!isRebrickableFigNumber(rebrickableId)) return
   getDb().prepare(`
-    INSERT INTO fig_id_map (rebrickable_id, bricklink_id, checked_at) VALUES (?, ?, datetime('now'))
+    INSERT INTO fig_id_map (rebrickable_id, bricklink_id, checked_at, rule) VALUES (?, ?, datetime('now'), ?)
     ON CONFLICT(rebrickable_id) DO UPDATE SET
-      bricklink_id = COALESCE(excluded.bricklink_id, fig_id_map.bricklink_id), checked_at = excluded.checked_at
-  `).run(rebrickableId, bricklinkId)
+      bricklink_id = COALESCE(excluded.bricklink_id, fig_id_map.bricklink_id), checked_at = excluded.checked_at, rule = excluded.rule
+  `).run(rebrickableId, bricklinkId, FIG_MATCH_RULE)
 }
 
 /** The BrickLink id known for a Rebrickable number, from the collection or the map. */
@@ -356,8 +363,8 @@ export function rememberedFigId(rebrickableId: string): string | null {
 
 /**
  * What's known for these Rebrickable numbers: a BrickLink id, or null when
- * the bridge looked in the last week and found none. Numbers it hasn't
- * looked up (or looked up long ago) are left out.
+ * the bridge looked in the last week, under the current rules, and found
+ * none. Numbers it hasn't looked up (or looked up long ago) are left out.
  */
 export function rememberedFigIds(rebrickableIds: string[]): Record<string, string | null> {
   const ids = [...new Set(rebrickableIds.filter(isRebrickableFigNumber))]
@@ -367,8 +374,8 @@ export function rememberedFigIds(rebrickableIds: string[]): Record<string, strin
   const db = getDb()
   const mapped = db.prepare(`
     SELECT rebrickable_id AS rb, bricklink_id AS bl FROM fig_id_map
-    WHERE rebrickable_id IN (${marks}) AND (bricklink_id IS NOT NULL OR checked_at > datetime('now', '-7 days'))
-  `).all(...ids) as { rb: string; bl: string | null }[]
+    WHERE rebrickable_id IN (${marks}) AND (bricklink_id IS NOT NULL OR (rule = ? AND checked_at > datetime('now', '-7 days')))
+  `).all(...ids, FIG_MATCH_RULE) as { rb: string; bl: string | null }[]
   for (const r of mapped) out[r.rb] = r.bl
   const owned = db.prepare(`
     SELECT rebrickable_id AS rb, fig_number AS bl FROM minifigures WHERE rebrickable_id IN (${marks}) AND fig_number NOT LIKE 'fig-%'

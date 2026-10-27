@@ -70,6 +70,37 @@ test('collection: add by number, edit, add a copy, remove and undo', async () =>
   expect(realErrors(run.errors)).toEqual([])
 })
 
+test('catalog: a minifigure shows its BrickLink id, opens its details, and is added under that id', async () => {
+  run = await launch({ settings: READY })
+  const { page } = run
+  await page.getByRole('link', { name: 'Catalog' }).click()
+  await page.getByRole('tab', { name: 'Minifigures' }).click()
+  await page.getByPlaceholder(/Search minifigures/).fill('Kate McCallister')
+  const card = page.getByRole('article').filter({ hasText: 'Kate McCallister' })
+  // Search results arrive under Rebrickable's number; BrickLink's id replaces it once found
+  await expect(card.getByText('idea100')).toBeVisible()
+
+  await card.click()
+  await expect(page.locator('h2:not(.sr-only)', { hasText: 'Kate McCallister' })).toBeVisible()
+  await expect(page.getByText('New · BrickLink')).toBeVisible()
+  await expect(page.getByText('Appears in 1 set')).toBeVisible()
+  await page.getByRole('button', { name: 'I own this' }).click()
+  await expect(page.getByText('Added Kate McCallister')).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('link', { name: 'Collection' }).click()
+  await page.getByRole('tab', { name: 'Minifigures' }).click()
+  const mine = page.getByRole('article', { name: /Kate McCallister/ })
+  await expect(mine.getByText('idea100')).toBeVisible()
+  // A figure you own opens in your collection, not the catalog
+  await page.getByRole('link', { name: 'Catalog' }).click()
+  await page.getByRole('tab', { name: 'Minifigures' }).click()
+  await page.getByPlaceholder(/Search minifigures/).fill('Kate McCallister')
+  await page.getByRole('article').filter({ hasText: 'Kate McCallister' }).click()
+  await expect(page.getByText('Market value')).toBeVisible()
+  expect(realErrors(run.errors)).toEqual([])
+})
+
 test('scan: a minifigure photo becomes a match you can add', async () => {
   run = await launch({ settings: READY })
   const { page } = run

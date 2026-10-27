@@ -4621,5 +4621,135 @@
     }
    ]
   }
+ ],
+ "SET/9488-1": [
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0359",
+      "name": "Commando Droid - Dark Brown",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 2,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  },
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0377",
+      "name": "Clone ARC Trooper Hammer, Rancor Battalion &#40;Phase 2&#41; - Dark Red Cloth Pauldron, Black Cloth Kama, Large Eyes",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 1,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  },
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0378",
+      "name": "Clone ARF Trooper, Rancor Battalion &#40;Phase 1&#41; - Large Eyes",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 1,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  }
+ ],
+ "SET/75037-1": [
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0001b",
+      "name": "Battle Droid - Tan, Angled Arms",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 1,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  },
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0092",
+      "name": "Super Battle Droid - Pearl Dark Gray, Wide Head",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 2,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  },
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0001c",
+      "name": "Battle Droid - Tan, Angled Arm and Straight Arm",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 1,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  },
+  {
+   "match_no": 0,
+   "entries": [
+    {
+     "item": {
+      "no": "sw0524",
+      "name": "Clone BARC Trooper, 91st Mobile Reconnaissance Corps &#40;Phase 2&#41; - Scowl",
+      "type": "MINIFIG",
+      "category_id": 65
+     },
+     "color_id": 0,
+     "quantity": 1,
+     "extra_quantity": 0,
+     "is_alternate": false,
+     "is_counterpart": false
+    }
+   ]
+  }
  ]
 }
