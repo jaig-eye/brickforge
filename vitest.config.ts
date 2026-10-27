@@ -14,7 +14,9 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     environment: 'node',
     setupFiles: ['tests/helpers/setup.ts'],
-    testTimeout: 20_000,
+    // Hosted CI disks are slow: a test that takes half a second here can take seconds there
+    testTimeout: 60_000,
+    hookTimeout: 60_000,
     pool: 'forks',
     restoreMocks: true,
   },

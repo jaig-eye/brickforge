@@ -29,6 +29,10 @@ async function upgraded(sql: string): Promise<void> {
   dirs.push(dir)
   process.env.BRICKFORGE_USER_DATA = dir
   const db = new Database(path.join(dir, 'brickforge.db'))
+  // Running the migrations statement by statement means a disk flush per statement,
+  // which takes seconds on a CI runner. A throwaway database doesn't need them.
+  db.pragma('journal_mode = MEMORY')
+  db.pragma('synchronous = OFF')
   db.exec(`CREATE TABLE _migrations (id INTEGER PRIMARY KEY AUTOINCREMENT, filename TEXT NOT NULL UNIQUE, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`)
   for (const f of BEFORE_014) {
     db.exec(fs.readFileSync(path.join(MIGRATIONS, f), 'utf8'))
