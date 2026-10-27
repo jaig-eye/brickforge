@@ -45,6 +45,7 @@ export const IPC = {
   CATALOG_FIGS:         'bf:catalog:figs',
   CATALOG_THEMES:       'bf:catalog:themes',
   CATALOG_SET_DETAIL:   'bf:catalog:setDetail',
+  CATALOG_FIG_IDS:      'bf:catalog:figIds',
 
   // ── Prices & alerts ──────────────────────────────────────────────────────
   PRICE_SUMMARY:        'bf:price:summary',
@@ -115,6 +116,7 @@ export const IPC = {
   PUSH_UPDATE:          'bf:push:update',
   PUSH_SYNC:            'bf:push:sync',
   PUSH_DATA_CHANGED:    'bf:push:dataChanged',
+  PUSH_FIG_IDS:         'bf:push:figIds',
 } as const
 
 export type IpcChannel = typeof IPC[keyof typeof IPC]

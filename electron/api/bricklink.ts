@@ -112,6 +112,36 @@ export async function getBricklinkItem(type: BricklinkType, no: string): Promise
   return { ...item, name: decodeEntities(item.name ?? ''), image_url: fix(item.image_url), thumbnail_url: fix(item.thumbnail_url) }
 }
 
+export interface BricklinkSetFig { no: string; name: string; quantity: number }
+
+interface SubsetGroup { entries: { item: { no: string; name: string; type: string }; quantity: number; is_alternate?: boolean }[] }
+
+const setFigsCache = new Map<string, BricklinkSetFig[] | null>()
+
+/**
+ * The minifigures in a set, by BrickLink id, from the set's BrickLink
+ * inventory. BrickLink has no catalog search, so this is how a set's figures
+ * get their BrickLink ids. Null when BrickLink doesn't know the set.
+ */
+export async function getBricklinkSetMinifigs(setNumber: string): Promise<BricklinkSetFig[] | null> {
+  const no = normSetNum(setNumber)
+  if (setFigsCache.has(no)) return setFigsCache.get(no)!
+  const groups = await blGet<SubsetGroup[]>(`/items/SET/${encodeURIComponent(no)}/subsets?break_minifigs=false`)
+  let figs: BricklinkSetFig[] | null = null
+  if (groups) {
+    const byNo = new Map<string, BricklinkSetFig>()
+    for (const e of groups.flatMap((g) => g.entries ?? [])) {
+      if (e.item?.type !== 'MINIFIG' || e.is_alternate) continue
+      const seen = byNo.get(e.item.no)
+      if (seen) seen.quantity += e.quantity || 1
+      else byNo.set(e.item.no, { no: e.item.no, name: decodeEntities(e.item.name ?? ''), quantity: e.quantity || 1 })
+    }
+    figs = [...byNo.values()]
+  }
+  setFigsCache.set(no, figs)
+  return figs
+}
+
 /**
  * BrickLink's API sends names HTML-escaped ("BB-8 &#40;Large Photoreceptor…&#41;");
  * they're stored and shown as plain text. &amp; goes last so "&amp;#40;" stays literal.

@@ -23,7 +23,7 @@ BrickForge keeps your whole LEGO collection in one place on your computer: every
 | | |
 |---|---|
 | **Collection** | Sets and minifigures with condition, quantity, purchase price, tags, notes, and a wishlist. Grid or table view, filters by theme, condition, and tag, and bulk edits. |
-| **Catalog** | Browse and search every LEGO set and minifigure from Rebrickable, with what you already own marked. |
+| **Catalog** | Browse and search every LEGO set and minifigure, with what you already own marked. Minifigures show their BrickLink ids. |
 | **Scan** | Drop photos of sets or minifigures and get matches from the catalog. With an AI provider set up, a photo of several minifigures is split into one scan per figure. |
 | **Value** | Market prices from BrickLink sales, portfolio history, gain over what you paid, top movers, value by theme, and price alerts. |
 | **Sell** | An eBay-ready title and HTML description for any set, plus BrickLink's recent sold prices to price it. |
@@ -79,7 +79,7 @@ The first time you open BrickForge, it walks you through connecting the free ser
 | Service | What it unlocks | Cost | Needed? |
 |---|---|---|---|
 | [Rebrickable](https://rebrickable.com/api/) | Set and minifigure names, pictures, themes, piece counts. Search, add, and Catalog. | Free | Yes |
-| [BrickLink](https://www.bricklink.com/v2/api/register_consumer.page) | Market prices, price history, alerts, and Sell's price suggestion. | Free | For prices |
+| [BrickLink](https://www.bricklink.com/v2/api/register_consumer.page) | Market prices, price history, alerts, Sell's price suggestion, and minifigure ids. | Free | For prices |
 | [Brickognize](https://brickognize.com/) | The photo recognizer behind Scan. | Free, no key | Built in |
 | AI provider | Double-checks uncertain scans, reads photographed lists, writes eBay listings. | Pay per use, or your Claude Code sign-in | Optional |
 
@@ -99,6 +99,8 @@ BrickLink's API uses four values: a consumer key and secret, and a token and tok
 4. Copy all four values into BrickForge and click **Test**.
 
 Prices are BrickLink's sold prices from the last six months (US region, in US dollars), falling back to current listings when nothing has sold. BrickForge refreshes them daily if you leave **Update prices daily** on.
+
+BrickLink is also the source of truth for minifigure ids: every minifigure in your collection goes by its BrickLink id (like `sw0700`). Only Rebrickable's catalog can be searched, so search results start out under Rebrickable's numbers; BrickForge finds each one's BrickLink id from the BrickLink inventories of the sets it comes in, and shows it as soon as it's known. When the sets alone can't tell similar figures apart, it compares the figure's official picture (through Brickognize) against just those candidates. If it still can't decide, enter the id in the minifigure's details.
 
 ### AI provider (optional)
 

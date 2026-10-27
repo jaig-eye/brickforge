@@ -31,7 +31,8 @@ export function ItemSheet() {
   const { data: sets } = useSets({ scope: 'all' })
   const { data: figs } = useFigs({ scope: 'all' })
   const item: Item | undefined = sheet
-    ? sheet.kind === 'set' ? sets?.find((s) => s.set_number === sheet.number) : figs?.find((f) => f.fig_number === sheet.number || f.bricklink_id === sheet.number)
+    // A fig opened by its Rebrickable number stays open after it moves to its BrickLink id
+    ? sheet.kind === 'set' ? sets?.find((s) => s.set_number === sheet.number) : figs?.find((f) => f.fig_number === sheet.number || f.bricklink_id === sheet.number || f.rebrickable_id === sheet.number)
     : undefined
 
   return (
@@ -58,7 +59,8 @@ function ItemBody({ item, kind }: { item: Item; kind: EntityKind }) {
   const gain = item.market_price != null && item.acquired_price != null ? (item.market_price - item.acquired_price) * qty : null
   const gainPct = gain != null && item.acquired_price ? (gain / (item.acquired_price * qty)) * 100 : null
   const blUrl = item.bricklink_url
-  const rbUrl = isSet(item) ? item.rebrickable_url : (item.fig_number.startsWith('fig-') ? `https://rebrickable.com/minifigs/${item.fig_number}/` : null)
+  const rbFig = isSet(item) ? null : item.rebrickable_id ?? (item.fig_number.startsWith('fig-') ? item.fig_number : null)
+  const rbUrl = isSet(item) ? item.rebrickable_url : rbFig ? `https://rebrickable.com/minifigs/${rbFig}/` : null
 
   const refresh = async () => {
     setRefreshing(true)
@@ -346,24 +348,41 @@ function AlertBox({ kind, number, condition, current }: { kind: EntityKind; numb
 
 function FigLinks({ fig }: { fig: CollectionFig }) {
   const qc = useQueryClient()
+  const openSheet = useUi((s) => s.openSheet)
   const [blId, setBlId] = useState(fig.bricklink_id ?? '')
   const [finding, setFinding] = useState(false)
-  const { data: appears } = useQuery({ queryKey: ['fig-sets', fig.fig_number], queryFn: () => api.collection.figSets(fig.fig_number), enabled: fig.fig_number.startsWith('fig-'), staleTime: 3_600_000 })
+  const rb = fig.rebrickable_id ?? (fig.fig_number.startsWith('fig-') ? fig.fig_number : null)
+  const { data: appears } = useQuery({ queryKey: ['fig-sets', rb], queryFn: () => api.collection.figSets(rb!), enabled: !!rb, staleTime: 3_600_000 })
+  // The figure now goes by its BrickLink id; keep this sheet on it
+  const follow = (number: string) => { if (number !== fig.fig_number) openSheet('minifig', number) }
   const saveBl = async () => {
-    try { await api.collection.updateFig(fig.id, { bricklink_id: blId.trim() || null }); await qc.invalidateQueries({ queryKey: ['collection'] }); toast.success('BrickLink id saved') } catch (err) { toast.error(err) }
+    try {
+      const row = await api.collection.updateFig(fig.id, { bricklink_id: blId.trim() || null })
+      await qc.invalidateQueries({ queryKey: ['collection'] })
+      follow(row.fig_number)
+      toast.success('BrickLink id saved')
+    } catch (err) { toast.error(err) }
   }
   const find = async () => {
     setFinding(true)
     try {
       const r = await api.collection.resolveBricklink(fig.id)
-      if (r.bricklink_id) { setBlId(r.bricklink_id); await qc.invalidateQueries({ queryKey: ['collection'] }); toast.success(`Found it: ${r.bricklink_id}`) }
-      else toast.info("Rebrickable doesn't list a BrickLink id for this minifigure. Enter it by hand.")
+      if (r.bricklink_id) {
+        setBlId(r.bricklink_id)
+        await qc.invalidateQueries({ queryKey: ['collection'] })
+        follow(r.bricklink_id)
+        toast.success(`Found it: ${r.bricklink_id}`)
+      } else toast.info("Couldn't match this minifigure to BrickLink on its own. Enter its BrickLink id by hand.")
     } catch (err) { toast.error(err) } finally { setFinding(false) }
   }
   return (
     <section className="px-6 pt-6">
       <h3 className="mb-2.5 font-display text-[15px] font-bold">BrickLink id</h3>
-      <p className="mb-2 text-[12.5px] text-fg-3">Prices come from BrickLink, which uses its own minifigure ids (like sw0001a).</p>
+      <p className="mb-2 text-[12.5px] text-fg-3">
+        {fig.bricklink_id
+          ? 'BrickForge knows minifigures by their BrickLink id, and their prices come from it. Change it if the match is wrong.'
+          : "Not matched to BrickLink yet, so there's no price. Find it, or enter its BrickLink id (like sw0001a)."}
+      </p>
       <form onSubmit={(e) => { e.preventDefault(); void saveBl() }} className="flex items-center gap-2">
         <Input value={blId} onChange={(e) => setBlId(e.target.value)} placeholder="e.g. sw0001a" className="font-mono" aria-label="BrickLink id" />
         <Button type="submit" disabled={blId.trim() === (fig.bricklink_id ?? '')}>Save</Button>

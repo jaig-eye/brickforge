@@ -46,6 +46,8 @@ export interface Minifigure {
   image_url: string | null
   bricklink_url: string | null
   bricklink_id: string | null
+  /** Its Rebrickable number (fig-…), for the catalog's pictures and set lists */
+  rebrickable_id: string | null
   notes: string | null
   is_owned: 0 | 1
   is_wanted: 0 | 1
@@ -168,7 +170,8 @@ export interface CatalogPage<T> {
 export interface CatalogSetDetail {
   set: CatalogSet
   theme: string | null
-  minifigs: { set_num: string; set_name: string; quantity: number; set_img_url: string | null }[]
+  /** From the set's BrickLink inventory when there are BrickLink keys (then set_num is the BrickLink id), else Rebrickable */
+  minifigs: { set_num: string; set_name: string; quantity: number; set_img_url: string | null; bricklink_id?: string }[]
 }
 
 // ── Prices ────────────────────────────────────────────────────────────────────

@@ -24,11 +24,6 @@ Track loose pieces and see which sets and minifigures you could build from what 
 - **Why:** a common ask from builders, not just collectors, and a way to find figures worth assembling to sell.
 - **Needs:** a parts table, part lists per set and per minifigure, and a way to count pieces that isn't tedious, such as importing a BrickLink store inventory. Cut from 1.0 because adding parts by hand was too much work.
 
-### BrickLink as the source of truth for minifigures
-Key every minifigure by its BrickLink id, and keep Rebrickable only for search and pictures.
-- **Why:** prices already come from BrickLink; one id everywhere removes the bridge between the two catalogs.
-- **Needs:** resolving BrickLink ids from each set's BrickLink inventory, and moving existing figures, prices, tags, and alerts to the new ids, sync included.
-
 ### Part-out value
 For each minifigure, compare its price whole with the sum of its parts on BrickLink.
 - **Why:** sellers decide between selling a figure whole and parting it out.

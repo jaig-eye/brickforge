@@ -69,6 +69,8 @@ export const api = {
     figs: (o: { search?: string; theme_id?: number | null; page?: number }) => call<CatalogPage<CatalogFig>>(IPC.CATALOG_FIGS, o),
     themes: () => call<CatalogTheme[]>(IPC.CATALOG_THEMES),
     setDetail: (setNumber: string) => call<CatalogSetDetail>(IPC.CATALOG_SET_DETAIL, setNumber),
+    /** BrickLink ids for Rebrickable search results: known now, the rest arrive on PUSH_FIG_IDS */
+    figIds: (results: { id: string; name: string }[]) => call<Record<string, string | null>>(IPC.CATALOG_FIG_IDS, results),
   },
   prices: {
     summary: () => call<PortfolioSummary>(IPC.PRICE_SUMMARY),

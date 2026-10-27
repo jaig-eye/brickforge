@@ -5,7 +5,7 @@ import { Heart, Plus, Check } from 'lucide-react'
 import { api } from '@/lib/api'
 import { AppError } from '@/lib/errors'
 import { useUi } from '@/lib/ui-store'
-import { useOwnership } from '@/lib/queries'
+import { useFigIds, useOwnership } from '@/lib/queries'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useAddItem } from '@/hooks/useAddItem'
 import type { EntityKind } from '@/lib/types'
@@ -55,16 +55,17 @@ export function AddDialog() {
   const isOwned = (n: string) => owned?.owned.includes(n)
   const isWanted = (n: string) => owned?.wanted.includes(n)
 
+  const list = results.data?.results ?? []
+  const blIds = useFigIds(kind === 'minifig' ? list : undefined)
   const add = async (num: string, wanted: boolean, el: Element | null, image: string | null, name?: string) => {
     setBusy(`${num}:${wanted}`)
     const o = { ...opts(), as: wanted ? 'wanted' as const : 'owned' as const }
     if (kind === 'set') await addSet(num, o, { el, image })
-    else await addFig({ set_num: num, name: name ?? num, set_img_url: image }, o, { el })
+    else await addFig({ set_num: num, name: name ?? num, set_img_url: image, bricklink_id: blIds[num] ?? null }, o, { el })
     setBusy(null)
   }
 
   const missingKey = results.error instanceof AppError && (results.error.code === 'missing_key' || results.error.code === 'auth')
-  const list = results.data?.results ?? []
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()} title="Add to your collection" width={680}
@@ -123,13 +124,15 @@ export function AddDialog() {
                 const img = item.set_img_url
                 const has = isOwned(num)
                 const wants = isWanted(num)
+                const bl = blIds[num]
                 return (
                   <li key={num} className="group flex items-center gap-3 rounded-[12px] px-2 py-1.5 hover:bg-hover">
                     <ItemImage src={img} alt={item.name} className="size-[52px] shrink-0 rounded-[10px]" pad="p-1" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[13.5px] font-medium text-fg">{item.name}</div>
                       <div className="mt-0.5 flex items-center gap-2 font-mono text-[11.5px] text-fg-3">
-                        <span>{num}</span>
+                        {/* BrickLink's id once known; until then Rebrickable's number, dimmed */}
+                        {bl ? <span title={`Rebrickable ${num}`}>{bl}</span> : <span className={kind === 'minifig' ? 'text-fg-4' : undefined}>{num}</span>}
                         {'year' in item ? <span>· {String((item as { year: number }).year)}</span> : null}
                         <span>· {formatNumber(item.num_parts)} pcs</span>
                       </div>

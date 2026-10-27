@@ -12,6 +12,7 @@ import { dataHealth, enrichCollection } from '../services/catalog'
 import { push } from '../services/notify'
 import { resyncAfterRestore } from '../services/sync'
 import { handle, str, obj, photo } from './handle'
+import { rekeyFigsToBricklink } from '../db/queries/collection.queries'
 
 const parent = () => BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
 
@@ -89,6 +90,7 @@ export function registerDataHandlers(): void {
     await restoreDb(target)
     // An older backup is brought up to the current schema before anything reads it
     await runMigrations()
+    rekeyFigsToBricklink()
     await resyncAfterRestore()
     push(IPC.PUSH_DATA_CHANGED, { kind: 'all' })
     return { restored: true }

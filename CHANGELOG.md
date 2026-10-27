@@ -4,7 +4,13 @@ All notable changes to BrickForge are listed here. The format follows [Keep a Ch
 
 ## [1.1.0] - 2026-10-26
 
+### Changed
+- BrickLink ids are now the source of truth for minifigures: every minifigure in your collection goes by its BrickLink id (like `sw0700`), with its prices, alerts, and tags. Your existing collection moves over on first launch, and sync carries the move to your other computers.
+- A minifigure's BrickLink id is found from the BrickLink inventories of the sets it comes in, which is far more reliable than matching pictures; the picture match now only has to choose among that set's figures.
+- A set's minifigures come from its BrickLink inventory, with their BrickLink ids and how many of each.
+
 ### Added
+- Catalog and search results show minifigures' BrickLink ids, filling them in as they're found.
 - macOS: disk images for Apple Silicon and Intel Macs, with the system's own window controls, a macOS menu bar, and ⌘ shortcuts. macOS can't update an app that isn't signed with an Apple Developer ID, so BrickForge checks GitHub for new versions and opens the download page.
 - The Claude Code AI provider finds the `claude` command on a Mac even when BrickForge is opened from the Dock.
 

@@ -8,6 +8,10 @@
  *    are only ever changed by you.
  * Re-adding or re-importing an item refreshes catalog fields and never resets
  * yours — that split is the whole point of addSet/addFig vs updateSet/updateFig.
+ *
+ * BrickLink ids are the keys: a set's number is the same in both catalogs,
+ * and a minifigure's fig_number is its BrickLink id once that's known (its
+ * Rebrickable fig-… number is kept in rebrickable_id). See rekeyFig.
  */
 import { getDb } from '../index'
 import { normalizeSetCondition, normalizeFigCondition } from '../../../src/lib/conditions'
@@ -84,9 +88,9 @@ export function listFigs(q: CollectionQuery = {}): CollectionFig[] {
   const where = [scopeClause('m', q.scope)]
   const params: unknown[] = []
   if (q.search?.trim()) {
-    where.push('(m.name LIKE ? OR m.fig_number LIKE ? OR m.bricklink_id LIKE ? OR m.character LIKE ? OR m.theme LIKE ?)')
+    where.push('(m.name LIKE ? OR m.fig_number LIKE ? OR m.bricklink_id LIKE ? OR m.rebrickable_id LIKE ? OR m.character LIKE ? OR m.theme LIKE ?)')
     const like = `%${q.search.trim()}%`
-    params.push(like, like, like, like, like)
+    params.push(like, like, like, like, like, like)
   }
   if (q.theme) { where.push('m.theme = ?'); params.push(q.theme) }
   if (q.condition) { where.push('m.condition = ?'); params.push(q.condition) }
@@ -121,17 +125,17 @@ export function collectionThemes(): { sets: string[]; figs: string[] } {
 export function ownershipIndex(): OwnershipIndex {
   const db = getDb()
   const sets = db.prepare('SELECT set_number AS n, is_owned, is_wanted FROM sets').all() as { n: string; is_owned: number; is_wanted: number }[]
-  const figs = db.prepare('SELECT fig_number AS n, bricklink_id AS bl, is_owned, is_wanted FROM minifigures').all() as { n: string; bl: string | null; is_owned: number; is_wanted: number }[]
+  const figs = db.prepare('SELECT fig_number AS n, bricklink_id AS bl, rebrickable_id AS rb, is_owned, is_wanted FROM minifigures').all() as { n: string; bl: string | null; rb: string | null; is_owned: number; is_wanted: number }[]
   const owned: string[] = []
   const wanted: string[] = []
   for (const s of sets) {
     if (s.is_owned) owned.push(s.n)
     else if (s.is_wanted) wanted.push(s.n)
   }
-  // Figs live under two id namespaces (Rebrickable fig-XXXX and BrickLink
-  // sw0380); both must match, or a scan of an owned fig offers a duplicate.
+  // Catalog and Scan show figs under either catalog's number (Rebrickable
+  // fig-XXXX, BrickLink sw0380); both must match, or an owned fig looks new.
   for (const f of figs) {
-    const ids = f.bl ? [f.n, f.bl] : [f.n]
+    const ids = [...new Set([f.n, f.bl, f.rb].filter((v): v is string => !!v))]
     if (f.is_owned) owned.push(...ids)
     else if (f.is_wanted) wanted.push(...ids)
   }
@@ -258,15 +262,133 @@ export function getFigByNumber(figNumber: string): Minifigure | null {
 }
 
 /**
- * The existing row for a fig under EITHER id namespace: its Rebrickable
- * number, its BrickLink id, or a row already bridged to that BrickLink id.
+ * The existing row for a fig under EITHER catalog's number: its BrickLink id
+ * (its key), or the Rebrickable number it was added or matched under.
  */
 export function findFig(figNumber: string, bricklinkId?: string | null): Minifigure | null {
   const ids = [...new Set([figNumber, bricklinkId].filter((v): v is string => !!v))]
   const marks = ids.map(() => '?').join(', ')
   return (getDb().prepare(
-    `SELECT * FROM minifigures WHERE fig_number IN (${marks}) OR bricklink_id IN (${marks}) ORDER BY is_owned DESC, id LIMIT 1`,
-  ).get(...ids, ...ids) ?? null) as Minifigure | null
+    `SELECT * FROM minifigures WHERE fig_number IN (${marks}) OR bricklink_id IN (${marks}) OR rebrickable_id IN (${marks})
+     ORDER BY is_owned DESC, id LIMIT 1`,
+  ).get(...ids, ...ids, ...ids) ?? null) as Minifigure | null
+}
+
+/** A fig's current row by any of its numbers: after a re-key, its old Rebrickable number still finds it. */
+function figByAnyNumber(figNumber: string): Minifigure | null {
+  return (getDb().prepare('SELECT * FROM minifigures WHERE fig_number = ? OR rebrickable_id = ? ORDER BY fig_number = ? DESC LIMIT 1')
+    .get(figNumber, figNumber, figNumber) ?? null) as Minifigure | null
+}
+
+// Rows elsewhere that refer to a minifigure by its number
+const FIG_REFS = ['price_history', 'price_alerts', 'item_tags'] as const
+
+/**
+ * Make a minifigure's BrickLink id its number. Its prices, alerts, and tags
+ * move with it, and sync records each move as the old key's removal and the
+ * new key's arrival. If another row already has that BrickLink id (the same
+ * figure reached by both numbers, or a copy pulled from another computer),
+ * the two become one: the BrickLink row keeps its fields and fills its gaps
+ * from the other, and quantity is the larger of the two, never their sum, so
+ * repeating the move never counts a figure twice.
+ */
+export function rekeyFig(from: string, blId: string): Minifigure | null {
+  const db = getDb()
+  const to = blId.trim()
+  if (!to || isRebrickableFigNumber(to)) return figByAnyNumber(from)
+  return db.transaction((): Minifigure | null => {
+    const row = figByAnyNumber(from)
+    if (!row) return null
+    const old = row.fig_number
+    const rb = row.rebrickable_id ?? (isRebrickableFigNumber(old) ? old : null)
+    if (old === to) {
+      if (row.bricklink_id !== to || row.rebrickable_id !== rb) {
+        db.prepare('UPDATE minifigures SET bricklink_id = ?, rebrickable_id = ? WHERE id = ?').run(to, rb, row.id)
+      }
+      return getFig(row.id)
+    }
+    const target = getFigByNumber(to)
+    if (target) {
+      db.prepare(`
+        UPDATE minifigures SET
+          rebrickable_id = COALESCE(rebrickable_id, ?), bricklink_id = ?,
+          character = COALESCE(character, ?), theme = COALESCE(theme, ?), year = COALESCE(year, ?),
+          image_url = COALESCE(image_url, ?), notes = COALESCE(notes, ?),
+          acquired_price = COALESCE(acquired_price, ?), acquired_date = COALESCE(acquired_date, ?),
+          quantity = MAX(quantity, ?),
+          is_owned = MAX(is_owned, ?),
+          is_wanted = CASE WHEN MAX(is_owned, ?) = 1 THEN 0 ELSE MAX(is_wanted, ?) END,
+          updated_at = datetime('now')
+        WHERE id = ?
+      `).run(rb, to, row.character, row.theme, row.year, row.image_url, row.notes, row.acquired_price, row.acquired_date,
+        row.quantity, row.is_owned, row.is_owned, row.is_wanted, target.id)
+      db.prepare('DELETE FROM minifigures WHERE id = ?').run(row.id)
+    } else {
+      db.prepare(`UPDATE minifigures SET fig_number = ?, bricklink_id = ?, rebrickable_id = ?, bricklink_url = ?, updated_at = datetime('now') WHERE id = ?`)
+        .run(to, to, rb, bricklinkCatalogUrl('M', to), row.id)
+    }
+    if (rb) rememberFigId(rb, to)
+    // Where both numbers have a row (a price on the same day), the BrickLink one stays
+    for (const tbl of FIG_REFS) {
+      db.prepare(`UPDATE OR IGNORE ${tbl} SET entity_id = ? WHERE entity_type = 'minifig' AND entity_id = ?`).run(to, old)
+      db.prepare(`DELETE FROM ${tbl} WHERE entity_type = 'minifig' AND entity_id = ?`).run(old)
+    }
+    return getFigByNumber(to)
+  })()
+}
+
+// ── What the bridge has learned (fig_id_map) ─────────────────────────────────
+
+/** Remember a Rebrickable number's BrickLink id, or that none was found (null). */
+export function rememberFigId(rebrickableId: string, bricklinkId: string | null): void {
+  if (!isRebrickableFigNumber(rebrickableId)) return
+  getDb().prepare(`
+    INSERT INTO fig_id_map (rebrickable_id, bricklink_id, checked_at) VALUES (?, ?, datetime('now'))
+    ON CONFLICT(rebrickable_id) DO UPDATE SET
+      bricklink_id = COALESCE(excluded.bricklink_id, fig_id_map.bricklink_id), checked_at = excluded.checked_at
+  `).run(rebrickableId, bricklinkId)
+}
+
+/** The BrickLink id known for a Rebrickable number, from the collection or the map. */
+export function rememberedFigId(rebrickableId: string): string | null {
+  return rememberedFigIds([rebrickableId])[rebrickableId] ?? null
+}
+
+/**
+ * What's known for these Rebrickable numbers: a BrickLink id, or null when
+ * the bridge looked in the last week and found none. Numbers it hasn't
+ * looked up (or looked up long ago) are left out.
+ */
+export function rememberedFigIds(rebrickableIds: string[]): Record<string, string | null> {
+  const ids = [...new Set(rebrickableIds.filter(isRebrickableFigNumber))]
+  const out: Record<string, string | null> = {}
+  if (!ids.length) return out
+  const marks = ids.map(() => '?').join(', ')
+  const db = getDb()
+  const mapped = db.prepare(`
+    SELECT rebrickable_id AS rb, bricklink_id AS bl FROM fig_id_map
+    WHERE rebrickable_id IN (${marks}) AND (bricklink_id IS NOT NULL OR checked_at > datetime('now', '-7 days'))
+  `).all(...ids) as { rb: string; bl: string | null }[]
+  for (const r of mapped) out[r.rb] = r.bl
+  const owned = db.prepare(`
+    SELECT rebrickable_id AS rb, fig_number AS bl FROM minifigures WHERE rebrickable_id IN (${marks}) AND fig_number NOT LIKE 'fig-%'
+  `).all(...ids) as { rb: string; bl: string }[]
+  for (const r of owned) out[r.rb] = r.bl
+  return out
+}
+
+/**
+ * Move every minifigure whose BrickLink id is known onto it. Runs after the
+ * migrations and after each sync, so rows added under Rebrickable numbers
+ * (by an older version, or on another computer) settle on BrickLink ids.
+ */
+export function rekeyFigsToBricklink(): number {
+  const rows = getDb().prepare(
+    "SELECT fig_number, bricklink_id FROM minifigures WHERE bricklink_id IS NOT NULL AND bricklink_id <> '' AND bricklink_id <> fig_number",
+  ).all() as { fig_number: string; bricklink_id: string }[]
+  let moved = 0
+  for (const r of rows) if (rekeyFig(r.fig_number, r.bricklink_id)) moved++
+  return moved
 }
 
 function figBricklinkId(c: FigCatalogFields): string | null {
@@ -275,6 +397,7 @@ function figBricklinkId(c: FigCatalogFields): string | null {
 
 export function upsertFigCatalog(c: FigCatalogFields): Minifigure {
   const blId = figBricklinkId(c)
+  const rbId = isRebrickableFigNumber(c.fig_number) ? c.fig_number : null
   const existing = findFig(c.fig_number, blId)
   const db = getDb()
   if (existing) {
@@ -283,19 +406,23 @@ export function upsertFigCatalog(c: FigCatalogFields): Minifigure {
         name = CASE WHEN name = fig_number OR name = '' THEN ? ELSE name END,
         image_url = COALESCE(image_url, ?),
         bricklink_id = COALESCE(bricklink_id, ?),
+        rebrickable_id = COALESCE(rebrickable_id, ?),
         bricklink_url = ?,
         character = COALESCE(character, ?), theme = COALESCE(theme, ?), year = COALESCE(year, ?)
       WHERE id = ?
-    `).run(c.name, c.image_url, blId, bricklinkCatalogUrl('M', blId ?? existing.bricklink_id ?? existing.fig_number),
+    `).run(c.name, c.image_url, blId, rbId, bricklinkCatalogUrl('M', blId ?? existing.bricklink_id ?? existing.fig_number),
       c.character ?? null, c.theme ?? null, c.year ?? null, existing.id)
-    return getFig(existing.id)!
+    const row = getFig(existing.id)!
+    return row.bricklink_id && row.bricklink_id !== row.fig_number ? rekeyFig(row.fig_number, row.bricklink_id)! : row
   }
+  // A known BrickLink id is the key; otherwise the Rebrickable number holds it until one is found
+  const key = blId ?? c.fig_number
   db.prepare(`
-    INSERT INTO minifigures (fig_number, name, character, theme, year, image_url, bricklink_url, bricklink_id, is_owned, is_wanted, quantity, condition)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 1, 'used')
-  `).run(c.fig_number, c.name, c.character ?? null, c.theme ?? null, c.year ?? null, c.image_url,
-    bricklinkCatalogUrl('M', blId ?? c.fig_number), blId)
-  return getFigByNumber(c.fig_number)!
+    INSERT INTO minifigures (fig_number, name, character, theme, year, image_url, bricklink_url, bricklink_id, rebrickable_id, is_owned, is_wanted, quantity, condition)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 1, 'used')
+  `).run(key, c.name, c.character ?? null, c.theme ?? null, c.year ?? null, c.image_url,
+    bricklinkCatalogUrl('M', key), blId, rbId)
+  return getFigByNumber(key)!
 }
 
 export function addFig(c: FigCatalogFields, opts: AddOptions): AddResult<Minifigure> {
@@ -339,20 +466,31 @@ export function updateFig(id: number, patch: FigPatch): Minifigure {
     })
     const cols = entries.map(([k]) => `${k} = ?`)
     const blIdx = entries.findIndex(([k]) => k === 'bricklink_id')
-    if (blIdx !== -1) {
+    const fig = getFig(id)
+    // A BrickLink-keyed fig keeps its id: a new one moves it (below), clearing it does nothing
+    if (blIdx !== -1 && values[blIdx] == null && fig && !isRebrickableFigNumber(fig.fig_number)) {
+      cols.splice(blIdx, 1)
+      values.splice(blIdx, 1)
+    } else if (blIdx !== -1) {
       cols.push('bricklink_url = ?')
-      const fig = getFig(id)
       values.push(bricklinkCatalogUrl('M', (values[blIdx] as string | null) ?? fig?.fig_number ?? ''))
     }
-    getDb().prepare(`UPDATE minifigures SET ${cols.join(', ')}, updated_at = datetime('now') WHERE id = ?`).run(...values, id)
+    if (cols.length) getDb().prepare(`UPDATE minifigures SET ${cols.join(', ')}, updated_at = datetime('now') WHERE id = ?`).run(...values, id)
   }
-  const row = getFig(id)
+  let row = getFig(id)
   if (!row) throw new Error('That minifigure is no longer in your collection.')
+  if (row.bricklink_id && row.bricklink_id !== row.fig_number) row = rekeyFig(row.fig_number, row.bricklink_id) ?? row
   return row
 }
 
-/** Background enrichment: fill gaps without touching updated_at. */
+/**
+ * Background enrichment: fill gaps without touching updated_at. figNumber may
+ * be the fig's Rebrickable number even after it moved to its BrickLink id;
+ * a newly found BrickLink id moves it there.
+ */
 export function setFigDetails(figNumber: string, patch: { name?: string | null; image_url?: string | null; theme?: string | null; year?: number | null; bricklink_id?: string | null }): void {
+  const row = figByAnyNumber(figNumber)
+  if (!row) return
   getDb().prepare(`
     UPDATE minifigures SET
       name = CASE WHEN ? IS NOT NULL AND (name = fig_number OR name = '') THEN ? ELSE name END,
@@ -361,10 +499,12 @@ export function setFigDetails(figNumber: string, patch: { name?: string | null; 
       year = COALESCE(year, ?),
       bricklink_id = COALESCE(bricklink_id, ?),
       bricklink_url = CASE WHEN ? IS NOT NULL AND bricklink_id IS NULL THEN ? ELSE bricklink_url END
-    WHERE fig_number = ?
+    WHERE id = ?
   `).run(patch.name ?? null, patch.name ?? null, patch.image_url ?? null, patch.theme ?? null, patch.year ?? null,
     patch.bricklink_id ?? null, patch.bricklink_id ?? null,
-    patch.bricklink_id ? bricklinkCatalogUrl('M', patch.bricklink_id) : null, figNumber)
+    patch.bricklink_id ? bricklinkCatalogUrl('M', patch.bricklink_id) : null, row.id)
+  const after = getFig(row.id)
+  if (after?.bricklink_id && after.bricklink_id !== after.fig_number) rekeyFig(after.fig_number, after.bricklink_id)
 }
 
 export function listFigsMissingBricklinkId(): { fig_number: string }[] {
@@ -373,10 +513,14 @@ export function listFigsMissingBricklinkId(): { fig_number: string }[] {
   ).all() as { fig_number: string }[]
 }
 
-/** Rebrickable-keyed figs missing theme or year (only those are enrichable). */
+/**
+ * Figs missing theme or year that Rebrickable can fill in: those with a
+ * Rebrickable number. fig_number here IS that number (setFigDetails finds the
+ * row by either).
+ */
 export function listFigsMissingDetails(): { fig_number: string }[] {
   return getDb().prepare(
-    "SELECT fig_number FROM minifigures WHERE (theme IS NULL OR year IS NULL) AND fig_number LIKE 'fig-%'",
+    "SELECT COALESCE(rebrickable_id, fig_number) AS fig_number FROM minifigures WHERE (theme IS NULL OR year IS NULL) AND COALESCE(rebrickable_id, fig_number) LIKE 'fig-%'",
   ).all() as { fig_number: string }[]
 }
 
@@ -444,7 +588,7 @@ const SET_RESTORE_COLS = [
   'has_box', 'has_instructions', 'missing_parts', 'created_at', 'updated_at',
 ] as const
 const FIG_RESTORE_COLS = [
-  'fig_number', 'name', 'character', 'theme', 'year', 'image_url', 'bricklink_url', 'bricklink_id', 'notes',
+  'fig_number', 'name', 'character', 'theme', 'year', 'image_url', 'bricklink_url', 'bricklink_id', 'rebrickable_id', 'notes',
   'is_owned', 'is_wanted', 'quantity', 'condition', 'acquired_price', 'acquired_date', 'created_at', 'updated_at',
 ] as const
 

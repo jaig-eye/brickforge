@@ -199,11 +199,6 @@ export function getMinifig(figNum: string): Promise<(RebrickableMinifig & { exte
   return get(`/minifigs/${encodeURIComponent(figNum)}/`)
 }
 
-/** The fig's BrickLink IDs (usually one, e.g. ["sw0093"]). */
-export async function getMinifigBricklinkIds(figNum: string): Promise<string[]> {
-  return (await getMinifig(figNum))?.external_ids?.BrickLink ?? []
-}
-
 /** Sets a fig appears in, newest first. */
 export async function getMinifigSets(figNum: string): Promise<RebrickableSet[]> {
   const res = await get<Page<RebrickableSet>>(`/minifigs/${encodeURIComponent(figNum)}/sets/`, { page_size: '100', ordering: '-year' })

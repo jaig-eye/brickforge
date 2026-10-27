@@ -21,7 +21,8 @@ export interface FakeRequest {
   body: Buffer
 }
 
-export type Override = (req: FakeRequest) => { status?: number; json?: unknown; text?: string; headers?: Record<string, string> } | undefined
+/** body sends raw bytes (an image), json or text otherwise */
+export type Override = (req: FakeRequest) => { status?: number; json?: unknown; text?: string; body?: Buffer; headers?: Record<string, string> } | undefined
 
 export interface FakeApis {
   urls: Record<'rebrickable' | 'bricklink' | 'brickognize' | 'openai' | 'anthropic', string>
@@ -45,7 +46,7 @@ function fixture<T = unknown>(service: string, name: string): T | null {
   return fs.existsSync(p) ? (JSON.parse(fs.readFileSync(p, 'utf8')) as T) : null
 }
 
-type Reply = { status: number; json?: unknown; text?: string; headers?: Record<string, string> }
+type Reply = { status: number; json?: unknown; text?: string; body?: Buffer; headers?: Record<string, string> }
 
 // ── Rebrickable ───────────────────────────────────────────────────────────────
 
@@ -115,6 +116,13 @@ function bricklink(req: FakeRequest): Reply {
     return data
       ? { status: 200, json: { meta: { code: 200, message: 'OK' }, data } }
       : { status: 200, json: { meta: { code: 200, message: 'OK' }, data: { avg_price: '0.0000', min_price: '0.0000', max_price: '0.0000', qty_avg_price: '0.0000', total_quantity: 0, unit_quantity: 0, price_detail: [] } } }
+  }
+  // A set's inventory (minifig entries only, recorded from the real API)
+  if ((m = req.path.match(/^\/items\/SET\/([^/]+)\/subsets$/))) {
+    const data = (fixture<Record<string, unknown>>('bricklink', 'subsets') ?? {})[`SET/${decodeURIComponent(m[1])}`]
+    return data
+      ? { status: 200, json: { meta: { code: 200, message: 'OK' }, data } }
+      : { status: 200, json: { meta: { code: 404, message: 'RESOURCE_NOT_FOUND', description: 'Item not found' }, data: {} } }
   }
   if ((m = req.path.match(/^\/items\/(SET|MINIFIG|PART)\/([^/]+)$/))) {
     const data = items[`${m[1]}/${decodeURIComponent(m[2])}`]
@@ -224,11 +232,12 @@ export async function startFakeApis(port = 0): Promise<FakeApis> {
       let reply: Reply | undefined
       for (const o of overrides) {
         const r = o(fr)
-        if (r) { reply = { status: r.status ?? 200, json: r.json, text: r.text, headers: r.headers }; break }
+        if (r) { reply = { status: r.status ?? 200, json: r.json, text: r.text, body: r.body, headers: r.headers }; break }
       }
       reply ??= ROUTES[service]?.(fr) ?? { status: 404, text: 'Unknown service' }
-      res.writeHead(reply.status, { 'content-type': reply.json !== undefined ? 'application/json' : 'text/plain', ...reply.headers })
-      res.end(reply.json !== undefined ? JSON.stringify(reply.json) : (reply.text ?? ''))
+      const type = reply.body ? 'application/octet-stream' : reply.json !== undefined ? 'application/json' : 'text/plain'
+      res.writeHead(reply.status, { 'content-type': type, ...reply.headers })
+      res.end(reply.body ?? (reply.json !== undefined ? JSON.stringify(reply.json) : (reply.text ?? '')))
     })
   })
   await new Promise<void>((resolve) => server.listen(port, '127.0.0.1', resolve))

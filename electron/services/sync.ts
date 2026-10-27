@@ -20,6 +20,7 @@ import { readSettings, writeSettings, setSecret } from '../main/settings-store'
 import { push } from './notify'
 import { ensureRemoteSchema, prepareFullSync, syncOnce, pendingCount, changeMarker, type Queryable } from './sync-engine'
 import { connectionConfig, describeServer, errorCode, friendlyError } from './sync-connection'
+import { rekeyFigsToBricklink } from '../db/queries/collection.queries'
 
 const SYNC_EVERY_MS = 60_000
 const WATCH_EVERY_MS = 3_000
@@ -146,7 +147,12 @@ async function cycle(): Promise<void> {
     const res = await withConnection((remote) => syncOnce(db, remote, deviceId()))
     run = { state: 'idle', lastSyncAt: new Date().toISOString(), lastError: null, pushed: res.pushed, pulled: res.pulled }
     if (res.rejected) log.warn(`[sync] skipped ${res.rejected} server rows that failed validation`)
-    if (res.pulled) push(IPC.PUSH_DATA_CHANGED, { kind: 'all' })
+    if (res.pulled) {
+      // Figures another computer still keeps under Rebrickable numbers move to
+      // their BrickLink ids here; the next sync sends the move back
+      rekeyFigsToBricklink()
+      push(IPC.PUSH_DATA_CHANGED, { kind: 'all' })
+    }
   } catch (err) {
     const e = friendlyError(err)
     if (run.lastError !== e.message) log.warn(`[sync] failed (${errorCode(err)}): ${e.message}`) // once per outage, not every minute

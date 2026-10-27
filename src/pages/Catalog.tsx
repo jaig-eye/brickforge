@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Check, Heart, Plus, Users } from 'lucide-react'
 import { api } from '@/lib/api'
 import { AppError } from '@/lib/errors'
-import { useOwnership, useSettings } from '@/lib/queries'
+import { useFigIds, useOwnership, useSettings } from '@/lib/queries'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useAddItem } from '@/hooks/useAddItem'
 import { formatMoney, formatNumber } from '@/lib/formatters'
@@ -63,10 +63,11 @@ export default function Catalog() {
   const keyMissing = settings && !settings.keys.rebrickable.set
   const keyRejected = results.error instanceof AppError && results.error.code === 'auth'
 
+  const blIds = useFigIds(kind === 'minifig' ? items : undefined)
   const add = (item: CatalogSet | CatalogFig, wanted: boolean, el: Element | null) => {
     const opts = { as: wanted ? 'wanted' as const : 'owned' as const, condition: kind === 'set' ? 'sealed' : 'used' }
     if (kind === 'set') void addSet(item.set_num, opts, { el, image: item.set_img_url })
-    else void addFig({ set_num: item.set_num, name: item.name, set_img_url: item.set_img_url }, opts, { el })
+    else void addFig({ set_num: item.set_num, name: item.name, set_img_url: item.set_img_url, bricklink_id: blIds[item.set_num] ?? null }, opts, { el })
   }
 
   return (
@@ -124,7 +125,10 @@ export default function Catalog() {
                         </div>
                       </div>
                       <div className="flex flex-1 flex-col px-1.5 pb-1 pt-2.5">
-                        <span className="font-mono text-[11.5px] text-accent-text">{item.set_num}</span>
+                        {/* BrickLink's id once known; until then Rebrickable's number, dimmed */}
+                        {blIds[item.set_num]
+                          ? <span className="font-mono text-[11.5px] text-accent-text" title={`Rebrickable ${item.set_num}`}>{blIds[item.set_num]}</span>
+                          : <span className={`font-mono text-[11.5px] ${kind === 'minifig' ? 'text-fg-4' : 'text-accent-text'}`}>{item.set_num}</span>}
                         <h3 className="mt-1 line-clamp-2 font-sans text-[13.5px] font-semibold leading-snug tracking-normal">{item.name}</h3>
                         <p className="mt-0.5 text-[12px] text-fg-3">{'year' in item ? `${item.year} · ` : ''}{formatNumber(item.num_parts)} pieces</p>
                         <div className="mt-auto flex items-center gap-1.5 pt-3" onClick={(e) => e.stopPropagation()}>

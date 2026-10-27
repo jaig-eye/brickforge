@@ -14,6 +14,7 @@ import { readSettings, writeSettings } from '../main/settings-store'
 import { fetchBricklinkPrice, hasBricklinkCredentials } from '../api/bricklink'
 import { hasRebrickableKey } from '../api/rebrickable'
 import { itemsToPrice, recordPrice, evaluateAlerts } from '../db/queries/pricing.queries'
+import { rekeyFig } from '../db/queries/collection.queries'
 import { ensureFigBricklinkId } from './catalog'
 import { push, notifyDesktop } from './notify'
 
@@ -41,10 +42,13 @@ export async function priceItem(kind: EntityKind, id: string, condition: PriceCo
   if (!lookup) {
     throw new AppError({ code: 'not_found', service: 'bricklink', message: 'No BrickLink id is known for this minifigure yet. Add it from its details.' })
   }
+  // A minifigure lives under its BrickLink id, and so does its price (the
+  // bridge may have just moved it there from its Rebrickable number)
+  const entityId = kind === 'minifig' ? (rekeyFig(id, lookup)?.fig_number ?? id) : id
   const res = await fetchBricklinkPrice(lookup, condition, kind === 'set' ? 'SET' : 'MINIFIG')
   if (!res) return null
   recordPrice({
-    entity_type: kind, entity_id: id, condition, source: res.source,
+    entity_type: kind, entity_id: entityId, condition, source: res.source,
     avg_price: res.avg_price, min_price: res.min_price, max_price: res.max_price, sample_count: res.sample_count,
   })
   return res.avg_price

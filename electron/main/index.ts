@@ -9,6 +9,7 @@ import { closeDb } from '../db/index'
 import { registerAllHandlers } from '../ipc/index'
 import { openExternalSafely } from '../ipc/app.ipc'
 import { seedDemoIfEmpty } from '../services/demo'
+import { rekeyFigsToBricklink } from '../db/queries/collection.queries'
 import { resumeQueue } from '../services/scan-queue'
 import { startScheduler, stopScheduler } from '../services/pricing'
 import { runStartupMaintenance } from '../services/maintenance'
@@ -163,6 +164,8 @@ if (!app.requestSingleInstanceLock()) {
     try {
       await runMigrations()
       if (isDemo) seedDemoIfEmpty()
+      const moved = rekeyFigsToBricklink()
+      if (moved) log.info(`[migrate] ${moved} minifigure(s) now go by their BrickLink id`)
     } catch (err) {
       log.error('Database setup failed:', err)
       const { dialog } = await import('electron')

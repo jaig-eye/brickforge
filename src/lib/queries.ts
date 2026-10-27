@@ -66,6 +66,20 @@ export const useSyncStatus = () => useQuery({ queryKey: keys.sync, queryFn: api.
 export const useUpdateState = () => useQuery({ queryKey: keys.update, queryFn: api.updates.state, staleTime: Infinity })
 
 /** Mirror main-process push events into the query cache. Mount once. */
+/**
+ * BrickLink ids for minifigure search results, which come from Rebrickable
+ * under its numbers: known ones at once, the rest as the bridge finds them.
+ */
+export function useFigIds(results: { set_num: string; name: string }[] | undefined) {
+  const list = (results ?? []).filter((r) => r.set_num.startsWith('fig-')).map((r) => ({ id: r.set_num, name: r.name }))
+  return useQuery({
+    queryKey: ['fig-ids', list.map((r) => r.id).join(',')],
+    queryFn: () => api.catalog.figIds(list),
+    enabled: list.length > 0,
+    staleTime: 60_000,
+  }).data ?? {}
+}
+
 export function usePushSync(): void {
   const qc = useQueryClient()
   useEffect(() => {
@@ -79,6 +93,10 @@ export function usePushSync(): void {
       api.on<UpdateState>(IPC.PUSH_UPDATE, (s) => qc.setQueryData(keys.update, s)),
       api.on(IPC.PUSH_DATA_CHANGED, () => { void invalidateCollection() }),
       api.on(IPC.PUSH_ALERTS, () => { void qc.invalidateQueries({ queryKey: keys.alerts }) }),
+      // A search result's BrickLink id, found in the background
+      api.on<{ rebrickable_id: string; bricklink_id: string | null }>(IPC.PUSH_FIG_IDS, (r) => {
+        qc.setQueriesData<Record<string, string | null>>({ queryKey: ['fig-ids'] }, (old) => (old ? { ...old, [r.rebrickable_id]: r.bricklink_id } : old))
+      }),
     ]
     return () => offs.forEach((off) => off())
   }, [qc])

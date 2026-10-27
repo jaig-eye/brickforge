@@ -159,10 +159,10 @@ afterAll(async () => {
 
 describe('sync engine', () => {
   it('uploads an existing collection in full on first connect, without local ids', async () => {
-    // This PC as it was before change tracking: migrations up to 012, then a collection
+    // This PC as it was before change tracking: every migration but 013, then a collection
     const before = path.join(dir, 'migrations-012')
     fs.mkdirSync(before, { recursive: true })
-    for (const f of fs.readdirSync(MIGRATIONS).filter((f) => f < '013')) fs.copyFileSync(path.join(MIGRATIONS, f), path.join(before, f))
+    for (const f of fs.readdirSync(MIGRATIONS).filter((f) => !f.startsWith('013'))) fs.copyFileSync(path.join(MIGRATIONS, f), path.join(before, f))
     await freshThisPc(before)
     addSet(FALCON, { as: 'owned', condition: 'sealed', acquired_price: 649.99, notes: 'Display case' })
     addSet(HOUSE, { as: 'wanted' })

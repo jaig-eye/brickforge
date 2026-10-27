@@ -19,7 +19,8 @@ const DANGLING = /(\s(\||&|w\/|with|and|-|·)|,)$/i
 const listSets = () => env.call<CollectionSet[]>(IPC.SETS_LIST, { scope: 'all' })
 const listFigs = () => env.call<CollectionFig[]>(IPC.FIGS_LIST, { scope: 'all' })
 const setRow = async (num: string) => (await listSets()).find((s) => s.set_number === num)
-const figRow = async (num: string) => (await listFigs()).find((f) => f.fig_number === num)
+// By either number: a fig added by its Rebrickable number moves to its BrickLink id once matched
+const figRow = async (num: string) => (await listFigs()).find((f) => f.fig_number === num || f.rebrickable_id === num)
 
 beforeAll(async () => {
   env = await createTestEnv()
@@ -166,7 +167,7 @@ describe('import', () => {
     expect(sets.filter((s) => s.set_number === '75192-1')).toHaveLength(1)
     expect(await setRow('75192-1')).toMatchObject({ quantity: 1, condition: 'open_complete', acquired_price: 600, notes: 'Opened for display' })
     expect(await setRow('10497-1')).toMatchObject({ is_owned: 1, is_wanted: 0 })
-    expect((await listFigs()).filter((f) => f.fig_number === 'fig-002544')).toHaveLength(1)
+    expect((await listFigs()).filter((f) => f.fig_number === 'fig-002544' || f.rebrickable_id === 'fig-002544')).toHaveLength(1)
     await env.call(IPC.DATA_ENRICH)
   })
 
@@ -208,7 +209,8 @@ describe('import', () => {
     const before = await userFields()
     expect(Object.values(before.sets).some((s) => s.wanted)).toBe(true)
     expect(before.sets['75192-1']).toMatchObject({ date: '2025-12-24', box: 1, manual: 0, missing: '2x 3023 light grey' })
-    expect(before.figs['fig-002544']).toMatchObject({ bl: 'sw0662', date: '2024-05-04' })
+    // Setting its BrickLink id by hand moved the fig to that id
+    expect(before.figs['sw0662']).toMatchObject({ bl: 'sw0662', date: '2024-05-04' })
 
     const { csv, sets, figs } = collectionCsv()
     expect([sets, figs]).toEqual([Object.keys(before.sets).length, Object.keys(before.figs).length])

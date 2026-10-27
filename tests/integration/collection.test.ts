@@ -82,14 +82,14 @@ describe('adding sets', () => {
 })
 
 describe('minifigures', () => {
-  it('adds a Rebrickable fig that carries its BrickLink id', async () => {
+  it('adds a Rebrickable fig under its BrickLink id, keeping its Rebrickable number', async () => {
     const { item, outcome } = await addFig(
       { set_num: 'fig-002514', name: 'C-3PO, Pearl Gold, Colorful Wires, Printed Legs', bricklink_id: 'sw0700', set_img_url: null },
       { as: 'owned', condition: 'new', acquired_price: 4.5 },
     )
     expect(outcome).toBe('added')
     expect(item).toMatchObject({
-      fig_number: 'fig-002514', bricklink_id: 'sw0700', is_owned: 1, quantity: 1, condition: 'new', acquired_price: 4.5,
+      fig_number: 'sw0700', bricklink_id: 'sw0700', rebrickable_id: 'fig-002514', is_owned: 1, quantity: 1, condition: 'new', acquired_price: 4.5,
       bricklink_url: 'https://www.bricklink.com/v2/catalog/catalogitem.page?M=sw0700',
     })
   })
@@ -97,7 +97,7 @@ describe('minifigures', () => {
   it('adding the same fig by its BrickLink id adds a copy instead of a duplicate row', async () => {
     const { item, outcome } = await addFig({ set_num: 'sw0700', name: 'C-3PO - Colorful Wires, Printed Legs' }, { as: 'owned' })
     expect(outcome).toBe('copy')
-    expect(item).toMatchObject({ fig_number: 'fig-002514', bricklink_id: 'sw0700', quantity: 2 })
+    expect(item).toMatchObject({ fig_number: 'sw0700', bricklink_id: 'sw0700', rebrickable_id: 'fig-002514', quantity: 2 })
     // The Rebrickable name is kept; the BrickLink one didn't overwrite it
     expect(item.name).toBe('C-3PO, Pearl Gold, Colorful Wires, Printed Legs')
     const rows = (await listFigs()).filter((f) => f.fig_number === 'fig-002514' || f.fig_number === 'sw0700' || f.bricklink_id === 'sw0700')
@@ -148,12 +148,12 @@ describe('editing', () => {
   })
 
   it('FIG_UPDATE changes only the fields you are allowed to edit', async () => {
-    const fig = (await listFigs()).find((f) => f.fig_number === 'fig-002514')!
+    const fig = (await listFigs()).find((f) => f.fig_number === 'sw0700')!
     const after = await env.call<Minifigure>(IPC.FIG_UPDATE, fig.id, {
       id: 1, fig_number: 'HACKED', created_at: '1999-01-01 00:00:00', image_url: 'https://evil.example/x.png',
       'condition = (SELECT 1); --': 'x', notes: 'Arms loose', condition: 'Cracked',
     })
-    expect(after).toMatchObject({ id: fig.id, fig_number: 'fig-002514', created_at: fig.created_at, image_url: fig.image_url, notes: 'Arms loose', condition: 'cracked' })
+    expect(after).toMatchObject({ id: fig.id, fig_number: 'sw0700', created_at: fig.created_at, image_url: fig.image_url, notes: 'Arms loose', condition: 'cracked' })
   })
 
   it('normalizes condition and quantity values on update', async () => {
@@ -207,13 +207,13 @@ describe('delete and undo', () => {
   })
 
   it('deletes and restores minifigures too', async () => {
-    const fig = (await listFigs()).find((f) => f.fig_number === 'fig-002514')!
-    await env.call(IPC.TAGS_APPLY, 'minifig', ['fig-002514'], ['Droids'])
+    const fig = (await listFigs()).find((f) => f.fig_number === 'sw0700')!
+    await env.call(IPC.TAGS_APPLY, 'minifig', ['sw0700'], ['Droids'])
     const deleted = await env.call<DeletedRow[]>(IPC.ITEMS_DELETE, 'minifig', [fig.id])
-    expect((await listFigs()).find((f) => f.fig_number === 'fig-002514')).toBeUndefined()
+    expect((await listFigs()).find((f) => f.fig_number === 'sw0700')).toBeUndefined()
     expect(await env.call<number>(IPC.ITEMS_RESTORE, 'minifig', deleted)).toBe(1)
-    const back = (await listFigs()).find((f) => f.fig_number === 'fig-002514')!
-    expect(back).toMatchObject({ bricklink_id: 'sw0700', quantity: 2, notes: 'Arms loose', condition: 'cracked' })
+    const back = (await listFigs()).find((f) => f.fig_number === 'sw0700')!
+    expect(back).toMatchObject({ bricklink_id: 'sw0700', rebrickable_id: 'fig-002514', quantity: 2, notes: 'Arms loose', condition: 'cracked' })
     expect(back.tags).toEqual(['Droids'])
   })
 })

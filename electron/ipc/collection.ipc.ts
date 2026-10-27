@@ -8,7 +8,7 @@ import {
 import { browseSets, browseMinifigs, getThemes, getMinifigSets } from '../api/rebrickable'
 import { getBricklinkItem, bricklinkImageUrl } from '../api/bricklink'
 import { looksLikeBricklinkFigId } from '../../src/lib/lego-ids'
-import { addSetByNumber, addFigFromCatalog, inspectSet, ensureFigBricklinkId } from '../services/catalog'
+import { addSetByNumber, addFigFromCatalog, inspectSet, ensureFigBricklinkId, figIdsForResults } from '../services/catalog'
 import { handle, str, optStr, int, ids, kind, obj } from './handle'
 
 function query(v: unknown): CollectionQuery {
@@ -65,7 +65,7 @@ export function registerCollectionHandlers(): void {
   handle(IPC.FIG_RESOLVE_BL, async (id: unknown) => {
     const fig = getFig(int(id))
     if (!fig) throw new AppError({ code: 'not_found', message: 'That minifigure is no longer in your collection.' })
-    const blId = fig.bricklink_id ?? await ensureFigBricklinkId(fig.fig_number)
+    const blId = fig.bricklink_id ?? await ensureFigBricklinkId(fig.rebrickable_id ?? fig.fig_number)
     if (!blId) return { bricklink_id: null, item: null }
     return { bricklink_id: blId, item: await getBricklinkItem('MINIFIG', blId).catch(() => null) }
   })
@@ -97,4 +97,8 @@ export function registerCollectionHandlers(): void {
   })
   handle(IPC.CATALOG_THEMES, () => getThemes())
   handle(IPC.CATALOG_SET_DETAIL, (setNumber: unknown) => inspectSet(str(setNumber, 30)))
+  handle(IPC.CATALOG_FIG_IDS, (list: unknown) => figIdsForResults((Array.isArray(list) ? list : []).slice(0, 60).map((r) => {
+    const o = obj<{ id: string; name: string }>(r)
+    return { id: str(o.id, 40), name: str(o.name ?? '', 300) }
+  })))
 }

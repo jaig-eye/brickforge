@@ -109,8 +109,9 @@ export function seedDemoIfEmpty(): void {
         theme: f.theme, year: f.year,
       }, { as: f.owned ? 'owned' : 'wanted', condition: f.condition, acquired_price: f.paid ?? null, notes: f.notes ?? null })
       if (f.acquired_date) updateFig(item.id, { acquired_date: f.acquired_date })
-      if (f.tags?.length) tagItems('minifig', [f.number], f.tags)
-      seedPrices('minifig', f)
+      // Stored under its BrickLink id when the sample knows it
+      if (f.tags?.length) tagItems('minifig', [item.fig_number], f.tags)
+      seedPrices('minifig', f, item.fig_number)
     }
     for (const a of fixture.alerts) {
       setAlert({ entity_type: a.kind, entity_id: a.id, condition: a.condition, direction: a.direction, target_price: a.target })
@@ -123,13 +124,13 @@ export function seedDemoIfEmpty(): void {
   log.info(`[demo] seeded ${fixture.sets.length} sets and ${fixture.figs.length} minifigures`)
 }
 
-function seedPrices(kind: EntityKind, item: DemoItem): void {
+function seedPrices(kind: EntityKind, item: DemoItem, entityId = item.number): void {
   for (const cond of ['new', 'used'] as const) {
     const now = cond === 'new' ? item.price_new : item.price_used
     if (!now) continue
     for (const p of history(`${kind}:${item.number}:${cond}`, now, item.trend ?? 0.05)) {
       recordPrice({
-        entity_type: kind, entity_id: item.number, condition: cond, source: 'sold',
+        entity_type: kind, entity_id: entityId, condition: cond, source: 'sold',
         avg_price: p.price, min_price: Math.round(p.price * 0.82 * 100) / 100, max_price: Math.round(p.price * 1.25 * 100) / 100, sample_count: 12,
       }, p.day)
     }

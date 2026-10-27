@@ -38,7 +38,7 @@ export function useAddItem() {
               label: 'Add them',
               run: async () => {
                 for (const f of d.minifigs) {
-                  await api.collection.addFig({ set_num: f.set_num, name: f.set_name, set_img_url: f.set_img_url, theme: d.theme, year: d.set.year },
+                  await api.collection.addFig({ set_num: f.set_num, name: f.set_name, set_img_url: f.set_img_url, bricklink_id: f.bricklink_id ?? null, theme: d.theme, year: d.set.year },
                     { as: 'owned', quantity: f.quantity, condition: opts.condition === 'sealed' ? 'new' : 'used' })
                 }
                 await invalidateCollection()

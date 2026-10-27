@@ -65,7 +65,7 @@ export const TABLES: Readonly<Record<SyncTable, TableSpec>> = {
     key: ['fig_number'],
     columns: {
       fig_number: text(100, false), name: text(1000, false), character: text(1000), theme: text(200), year: int(),
-      image_url: text(2000), bricklink_url: text(2000), bricklink_id: text(100), notes: text(20_000),
+      image_url: text(2000), bricklink_url: text(2000), bricklink_id: text(100), rebrickable_id: text(100), notes: text(20_000),
       is_owned: int(false), is_wanted: int(false), quantity: int(false),
       condition: { type: 'text', max: 40, normalize: normalizeFigCondition },
       acquired_price: real(), acquired_date: text(40), created_at: stamp(), updated_at: stamp(),

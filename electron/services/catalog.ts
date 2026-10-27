@@ -8,13 +8,13 @@ import { isRebrickableFigNumber } from '../../src/lib/lego-ids'
 import type { AddOptions, AddResult, LegoSet, Minifigure, CatalogSetDetail, DataHealth } from '../../src/lib/types'
 import log from '../main/logger'
 import {
-  lookupSet, inspectSet as rbInspectSet, resolveThemeName, getMinifig, getMinifigBricklinkIds, getMinifigDetails, hasRebrickableKey,
+  lookupSet, inspectSet as rbInspectSet, resolveThemeName, getMinifig, getMinifigDetails, getMinifigSets, hasRebrickableKey,
 } from '../api/rebrickable'
 import { brickognizeFigs } from '../api/brickognize'
 import { fetchImage } from './images'
-import { getBricklinkItem, hasBricklinkCredentials, bricklinkImageUrl } from '../api/bricklink'
+import { getBricklinkItem, getBricklinkSetMinifigs, hasBricklinkCredentials, bricklinkImageUrl, type BricklinkSetFig } from '../api/bricklink'
 import {
-  addSet, addFig, getSetByNumber, setSetTheme, setFigDetails, listSetsMissingTheme,
+  addSet, addFig, findFig, getSetByNumber, setSetTheme, setFigDetails, listSetsMissingTheme, rememberFigId, rememberedFigId, rememberedFigIds,
   listFigsMissingBricklinkId, listFigsMissingDetails, listFigsMissingName, type FigCatalogFields,
 } from '../db/queries/collection.queries'
 import { IPC } from '../../src/lib/ipc-types'
@@ -62,28 +62,130 @@ export function namesAgree(rebrickableName: string, bricklinkName: string, score
     || (score >= 0.8 && overlap(full, bl) >= 0.5)
 }
 
+/** How well two names describe each other, 0–1: the share of words that match, both ways. */
+export function nameScore(a: string, b: string): number {
+  const x = tokens(a)
+  const y = tokens(b)
+  return (overlap(x, y) + overlap(y, x)) / 2
+}
+
 /**
- * THE fig id bridge: find a Rebrickable minifig's BrickLink id and persist it
- * (plus its catalog link). Rebrickable's API doesn't publish BrickLink ids for
- * minifigs, so the bridge shows the fig's OFFICIAL catalog image to
- * Brickognize (which answers in BrickLink ids) and accepts the match only
- * when it's confident or the names agree. BrickLink ids pass through.
+ * The BrickLink figures a Rebrickable figure could be: the minifigures in the
+ * BrickLink inventories of the sets it comes in. The figure is in every one
+ * of those sets, so the pool narrows to the ids they share. Empty without
+ * BrickLink keys or when BrickLink doesn't know the sets.
  */
-export async function ensureFigBricklinkId(figNumber: string): Promise<string | null> {
+async function setInventoryPool(figNumber: string): Promise<BricklinkSetFig[]> {
+  if (!hasBricklinkCredentials()) return []
+  const sets = (await getMinifigSets(figNumber).catch(() => [])).slice(0, 4)
+  const lists: BricklinkSetFig[][] = []
+  for (const s of sets) {
+    const figs = await getBricklinkSetMinifigs(s.set_num).catch((err) => {
+      if (err instanceof AppError && (err.code === 'auth' || err.code === 'network')) throw err
+      return null
+    })
+    if (figs?.length) lists.push(figs)
+  }
+  let pool = lists[0] ?? []
+  for (const list of lists.slice(1)) {
+    const ids = new Set(list.map((f) => f.no))
+    const shared = pool.filter((f) => ids.has(f.no))
+    if (shared.length) pool = shared
+  }
+  return pool
+}
+
+/**
+ * THE fig id bridge: find a Rebrickable minifig's BrickLink id; the caller's
+ * row then moves to that id (BrickLink ids are the collection's keys).
+ * Rebrickable doesn't publish BrickLink ids for minifigs, so:
+ *  1. Its sets' BrickLink inventories: one shared figure is the answer, and
+ *     among several the name decides when one clearly fits best.
+ *  2. Brickognize, shown the fig's official picture: within that pool it only
+ *     has to tell the pool's figures apart; without a pool it must be
+ *     confident or agree on the name.
+ * BrickLink ids pass through.
+ */
+export async function ensureFigBricklinkId(figNumber: string, opts: { visual?: boolean; name?: string } = {}): Promise<string | null> {
   if (!isRebrickableFigNumber(figNumber)) return figNumber
-  const listed = await getMinifigBricklinkIds(figNumber).catch(() => [])
-  let blId: string | null = listed[0] ?? null
-  if (!blId) {
-    const fig = await getMinifig(figNumber)
-    const img = await fetchImage(fig?.set_img_url)
-    if (fig && img) {
-      const bk = await brickognizeFigs(img.buffer, img.mediaType)
-      const top = bk.ok ? bk.items[0] : undefined
-      if (top && (top.score >= 0.9 || (top.score >= 0.45 && namesAgree(fig.name, top.name, top.score)))) blId = top.id
+  const visual = opts.visual ?? true
+  let blId = rememberedFigId(figNumber)
+  // Without the picture step, a name from a search result saves a lookup
+  const fig = blId || (!visual && opts.name) ? null : await getMinifig(figNumber)
+  if (!blId && fig) blId = fig.external_ids?.BrickLink?.[0] ?? null
+  const name = opts.name ?? fig?.name ?? null
+  const pool = blId || !name ? [] : await setInventoryPool(figNumber)
+  if (!blId && name && pool.length) {
+    if (pool.length === 1) blId = pool[0].no
+    else {
+      const ranked = pool.map((f) => ({ no: f.no, score: nameScore(name, f.name) })).sort((a, b) => b.score - a.score)
+      if (ranked[0].score >= 0.5 && ranked[0].score - ranked[1].score >= 0.15) blId = ranked[0].no
     }
   }
+  if (!blId && visual && fig) {
+    const img = await fetchImage(fig.set_img_url)
+    if (img) {
+      const bk = await brickognizeFigs(img.buffer, img.mediaType)
+      const items = bk.ok ? bk.items : []
+      const inPool = new Set(pool.map((f) => f.no))
+      const top = inPool.size ? items.find((i) => inPool.has(i.id) && i.score >= 0.3) : items[0]
+      if (top && (inPool.size || top.score >= 0.9 || (top.score >= 0.45 && namesAgree(fig.name, top.name, top.score)))) blId = top.id
+    }
+  }
+  rememberFigId(figNumber, blId)
   if (blId) setFigDetails(figNumber, { bricklink_id: blId })
   return blId
+}
+
+// ── BrickLink ids for search results ──────────────────────────────────────────
+
+const pendingIds: { id: string; name: string }[] = []
+let draining = false
+
+/**
+ * BrickLink ids for catalog search results (Rebrickable is the only catalog
+ * that can be searched, so results arrive under Rebrickable numbers). Known
+ * ones come back at once; the rest are looked up one at a time in the
+ * background, through set inventories only, and announced on PUSH_FIG_IDS.
+ */
+export function figIdsForResults(results: { id: string; name: string }[]): Record<string, string | null> {
+  const figs = results.filter((r) => isRebrickableFigNumber(r.id)).slice(0, 60)
+  const known = rememberedFigIds(figs.map((f) => f.id))
+  if (hasBricklinkCredentials() && hasRebrickableKey()) {
+    // The latest search goes first; an old one's leftovers wait or drop off
+    for (const f of [...figs].reverse()) {
+      if (f.id in known) continue
+      const i = pendingIds.findIndex((p) => p.id === f.id)
+      if (i !== -1) pendingIds.splice(i, 1)
+      pendingIds.unshift(f)
+    }
+    pendingIds.splice(80)
+    void drainPendingIds()
+  }
+  return known
+}
+
+async function drainPendingIds(): Promise<void> {
+  if (draining) return
+  draining = true
+  try {
+    while (pendingIds.length) {
+      const { id, name } = pendingIds.shift()!
+      try {
+        const bl = await ensureFigBricklinkId(id, { visual: false, name })
+        push(IPC.PUSH_FIG_IDS, { rebrickable_id: id, bricklink_id: bl })
+      } catch (err) {
+        // Bad keys, offline, or rate-limited: stop; the next search starts again
+        if (err instanceof AppError && ['auth', 'missing_key', 'network', 'rate_limited'].includes(err.code)) {
+          pendingIds.length = 0
+          break
+        }
+        log.warn(`[fig-ids] ${id}:`, err instanceof Error ? err.message : err)
+      }
+    }
+  } finally {
+    draining = false
+  }
 }
 
 /** Add a set by its number. Known sets skip the network round trip. */
@@ -109,22 +211,32 @@ export async function addSetByNumber(setNumber: string, opts: AddOptions): Promi
 /** Add a minifig from catalog data; the id bridge and details land in the background. */
 export function addFigFromCatalog(fig: FigCatalogFields, opts: AddOptions): AddResult<Minifigure> {
   const result = addFig(fig, opts)
-  void enrichFig(result.item.fig_number).catch(() => undefined)
+  void enrichFig(result.item.rebrickable_id ?? result.item.fig_number).catch(() => undefined)
   return result
 }
 
+/** Rebrickable details for a fig added from Rebrickable, and its BrickLink id if it still needs one. */
 async function enrichFig(figNumber: string): Promise<void> {
   if (!isRebrickableFigNumber(figNumber) || !hasRebrickableKey()) return
-  await ensureFigBricklinkId(figNumber)
+  if (!findFig(figNumber)?.bricklink_id) await ensureFigBricklinkId(figNumber)
   const d = await getMinifigDetails(figNumber)
   setFigDetails(figNumber, { year: d.year, theme: await resolveThemeName(d.themeId) })
   push(IPC.PUSH_DATA_CHANGED, { kind: 'minifig' })
 }
 
+/**
+ * A set and its minifigures. With BrickLink keys the figures come from the
+ * set's BrickLink inventory, already under their BrickLink ids; otherwise
+ * from Rebrickable, to be matched to BrickLink ids after they're added.
+ */
 export async function inspectSet(setNumber: string): Promise<CatalogSetDetail> {
   const res = await rbInspectSet(setNumber)
   if (!res) throw new AppError({ code: 'not_found', service: 'rebrickable', message: `Set ${setNumber} isn't in the Rebrickable catalog.` })
-  return { set: res.set, theme: await resolveThemeName(res.set.theme_id), minifigs: res.minifigs }
+  const bl = hasBricklinkCredentials() ? await getBricklinkSetMinifigs(res.set.set_num).catch(() => null) : null
+  const minifigs = bl
+    ? bl.map((f) => ({ set_num: f.no, set_name: f.name, quantity: f.quantity, set_img_url: bricklinkImageUrl('M', f.no), bricklink_id: f.no }))
+    : res.minifigs
+  return { set: res.set, theme: await resolveThemeName(res.set.theme_id), minifigs }
 }
 
 // ── Background enrichment ─────────────────────────────────────────────────────
